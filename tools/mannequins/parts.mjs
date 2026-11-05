@@ -151,6 +151,32 @@ export function padGeometry(w, h, d, soft) {
   });
 }
 
+/**
+ * A half-round pad `w` (x) wide, `length` (z) long and `h` (y) tall: flat side down, the top a half
+ * ellipse curving front to back, the pad of a glute-ham bench. `from` and `to` (0 to 1, along `length`)
+ * cut a slice of it, so a pad built of slices has a box for each, which is how the checks measure its
+ * curve. Centred across x and along z on the whole pad, standing on y = 0.
+ */
+export function halfRoundGeometry(w, length, h, from = 0, to = 1) {
+  return shape(`half_round:${mm(w)}:${mm(length)}:${mm(h)}:${mm(from)}:${mm(to)}`, () => {
+    const a = length / 2;
+    const top = (z) => h * Math.sqrt(Math.max(0, 1 - (z / a) ** 2));
+    const [z0, z1] = [from, to].map((t) => -a + t * length);
+    const steps = Math.max(2, Math.ceil(24 * (to - from)));
+    const s = new THREE.Shape();
+    s.moveTo(z0, 0);
+    s.lineTo(z0, top(z0));
+    for (let k = 1; k <= steps; k++) s.lineTo(z0 + ((z1 - z0) * k) / steps, top(z0 + ((z1 - z0) * k) / steps));
+    s.lineTo(z1, 0);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: w, bevelEnabled: false });
+    // Extruded along z from the shape's x-y plane (its x the pad's length, its y up): turn the length onto z.
+    g.translate(0, 0, -w / 2);
+    g.rotateY(-Math.PI / 2);
+    return soften(g);
+  });
+}
+
 /** Square tubing `w` across, its corners rounded, `length` long along y and centred. */
 export function tubeGeometry(w, length) {
   return shape(`tube:${mm(w)}:${mm(length)}`, () => {
@@ -581,9 +607,9 @@ export function turnTo(object, along, toward) {
   object.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, x.clone().cross(y)));
 }
 
-/** A round knob, `r` across, at `at`. */
-export function knob(M, at, r = 0.016) {
-  const k = part(shape(`knob:${r}`, () => { const g = new THREE.SphereGeometry(r, 14, 10); g.deleteAttribute('uv'); return g; }), M.vinyl);
+/** A round knob, `r` across, at `at`, in vinyl unless `material` says. */
+export function knob(M, at, r = 0.016, material = M.vinyl) {
+  const k = part(shape(`knob:${r}`, () => { const g = new THREE.SphereGeometry(r, 14, 10); g.deleteAttribute('uv'); return g; }), material);
   k.position.copy(at);
   return k;
 }

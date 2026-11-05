@@ -46,6 +46,8 @@ export const BATCHES = {
   ],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
+  // The hip thrust machine's exercise (#229).
+  'hip-thrust': ['machine_hip_thrust'],
   // The power rack's pull-ups, chin-ups, hangs and dips, the feet off the floor (#196).
   'power-rack': [
     'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
@@ -53,10 +55,20 @@ export const BATCHES = {
   ],
   // The shoulder press machine's one exercise, machine-first (#225).
   'shoulder-press': ['machine_shoulder_press'],
+  // The captain's chair's one exercise, a knee raise with the forearms on the pads (#237).
+  'captains-chair': ['roman_chair_crunch'],
+  // The glute-ham developer's one exercise (#230), kneeling on its pads with the ankles in its rollers.
+  'glute-ham-raise': ['glute_ham_raise'],
   // The library's first dumbbell exercises (#127), ahead of the rest of the barbell ones (owner).
   dumbbell: [
     'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',
     'db_romanian_deadlift', 'single_arm_db_row', 'db_lunge', 'db_shrug',
+  ],
+  // The second dumbbell batch (#127): variants of the lifts the owner has OK'd.
+  'dumbbell-variants': [
+    'super_rom_db_lateral_raise', 'bent_over_reverse_db_flye', 'db_guillotine_press', 'db_skull_crusher',
+    'dumbbell_shoulder_press_standing', 'standing_db_arnold_press', 'arnold_press_seated', 'db_walking_lunge',
+    'db_curtsy_lunge', '1_arm_db_kroc_row', 'db_triceps_kickback', '1_arm_overhead_db_triceps_extension',
   ],
   // The cable crossover's exercises, the first of two batches (#197): those stood with the back to
   // the towers or beside one, a handle in the hand.
@@ -70,6 +82,8 @@ export const BATCHES = {
     '1_leg_cable_glute_kickback', 'cable_crunch', 'cable_face_pull', 'cable_hip_abduction', 'cable_pull_through',
     'cable_triceps_kickback', 'cable_woodchopper', 'cable_wrist_curl', 'cable_wrist_extension', 'seated_cable_flye',
   ],
+  // The seated dip machine's one exercise, machine-first (#226).
+  'dip-machine': ['seated_dip_machine'],
 };
 
 const idsOf = (name) => {

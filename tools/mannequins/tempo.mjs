@@ -19,6 +19,8 @@ export const MOTION_TEMPOS = {
   leg_press: tempo(2, 0.3, 1, 0.6),
   chest_press: tempo(2, 0.3, 1, 0.6),
   shoulder_press: tempo(2, 0.3, 1, 0.6),
+  // Pushed down to the hips for the 1 s and let up in 2: the lowering is the return.
+  dip_machine: tempo(2, 0.3, 1, 0.6),
   // The top of these is where the muscle is shortest (the curl's heels drawn up, the raise's arm
   // out), so the lowering is the eccentric.
   arms: tempo(2, 0.3, 1, 0.6),
@@ -30,12 +32,17 @@ export const MOTION_TEMPOS = {
   // Pulled from arms long (a row, a machine pulldown): the clip's first half is the concentric.
   lever_handles: tempo(1, 0.3, 2, 0.5),
   chest_pad: tempo(1, 0.3, 2, 0.5),
+  // Driven up from the bottom: the clip's first half, the lowering, is the eccentric.
+  hip_thrust: tempo(2, 0.5, 1, 1),
   bridge: tempo(2, 0.3, 1, 0.6),
   // Lowered from the bar or onto the handles: the clip's first half is the eccentric.
   hang: tempo(2, 0.3, 1, 0.6),
   support: tempo(2, 0.3, 1, 0.6),
+  chair: tempo(2, 0.3, 1, 0.6),
   lunge: tempo(2, 0.3, 1, 0.6),
   bench_row: tempo(2, 0.3, 1, 0.6),
+  // Lowered slowly, the eccentric, and pulled back up by the hamstrings.
+  glute_ham_raise: tempo(3, 0.5, 2, 0.5),
 };
 
 /** The entry's tempo: its own, otherwise its movement's. */

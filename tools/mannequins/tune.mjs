@@ -22,10 +22,13 @@ export const OPTIONAL = {
   hack_squat: { 'grip.pole': [0.6, -1, 0.3], 'feet.kneesOut': 0.35 },
   lever_handles: { 'grip.rotate': 0, 'grip.pole': [0.7, -1, -0.5] },
   chest_pad: { 'grip.pole': [0.5, 0.4, -1], 'body.look': -0.3, 'feet.kneesOut': 0.2 },
+  hip_thrust: { 'grip.pole': [0.5, -1, -0.5], 'body.look': 0.3, 'feet.kneesOut': 0.15 },
   bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
   hinge: { 'top.shrug': 0, 'bottom.shrug': 0, 'feet.y': 0 },
+  glute_ham_raise: { 'body.look': 0.25 },
   hang: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   support: { 'body.look': 0.1, 'feet.kneesOut': 0 },
+  chair: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   // A back squat's elbows, [out, up, forward]: down and back by default, as the motion has them.
   squat: { 'feet.y': 0, 'grip.spot': [0.02, 0.06, 0.07], 'grip.pole': [0.3, -1, -0.8] },
 };
@@ -152,6 +155,8 @@ export function rangeOf(path, value) {
   if (key === 'wrist') return { min: -60, max: 60, step: 1, unit: '°' };
   // A thumb's root swings from the palm to square off it, and no further (`holdOf`).
   if (key === 'swing') return { min: 0, max: 90, step: 1, unit: '°' };
+  // A stirrup the forearm goes through lies from straight behind the palm to along the forearm.
+  if (key === 'through') return { min: 0, max: 90, step: 1, unit: '°' };
   // The wrists' share of the forearms' lean, from none to all of it (`grip.level`).
   if (key === 'level') return { min: 0, max: 1, step: 0.05, unit: '' };
   if (DEGREES.has(key)) return { min: Math.min(-40, value - 20), max: Math.max(40, value + 20), step: 1, unit: '°' };

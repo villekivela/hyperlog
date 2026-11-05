@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { STRAIGHT, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
 import { heldPair } from './recipes/power-rack.mjs';
+import { HOLD as CHAIR } from './recipes/captains-chair.mjs';
 import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
 import { fitted } from './fit.mjs';
 
@@ -577,6 +578,36 @@ export const MOTIONS = {
   },
 
   /**
+   * Seated against a back pad that leans back as the machine's carriage rocks, the feet on its
+   * footplates, which rise with it, the hands on the grips of the arms pushed down to the hips: a
+   * seated dip. The linkage gives the hips, the pad's lean and where the grips and the footplates are,
+   * each at the arms' value; the ankles stand `feet.down` below the plate's middle, on its face.
+   */
+  dip_machine(e, s, L) {
+    const { hipC, lean, hand, across, plate, plateOut, plateUp } = s.linkage;
+    // The spine lies along the pad, whose face the back's depth off it touches all the way up.
+    const u = trunkUp(-lean + rad(e.body.trunk ?? 0));
+    const f = forwardOf(u);
+    const ankle = plate.clone().addScaledVector(plateOut, L.ankleY + 0.01).addScaledVector(plateUp, -e.feet.down);
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, 0.12).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * e.feet.stance)),
+      foot: (side) => ({
+        heading: plateUp.clone().multiplyScalar(Math.cos(toeOut)).addScaledVector(X, side * Math.sin(toeOut)),
+        top: plateOut.clone(),
+      }),
+      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0.2), 1, 0.4).normalize(),
+      support: () => ({ point: plate.clone(), normal: plateOut.clone() }),
+      hand, across,
+      armPole: (side) => V(side * 0.1, 0.2, -1).normalize(),
+      // The elbows go back, held to the pole as a lifter's are (the arms are a dip's, not a press's).
+      armTraced: true,
+    };
+  },
+
+  /**
    * Pressing dumbbells on an adjustable bench at `bench.angle`, written in the backrest's frame so
    * one entry fits every angle: the back along the pad, and the hips `body.sit` off its face and
    * `body.seat` down it from the seat-back corner (the body slides down the pad, never into the
@@ -632,7 +663,7 @@ export const MOTIONS = {
    * the side from that plane, in degrees about the shoulder: a Y overhead.
    */
   arms(e, s, L) {
-    const { hipC, u, feet } = bodyOf(e, s, L);
+    const { hipC, u, lean, feet } = bodyOf(e, s, L);
     const f = forwardOf(u);
     const sh = shouldersOf(hipC, u, L);
     const elbow = sh.clone().addScaledVector(hanging(s.upperArm), L.up * STRAIGHT);
@@ -648,6 +679,7 @@ export const MOTIONS = {
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      spine: archOf(e.body?.arch, lean),
       ...feet,
       bar, grip: e.grip.width,
       hand: handsOf(e, (side) => (out ? leaned(bar.clone().setX(side * e.grip.width), side) : bar.clone().setX(side * e.grip.width))),
@@ -659,19 +691,19 @@ export const MOTIONS = {
   /**
    * A split stance, the feet planted through the rep: the left foot flat `feet.front` ahead, the
    * right `feet.back` behind (its ball's place), up on its ball with the heel `heel` degrees off the
-   * floor, heels up positive, its toes bent back as far so they stay down. The hips drop between
-   * them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width`
-   * either side of the middle.
+   * floor, heels up positive, its toes bent back as far so they stay down; `feet.cross` steps it that
+   * far across behind the front foot (a curtsy), and `feet.hips` moves the hips and arms that far toward it.
+   * The hips drop between them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width` either side of the middle.
    */
   lunge(e, s, L) {
-    const hipC = V(0, ...s.hip);
+    const hipC = V(e.feet.hips ?? 0, ...s.hip);
     const lean = spineLean(s.trunk, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
     const a = rad(s.heel);
     const heading = V(0, -Math.sin(a), Math.cos(a));
     const top = V(0, Math.cos(a), Math.sin(a));
-    const ball = V(-e.feet.stance, L.ballY, e.feet.back);
+    const ball = V(-e.feet.stance + (e.feet.cross ?? 0), L.ballY, e.feet.back);
     const sh = shouldersOf(hipC, u, L);
     const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
     const drop = Math.sqrt(Math.max(0, reach * reach - (e.grip.width - L.shW) ** 2));
@@ -683,7 +715,7 @@ export const MOTIONS = {
       foot: (side) => (side < 0 ? { heading: heading.clone(), top: top.clone() } : { heading: V(Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) }),
       kneePole: (side) => V(side * (e.feet.kneesOut ?? 0), 0, 1).normalize(),
       support: (side) => (side < 0 ? { point: ball.clone().addScaledVector(top, -L.ballY), normal: top.clone() } : floor),
-      hand: (side) => V(side * e.grip.width, sh.y - drop, sh.z),
+      hand: (side) => V(hipC.x + side * e.grip.width, sh.y - drop, sh.z),
       armPole: elbowsTo(e, [0.4, 0, -1]),
       offsets: { ball_r: [-s.heel, 0, 0] },
     };
@@ -932,6 +964,68 @@ export const MOTIONS = {
   },
 
   /**
+   * Kneeling on a glute-ham developer's pads, the ankles in its rollers and the soles on its plate,
+   * the knees where `s.linkage` has them: the body, hips straight, thighs and trunk in one line,
+   * lowers about the knees. `lean` is that line's lean from upright forward, in degrees, from the
+   * top to the bottom. The arms hang straight down, the hands open, until the body is nearly level;
+   * then they reach to rest on the ends of the handles.
+   */
+  glute_ham_raise(e, s, L) {
+    const { knee, ankle, handle, sole, soleUp, toes } = s.linkage;
+    // The thigh's way, and the spine's, which runs on from it with the hips straight: the line from the hips to the shoulders leans as the thigh does.
+    const thigh = trunkUp(rad(s.lean));
+    const u = trunkUp(spineLean(s.lean, L));
+    const f = forwardOf(u);
+    const across = e.feet?.stance ?? L.hipW;
+    const hipC = knee.clone().addScaledVector(thigh, L.thigh);
+    const sh = shouldersOf(hipC, u, L);
+    const hanging = V(0, -(L.up + L.fore) * STRAIGHT, 0.04);
+    // How far the hands have gone to the handles: none until the body is past 55% of its way down, all of it at the bottom.
+    const done = Math.min(1, Math.max(0, (s.lean - e.top.lean) / (e.bottom.lean - e.top.lean)));
+    const rest = smooth(Math.min(1, Math.max(0, (done - 0.55) / 0.45)));
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.25).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * across)),
+      toeOut: 0,
+      foot: () => ({ heading: toes.clone(), top: soleUp.clone() }),
+      kneePole: () => V(0, -0.4, 1).normalize(),
+      support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
+      openHands: true,
+      // Never past what the arm reaches (a little short of straight, which the elbow would flip at), so the elbow turns steadily.
+      hand: (side) => {
+        const shoulder = sh.clone().addScaledVector(X, side * L.shW);
+        const at = shoulder.clone().add(hanging).lerp(handle(side), rest);
+        const way = at.clone().sub(shoulder);
+        return shoulder.add(way.setLength(Math.min(way.length(), (L.up + L.fore) * 0.96)));
+      },
+      armPole: elbowsTo(e, [0.3, 0, -1]),
+    };
+  },
+
+  /**
+   * Seated on a low seat, the upper back against the pads of a carriage that turns about a pivot
+   * behind the body, a belt over the hips, the feet flat on a platform ahead, the hands on the
+   * handles the carriage carries: a machine hip thrust. The hips ride the carriage, and the spine
+   * runs from them along the pads.
+   */
+  hip_thrust(e, s, L) {
+    const { hip, spine, handle, across, sole, soleUp, toes, ankle } = s.linkage;
+    const f = forwardOf(spine);
+    const toeOut = rad(e.feet.toeOut ?? 0);
+    return {
+      hipC: hip.clone(), u: spine,
+      headDir: spine.clone().addScaledVector(f, e.body?.look ?? 0.3).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * e.feet.stance)),
+      foot: (side) => ({ heading: toes.clone().applyAxisAngle(soleUp, side * toeOut), top: soleUp.clone() }),
+      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0.15), 1, 0.5).normalize(),
+      support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
+      hand: handle, across,
+      armPole: elbowsTo(e, [0.5, -1, -0.5]),
+    };
+  },
+
+  /**
    * Hanging from a rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a
    * leg raise. The shoulders hang straight-armed under `kit.power_rack.handles`, the pair of grips,
    * and `rise` lifts them from there, `back` behind the grips.
@@ -951,6 +1045,22 @@ export const MOTIONS = {
     const { hands, middle, arms } = rackHold(e, L);
     const sh = V(middle.x, middle.y + arms - s.sink, middle.z + (s.over ?? 0));
     return { ...heldBody(e, s, sh, L), ...hands, armPole: elbowsTo(e, [0.25, 0, -1]) };
+  },
+
+  /**
+   * On a captain's chair: the forearms on the arm pads, the upper arms upright, the hands closed on
+   * the grips ahead of the elbows, the back to the back pad and the legs hanging free. The elbows sit
+   * on the pads as far behind the grips as the forearms reach, and the shoulders stand over them.
+   */
+  chair(e, s, L) {
+    const fore = L.fore * STRAIGHT + depthOf(e, L);
+    const upper = L.up * STRAIGHT;
+    const grip = CHAIR.at(1);
+    const ey = CHAIR.padTop + CHAIR.elbowLift;
+    const along = Math.sqrt(Math.max(0, fore * fore - (grip.y - ey) ** 2 - (grip.x - CHAIR.padX) ** 2));
+    const ez = grip.z - along + (s.back ?? 0);
+    const sh = V(0, ey + Math.sqrt(Math.max(0, upper * upper - (L.shW - CHAIR.padX) ** 2)), ez);
+    return { ...heldBody(e, s, sh, L), hand: CHAIR.at, across: CHAIR.across, armPole: elbowsTo(e, [0.3, -1, -0.1]) };
   },
 
   /**

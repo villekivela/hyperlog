@@ -161,6 +161,19 @@ export const POSES = {
     camera: { target: [-0.1, 0.98, 0.1], halfHeight: 1.2, azimuth: 56, elevation: 12 },
   },
 
+  // Seated against the carriage's back pad, the feet on its plates, the hands on the grips: the
+  // arms from straight down at the hips (the top) to the handles at the lower chest (the bottom),
+  // the carriage rocking back with them.
+  seated_dip_machine: {
+    equipment: 'machine',
+    motion: 'dip_machine',
+    kit: { dip_machine: {} },
+    body: {},
+    feet: { stance: 0.13, toeOut: 8, down: 0.04 },
+    grip: {},
+    camera: { target: [0, 0.8, 0.1], halfHeight: 1.0, azimuth: 56, elevation: 12 },
+  },
+
   // The starter program's exercises (#127, the starter batch): first poses for the owner to tune.
 
   // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides:
@@ -300,6 +313,18 @@ export const POSES = {
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
+  // Seated, the upper back on the carriage's pads and the belt over the hips, the feet flat on the
+  // platform, the hands on the handles by the hips: the hips drop to the seat and drive up until the
+  // thighs are level.
+  machine_hip_thrust: {
+    equipment: 'machine',
+    motion: 'hip_thrust',
+    kit: { hip_thrust_machine: {} },
+    feet: { stance: 0.1, toeOut: 8 },
+    grip: { pole: [0.8, -0.3, 0.3] },
+    camera: { target: [0, 0.75, 0.1], halfHeight: 1.0, azimuth: 70, elevation: 8 },
+  },
+
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
   machine_pulldown: {
     equipment: 'machine',
@@ -397,7 +422,7 @@ export const POSES = {
   cable_shoulder_press: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true } },
+    kit: { bench: { angle: 80 }, cable_column: { at: [0.6691, -0.15], pulley: 0.12, twin: true, through: 30 } },
     body: { hip: [0.547, 0.19], trunk: -10 },
     top: { hand: [0.2882, 1.644, 0.2943] },
     bottom: { hand: [0.32, 1.147, 0.2] },
@@ -927,6 +952,20 @@ export const POSES = {
     bottom: { over: 0.24, trunk: 22, thigh: 16, shin: 28 },
   },
 
+  // A knee raise on the captain's chair: the forearms on the arm pads, the hands on the grips, the
+  // back to the back pad leaning 10°, the legs hanging free. The knees come up past the hips (video,
+  // 0:03), bent about 60°.
+  roman_chair_crunch: {
+    equipment: 'bodyweight',
+    motion: 'chair',
+    kit: { captains_chair: {} },
+    top: { trunk: -10, thigh: 112, shin: -52, shrug: 0, back: 0.04 },
+    bottom: { trunk: -10, thigh: 5, shin: 15, shrug: 0, back: 0.04 },
+    feet: { stance: 0.09, point: 30 },
+    grip: { pole: [0.3, -1, -0.1] },
+    camera: { target: [0, 1.0, 0.3], halfHeight: 1.2, azimuth: 35, elevation: 10 },
+  },
+
   // The plain lift with a plate on a dip belt's chain.
   weighted_pullup: { like: 'pullup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
   weighted_chinup: { like: 'chinup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
@@ -1081,5 +1120,149 @@ export const POSES = {
     bottom: { press: 1, chest: [0.1869, -0.0676], rotate: 3.4497, tilt: 12.395, wrist: [-61.5991, -19.2892] },
     grip: { width: 0.3227, lockout: 0.2859, elbows: 0.3622 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
+  // The second dumbbell batch (#127): variants of the lifts above, first poses for the owner to tune.
+
+  // The lateral raise's arc carried on past the shoulders, the arms long, until the dumbbells are overhead.
+  super_rom_db_lateral_raise: {
+    like: 'db_lateral_raise',
+    top: { hand: [0.3167, 2.08, 0.0401], wrist: [0, 0], rotate: 0 },
+    bottom: { hand: [0.35, 0.81, 0.0403], wrist: [0, 0] },
+    grip: { pole: [0, 0, -1] },
+    camera: { target: [0, 1.15, 0], halfHeight: 1.25, azimuth: 20, elevation: 8 },
+  },
+
+  // Hinged over near level, the knees soft: the dumbbells hang under the shoulders, palms in, and
+  // sweep out wide on a long arm until they stand level with the shoulders.
+  bent_over_reverse_db_flye: {
+    like: 'db_lateral_raise',
+    top: { shin: 14, thigh: 48, trunk: 70, hand: [0.8, 1.0, 0.3], wrist: [0, 0], rotate: -66 },
+    bottom: { shin: 14, thigh: 48, trunk: 70, hand: [0.26, 0.37, 0.31], wrist: [0, 0], rotate: -83 },
+    grip: { pole: [0, 1, -0.3], across: [0, 0, 1] },
+    camera: { target: [0, 0.8, 0.1], halfHeight: 1.05, azimuth: 30, elevation: 10 },
+  },
+
+  // The flat press with the elbows flared wide, the dumbbells coming down over the upper chest for
+  // the deepest stretch, not beside the lower chest.
+  db_guillotine_press: {
+    like: 'db_bench_press',
+    top: { hand: [0.3034, 1.1773, -0.26] },
+    bottom: { hand: [0.38, 0.72, -0.27] },
+    grip: { pole: [1, -0.6, -0.05] },
+    tempo: { bottom: 0.3 },
+  },
+
+  // On the flat bench, palms in: the upper arms stand near still, leaning a little toward the head,
+  // and the forearms fold so the dumbbells come down beside it, the elbows tucked.
+  db_skull_crusher: {
+    like: 'db_bench_press',
+    motion: 'arms',
+    top: { upperArm: 180, forearm: 212, rotate: 90, wrist: [0, 0] },
+    bottom: { upperArm: 188, forearm: 310, rotate: 90, wrist: [0, 0] },
+    grip: { width: 0.21, sits: 'base', pole: [-0.08, 1, 0.4], level: 0 },
+    tempo: { bottom: 0.3 },
+  },
+
+  // Standing tall, as the raise stands: the seated press's line, from beside the ears to overhead,
+  // palms forward, the wrists flowing as the presses' do.
+  dumbbell_shoulder_press_standing: {
+    like: 'db_lateral_raise',
+    top: { trunk: -2, hand: [0.2, 2.06, -0.03], wrist: [0, 0], rotate: 6 },
+    bottom: { trunk: -2, hand: [0.46, 1.5, 0.03], wrist: [0, 0], rotate: 6 },
+    grip: { arc: false, across: null, sits: 'heel', pole: [1, -1, 0.1], level: 0.7 },
+    camera: { target: [0, 1.15, 0], halfHeight: 1.25, azimuth: 40, elevation: 8 },
+  },
+
+  // The standing press started with the elbows in front and the palms to the face: the forearms turn
+  // out as the dumbbells rise, so the palms face forward overhead.
+  standing_db_arnold_press: {
+    like: 'dumbbell_shoulder_press_standing',
+    bottom: { hand: [0.2, 1.5, 0.27], rotate: 172 },
+    grip: { pole: [0.2, -1, 1] },
+  },
+
+  // The seated press started with the elbows in front and the palms to the face, turning out on the
+  // way up, as the standing Arnold press does.
+  arnold_press_seated: {
+    like: 'seated_db_shoulder_press',
+    bottom: { chest: [0.26, -0.06], rotate: 172, tilt: 0, wrist: [0, 0] },
+    grip: { width: 0.21, elbows: 0.12, level: 0.7 },
+  },
+
+  // The lunge at a walking lunge's longer stride, the rep held in the step: the clip plays its
+  // lowering back to lift, so it can't travel across the floor.
+  db_walking_lunge: {
+    like: 'db_lunge',
+    top: { hip: [0.78, 0.05], trunk: 10, heel: 35 },
+    bottom: { hip: [0.52, 0.05], trunk: 13, heel: 55 },
+    feet: { front: 0.42, back: -0.38 },
+  },
+
+  // The lunge with the back foot stepped across behind the front one, sinking into the front hip.
+  db_curtsy_lunge: {
+    like: 'db_lunge',
+    top: { hip: [0.77, 0.03], heel: 36 },
+    bottom: { hip: [0.56, 0.03], heel: 50 },
+    feet: { front: 0.26, back: -0.3, cross: 0.5, hips: 0.12 },
+    camera: { target: [0.12, 0.85, 0], halfHeight: 1.05, azimuth: 150, elevation: 8 },
+    shadow: { size: [0.9, 1.8], at: [0.12, 0] },
+  },
+
+  // The 1-arm row loosened on purpose, momentum heaving a heavier bell: the trunk rocks up and twists
+  // about the spine as it comes in, the chest open to the rowing arm at the top, that shoulder hanging
+  // low and forward at the bottom. The bell travels further and comes up fast. `level` holds it near
+  // level through all that.
+  '1_arm_db_kroc_row': {
+    like: 'single_arm_db_row',
+    kit: { dumbbells: { heavy: true } },
+    top: { trunk: 60, hand: [0.27, 0.86, -0.1], offsets: { spine_01: [0, 10, 0], spine_02: [0, 10, 0], spine_03: [0, 10, 0] } },
+    bottom: { trunk: 84, hand: [0.17, 0.3, 0.33], offsets: { spine_01: [0, -10, 0], spine_02: [0, -10, 0], spine_03: [0, -10, 0] } },
+    grip: { level: 0.7, rest: [-0.2444, 0.5, 0.15] },
+    tempo: { lowering: 1.5, bottom: 0.1, lifting: 0.6, top: 0.2 },
+  },
+
+  // As the video has it: a long split, the front knee bent and the back leg near straight, the right
+  // hand over the top of the bench's near-upright back. The left upper arm stays up level with the
+  // back, and the forearm swings from hanging to straight out behind: the clip's top is the arm long.
+  // The bench stands off to the right, so its rear frame runs beside the front foot, not under it.
+  db_triceps_kickback: {
+    like: 'single_arm_db_row',
+    motion: 'arms',
+    kit: { bench: { angle: 85, hinge: -0.02, at: [-0.48, 0.8] } },
+    body: null,
+    top: { shin: 12, thigh: 52, trunk: 54, upperArm: -92, forearm: -88, rotate: 90, wrist: [0, 0], offsets: { hand_r: [80, 40, 0] } },
+    bottom: { shin: 12, thigh: 52, trunk: 54, upperArm: -92, forearm: -6, rotate: 90, wrist: [0, 0], offsets: { hand_r: [80, 40, 0] } },
+    feet: { stance: 0.14, stagger: -0.78, z: -0.31, toeOut: 8, kneesOut: 0.1 },
+    grip: { width: 0.25, rest: [-0.36, 1.285, 0.7], pole: [-0.1, 0.8, -0.8], level: 0 },
+    camera: { target: [0, 0.8, 0.15], halfHeight: 1.1, azimuth: 80, elevation: 8 },
+    shadow: { size: [1.1, 2.2], at: [-0.1, 0.15] },
+  },
+
+  // Seated against the bench's upright back, the right palm flat on the chest, its elbow turned down
+  // from under the pole the working arm needs: the left elbow points up and stays, and the forearm
+  // lowers the dumbbell behind the head until the triceps stretch.
+  '1_arm_overhead_db_triceps_extension': {
+    like: 'db_bicep_curl',
+    kit: { dumbbells: { hand: 1 }, bench: { angle: 85, hinge: -0.02 } },
+    body: { hip: [0.522, 0.15], trunk: 3 },
+    top: { upperArm: 168, forearm: 182, rotate: 90, wrist: [0, 0], offsets: { upperarm_r: [0, 0, 100], hand_r: [120, 40, 0] }, trunk: -3.7671 },
+    bottom: { upperArm: 168, forearm: 263, rotate: 90, wrist: [0, 0], offsets: { upperarm_r: [0, 0, 100], hand_r: [120, 40, 0] }, trunk: -4.2407 },
+    feet: { stance: 0.2859, z: 0.4271, toeOut: 20 },
+    grip: { width: 0.1, one: 1, rest: [0.09, 1.0, 0.3], pole: [0.02, 0.5, 1], sits: 'mid' },
+    camera: { target: [0, 1.05, 0.05], halfHeight: 1.22, azimuth: 66, elevation: 10 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
+  // The glute-ham raise on its developer (#230): kneeling on the pads, the soles on the plate, the body
+  // lowering about the knees from upright to level, the hips straight. Machine-first on a static kit.
+  glute_ham_raise: {
+    equipment: 'machine',
+    motion: 'glute_ham_raise',
+    kit: { glute_ham_raise: {} },
+    top: { lean: 0 },
+    bottom: { lean: 78 },
+    camera: { target: [0, 1.0, 0.45], halfHeight: 1.0, azimuth: 62, elevation: 8 },
+    shadow: { size: [1.6, 1.3], at: [0, 0.25] },
   },
 };

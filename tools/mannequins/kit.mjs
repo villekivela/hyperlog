@@ -20,7 +20,7 @@ export const MACHINES = {
   squat_machine: { kit: 'squat_machine', exercises: ['hack_squat', 'pendulum_squat', 'machine_squat'] },
   leg_extension: { kit: 'leg_extension', exercises: ['leg_extension'] },
   leg_curl: { kit: 'leg_curl', exercises: ['lying_leg_curl', 'seated_leg_curl'] },
-  glute_ham_raise: { kit: null, exercises: ['glute_ham_raise'] },
+  glute_ham_raise: { kit: 'glute_ham_raise', exercises: ['glute_ham_raise'] },
   pec_deck: { kit: 'pec_deck', exercises: ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'] },
   row_machine: { kit: 'row_machine', exercises: ['machine_row', 'chest_supported_machine_row'] },
   t_bar_row_machine: { kit: 't_bar_row_machine', exercises: ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'] },
@@ -28,12 +28,12 @@ export const MACHINES = {
   shoulder_press: { kit: 'shoulder_press', exercises: ['machine_shoulder_press'] },
   lateral_raise_machine: { kit: 'lateral_raise_machine', exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
   preacher_curl_machine: { kit: 'preacher_curl_machine', exercises: ['machine_preacher_curl'] },
-  dip_machine: { kit: null, exercises: ['seated_dip_machine'] },
+  dip_machine: { kit: 'dip_machine', exercises: ['seated_dip_machine'] },
   hip_machine: { kit: 'hip_machine', exercises: ['machine_hip_abduction', 'machine_adduction'] },
-  hip_thrust_machine: { kit: null, exercises: ['machine_hip_thrust'] },
+  hip_thrust_machine: { kit: 'hip_thrust_machine', exercises: ['machine_hip_thrust'] },
   calf_raise_machine: { kit: 'calf_raise_machine', exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },
   crunch_machine: { kit: null, exercises: ['machine_crunch'] },
-  shrug_machine: { kit: null, exercises: ['machine_shrug'] },
+  shrug_machine: { kit: 'shrug_machine', exercises: ['machine_shrug'] },
 };
 
 /**
@@ -90,7 +90,7 @@ export const EQUIPMENT = {
   dumbbell: ['dumbbells', 'bench'],
   cable: ['cable_tower', 'cable_column', 'cable_crossover', 'bench'],
   machine: Object.values(MACHINES).map((m) => m.kit).filter(Boolean),
-  bodyweight: ['power_rack'],
+  bodyweight: ['power_rack', 'captains_chair'],
   ez_bar: ['ez_bar'],
   trap_bar: ['trap_bar'],
   safety_bar: ['safety_bar'],
