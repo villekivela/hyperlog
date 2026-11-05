@@ -39,7 +39,7 @@ const PAD = { length: 0.3, radius: 0.07 };
 // aft between the bar and the plate, a valley between the two, so it drops in front of the plate.
 const KNEE_OUT = 0.195;
 // The strut rakes toward the tower on its way down to the knee.
-const KNEE_Z = PLANE + 0.12;
+const KNEE_Z = PLANE + 0.3;
 const LEVER_WIDTH = 0.06;
 const WEDGE_Z = PLANE + 0.04;
 const WEDGE = { length: 0.33, width: 0.1, height: 0.12, over: 0.125, in: 0.1, tilt: rad(28) };
@@ -228,7 +228,7 @@ export default recipe({
           l.arm.quaternion.setFromAxisAngle(V(0, 0, s), value - LIMITS[0]);
           l.arm.position.copy(pivot).sub(pivot.clone().applyQuaternion(l.arm.quaternion));
           span(l.grip, gripFrom, gripTo);
-          span(l.bracket, knee, mount);
+          span(l.bracket, knee.clone().setZ(PLANE), mount);
           span(l.stem, mount, grip);
           span(l.pad, padBack, padFront);
           state.joints[`arm_${k}`] = { value, origin: pivot };

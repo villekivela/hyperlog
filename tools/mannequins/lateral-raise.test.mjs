@@ -312,7 +312,7 @@ test('the whole lever is solid to the body: strut, beam, bracket and wedge', () 
     const { origin } = kit.joints[`arm_${k}`];
     assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y > origin.y), `${k}'s wedge`);
     assert.ok(solid.some((b) => b.max.z - b.min.z > 0.3 && b.max.y <= origin.y && b.max.x - b.min.x < 0.1 && b.max.y - b.min.y < 0.1), `${k}'s beam`);
-    assert.ok(solid.filter((b) => b.max.z - b.min.z < 0.2 && b.max.y - b.min.y > 0.2).length >= 1, `${k}'s strut`);
+    assert.ok(solid.some((b) => b.max.y - b.min.y > 0.2 && b.max.x - b.min.x > 0.15), `${k}'s strut`);
   }
 });
 
@@ -361,8 +361,11 @@ test('the lever rakes toward the tower as it comes down, its wedge close over th
   const kit = machine();
   for (const [k] of SIDES) {
     const { origin } = kit.joints[`arm_${k}`];
-    const reach = Math.max(...boxes(kit).filter(({ mesh }) => kit.bodies[`arm_${k}`].includes(mesh)).map(({ box: b }) => b.max.z));
-    assert.ok(reach > origin.z + 0.09, `${k}'s lever reaches ${(reach - origin.z).toFixed(2)} m toward the tower from its pivot`);
+    // Measured on the strut itself: the lever's own box takes in the wedge it carries.
+    const cores = [];
+    kit.bodies[`arm_${k}`].forEach((n) => n.traverse((o) => { if (o.userData.proxy) cores.push(new THREE.Box3().setFromObject(o, true)); }));
+    const reach = Math.max(...cores.map((b) => b.max.z));
+    assert.ok(reach > origin.z + 0.28, `${k}'s lever reaches ${(reach - origin.z).toFixed(2)} m toward the tower from its pivot`);
     assert.ok(wedgeOf(kit, k).min.y < origin.y + 0.1, `${k}'s wedge starts ${(wedgeOf(kit, k).min.y - origin.y).toFixed(2)} m over the pivot`);
   }
 });
