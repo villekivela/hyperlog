@@ -1,7 +1,7 @@
 // A seated pec deck (refs/pec_deck/ref.md): a seat and back pad in front of a column, and on the
 // column an overhead unit with a vertical axis either side, 0.4 m apart. A lever arm swings from each
-// in a horizontal plane, 0.48 m out to a pin, and a drop arm hangs from the pin to a vertical grip at
-// shoulder height, with a short horizontal grip across its foot. One weight stack stands behind the
+// in a horizontal plane, 0.48 m out to a pin, and a drop arm hangs from the pin, and a handle bent
+// out of it, in a U, makes the vertical grip at shoulder height. One weight stack stands behind the
 // column. The same grips serve the pec fly (arms swept in front of the chest) and the rear delt fly
 // (arms swept out to the sides), so nothing is adjusted between them but the seat.
 //
@@ -10,7 +10,7 @@
 // stack stays down: two arms pull it and the recipe format ties a stack to one joint.
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, basePlate, endCap, pad, part, pulley, rod, rodGeometry, rollerGeometry, seatOn, span, stackFrame, tube, turnedPart,
+  UPRIGHTS, WHEEL, basePlate, bent, endCap, pad, part, pulley, rod, rodGeometry, rollerGeometry, seatOn, span, stackFrame, tube, turnedPart,
   weightStack, wheelGeometry,
 } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
@@ -99,22 +99,20 @@ export default recipe({
       const end = rest(s);
       const foot = end.clone().setY(GRIP_Y - 0.12);
       const top = end.clone().setY(GRIP_Y + 0.12);
-      // The grip stands this far in along the lever from the drop arm, joined to it by a stub at each end.
+      // The grip stands this far in along the lever from the drop arm.
       const inward = axisOf(s).sub(end).setY(0).normalize().multiplyScalar(GRIP_OFF);
       const lever = part(rodGeometry(0.025), M.frame);
       span(lever, axisOf(s), end);
       const drop = part(rodGeometry(0.022), M.frame);
       span(drop, end, foot);
-      const vertical = part(rodGeometry(GRIP), M.vinyl, { held: true });
-      span(vertical, foot.clone().add(inward), top.clone().add(inward));
-      const stubs = [foot, top].map((from) => {
-        const stub = part(rodGeometry(GRIP), M.vinyl, { held: true });
-        span(stub, from, from.clone().add(inward));
-        return stub;
-      });
+      // One bent tube: out of the drop arm at the top, along, down the grip, and back into the arm at the foot.
+      const at = (along, y) => end.clone().addScaledVector(inward.clone().normalize(), along).setY(y);
+      const handle = bent(`pec_deck_handle:${s}`, [
+        at(0, top.y), at(0.03, top.y), at(GRIP_OFF, top.y - 0.03), at(GRIP_OFF, foot.y + 0.03), at(0.03, foot.y), at(0, foot.y),
+      ], GRIP, M.vinyl, { held: true });
       const hub = turnedPart(wheelGeometry(0.035, 0.05), M.pulley, axisOf(s), { solid: false });
       const pin = turnedPart(rollerGeometry(0.03, 0.05), M.pulley, end, { solid: false });
-      return { body: [hub, lever, pin, drop, vertical, ...stubs], point: end.clone().add(inward).setY(GRIP_Y) };
+      return { body: [hub, lever, pin, drop, handle], point: end.clone().add(inward).setY(GRIP_Y) };
     });
     return {
       parts: [...frame, ...arms.flatMap((a) => a.body)],
