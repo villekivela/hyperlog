@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { STRAIGHT, V, X, forwardOf, hanging, kneeAt, rad, shouldersOf, sideOn, spineLean, trunkUp } from './rig.mjs';
 import { benchHinge } from './recipes/bench.mjs';
+import { heldPair } from './recipes/power-rack.mjs';
 import { GRIP_LANDMARKS, holdOf } from './grip.mjs';
 import { fitted } from './fit.mjs';
 
@@ -309,6 +310,55 @@ const archOf = (arch, lean) => arch && Object.fromEntries(
   ['spine_01', 'spine_02', 'spine_03'].map((n, i) => [n, trunkUp(lean + rad(arch[i]))]),
 );
 
+/**
+ * Legs off the floor, from the hips: `thigh` swings the knee forward of the hip and `shin` the knee
+ * forward of the ankle, as standing, and `feet.point` turns the feet down from square to the shin.
+ * A foot's `support` is the plane under its own sole, since nothing bears on it.
+ */
+function freeLegs(e, s, hipC, L) {
+  const [thigh, shin] = [s.thigh ?? 0, s.shin ?? 0];
+  const point = rad(e.feet.point ?? 30);
+  const down = hanging(-shin);
+  const front = hanging(90 - shin);
+  const heading = front.clone().multiplyScalar(Math.cos(point)).addScaledVector(down, Math.sin(point));
+  const top = front.clone().multiplyScalar(Math.sin(point)).addScaledVector(down, -Math.cos(point));
+  const ankles = [-1, 1].map((side) => hipC.clone().addScaledVector(X, side * e.feet.stance)
+    .addScaledVector(hanging(thigh), L.thigh * STRAIGHT).addScaledVector(down, L.shin * STRAIGHT));
+  return {
+    ankles,
+    foot: () => ({ heading: heading.clone(), top: top.clone() }),
+    kneePole: (side) => hanging(90 + thigh).addScaledVector(X, side * (e.feet.kneesOut ?? 0)).normalize(),
+    support: (side) => ({ point: ankles[side < 0 ? 0 : 1].clone().addScaledVector(top, -L.ankleY), normal: top.clone() }),
+    offFloor: true,
+  };
+}
+
+/**
+ * Where a body held up by its hands stands, with its shoulder joints at `sh`: the hip centre, the
+ * trunk's way and the legs. `s.shrug` lifts the joints off the trunk.
+ */
+function heldBody(e, s, sh, L) {
+  const u = trunkUp(spineLean(s.trunk ?? 0, L));
+  const f = forwardOf(u);
+  const hipC = sh.clone().addScaledVector(u, -L.trunkUp).addScaledVector(f, L.trunkBack).add(V(0, -L.clavicle * Math.sin(rad(s.shrug ?? 0)), 0));
+  return {
+    hipC, u, shrug: s.shrug,
+    headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.1).normalize(),
+    ...freeLegs(e, s, hipC, L),
+  };
+}
+
+/**
+ * The pair of grips a body held up by its hands holds (`kit.power_rack.handles`): the frame's hands,
+ * the point midway between them, and how far straight arms reach up or down to that point.
+ */
+function rackHold(e, L) {
+  const { at, across } = heldPair(e.kit.power_rack.handles);
+  const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
+  const dx = Math.abs(at(1).x - at(-1).x) / 2 - L.shW;
+  return { hands: { hand: at, across }, middle: at(1).add(at(-1)).multiplyScalar(0.5), arms: Math.sqrt(Math.max(0, reach * reach - dx * dx)) };
+}
+
 export const MOTIONS = {
   /**
    * A barbell on the back, kept over the middle of the feet. Without a trunk angle, the legs bend
@@ -411,8 +461,8 @@ export const MOTIONS = {
       ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
       grip: e.grip.width,
       // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the
-      // shoulders.
-      armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
+      // shoulders. The hand on the bar outweighs it; `grip.pole` points them firmly.
+      armPole: elbowsTo(e, [e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)]),
     };
   },
 
@@ -857,6 +907,28 @@ export const MOTIONS = {
       hand: handle, across,
       armPole: elbowsTo(e, [0.5, 0.4, -1]),
     };
+  },
+
+  /**
+   * Hanging from a rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a
+   * leg raise. The shoulders hang straight-armed under `kit.power_rack.handles`, the pair of grips,
+   * and `rise` lifts them from there, `back` behind the grips.
+   */
+  hang(e, s, L) {
+    const { hands, middle, arms } = rackHold(e, L);
+    const sh = V(middle.x, middle.y - arms + s.rise, middle.z - (s.back ?? 0));
+    return { ...heldBody(e, s, sh, L), ...hands, armPole: elbowsTo(e, [0.8, -1, 0.3]) };
+  },
+
+  /**
+   * Resting on a rack's dip handles by the hands, the feet off the floor: a dip. The shoulders stand
+   * straight-armed over `kit.power_rack.handles`, the pair of grips, midway between them, and `sink`
+   * lowers them from there, `over` ahead of the grips.
+   */
+  support(e, s, L) {
+    const { hands, middle, arms } = rackHold(e, L);
+    const sh = V(middle.x, middle.y + arms - s.sink, middle.z + (s.over ?? 0));
+    return { ...heldBody(e, s, sh, L), ...hands, armPole: elbowsTo(e, [0.25, 0, -1]) };
   },
 
   /**

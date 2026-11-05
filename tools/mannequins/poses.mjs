@@ -47,11 +47,12 @@ export const POSES = {
     // a gap under the lower back. The head lies back on the pad.
     body: { hip: [0.567, 0.28], trunk: -89, head: -15, arch: [16, -16.5, -8] },
     feet: { stance: 0.325, z: 0.445, toeOut: 25 },
-    // A normal bench grip, about 1.5 shoulder widths. From locked out over the shoulders, the arms
-    // straight, to the lower chest, the elbows out under the wrists so the forearms stand vertical.
-    top: { bar: [1.1435, -0.2] },
-    bottom: { bar: [0.727, -0.09] },
-    grip: { width: 0.4, elbows: 0.9 },
+    // A normal bench grip, about 1.5 shoulder widths. From over the shoulders, the elbows soft as the
+    // owner tuned them, to the lower chest, the elbows out under the wrists so the forearms stand
+    // vertical, the wrist easing straight. Provisional: the owner's morning look settles it (#202).
+    top: { bar: [1.1297, -0.2], wrist: [0, 25] },
+    bottom: { bar: [0.727, -0.09], wrist: [0, 0] },
+    grip: { width: 0.4, elbows: 0.9, swing: 45 },
     camera: { target: [0, 0.55, 0.05], halfHeight: 0.98, azimuth: 58, elevation: 32 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
@@ -149,12 +150,13 @@ export const POSES = {
 
   // The starter program's exercises (#127, the starter batch): first poses for the owner to tune.
 
-  // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides.
+  // A bench press with the hands about shoulder width apart, the elbows tucked toward the sides:
+  // `grip.pole` holds them beside the ribs, where the wrist alone left them inside the chest.
   close_grip_bench_press: {
     like: 'barbell_bench_press',
-    top: { bar: [1.147, -0.21], wrist: [0, 27.7209] },
-    bottom: { bar: [0.7517, -0.063], wrist: [-53.1261, 18.2864], rotate: 17.6573 },
-    grip: { width: 0.3005, elbows: 0.2191 },
+    top: { bar: [1.147, -0.21] },
+    bottom: { bar: [0.7517, -0.063] },
+    grip: { width: 0.3005, elbows: 0.2191, pole: [0.05, -1, 0.55] },
   },
 
   // Two grips on the lat bar (owner): the first set wide and overhand, at 1.5 shoulder widths, the
@@ -839,6 +841,84 @@ export const POSES = {
     camera: { target: [0, 0.3, 0.05], halfHeight: 0.8, azimuth: 58, elevation: 28 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
+
+  // Hanging from the rack's bar, a little wider than the shoulders: from straight arms, the
+  // shoulders let up under the bar, to the chin over it, the chest leaning back to it.
+  pullup: {
+    equipment: 'bodyweight',
+    motion: 'hang',
+    kit: { power_rack: { handles: 'standard' } },
+    top: { rise: 0.485, back: 0.13, trunk: -8, thigh: 4, shin: 8, shrug: -12 },
+    bottom: { rise: 0.006, back: 0, trunk: 0, thigh: 2, shin: 4, shrug: 13 },
+    feet: { stance: 0.09, point: 30 },
+    grip: { pole: [0.8, -1, 0.3] },
+    camera: { target: [0, 1.4, 0.1], halfHeight: 1.45, azimuth: 150, elevation: 8 },
+  },
+
+  // On the cross tube's ends, outside the outer prongs: the hands hang the body higher, so the
+  // chin reaches the bar on less of a rise.
+  pullup_wide_grip: { like: 'pullup', kit: { power_rack: { handles: 'wide' } }, top: { rise: 0.43 }, grip: { swing: 45 } },
+  // On the cross tube hard by the inner prongs, leaning back about 15° (the library's note): the
+  // V's arms turn an overhand hand palm out.
+  close_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'narrow' } }, top: { trunk: -15 } },
+  // On the inner prongs, the palms facing.
+  neutral_grip_pullup: { like: 'pullup', kit: { power_rack: { handles: 'neutral' } }, top: { rise: 0.495 } },
+  // The pull-up's grips turned underhand, the elbows coming down in front.
+  chinup: { like: 'pullup', grip: { rotate: 180, pole: [0.3, -1, 0.6] } },
+  chinup_wide_grip: { like: 'chinup', kit: { power_rack: { handles: 'wide' } }, top: { rise: 0.43 } },
+  close_grip_chinup: { like: 'chinup', kit: { power_rack: { handles: 'close' } }, top: { rise: 0.495 } },
+
+  // A clip a grip, as the 2-grip pulldown: set 1 overhand about 1.5 shoulder widths apart on the
+  // cross tube, set 2 underhand on the V, as near shoulder width as the bar has.
+  '2_grip_pullup': {
+    like: 'pullup',
+    grips: {
+      wide: {},
+      narrow: { kit: { power_rack: { handles: 'close' } }, grip: { rotate: 180, pole: [0.3, -1, 0.6] }, top: { rise: 0.495 } },
+    },
+  },
+
+  // Held at the bottom of the pull-up: nothing moves but the hands closing.
+  dead_hang: {
+    like: 'pullup',
+    top: { rise: 0.006, back: 0, trunk: 0, thigh: 2, shin: 4, shrug: 13 },
+  },
+
+  // The arms straight and the shoulders under the bar: the legs come up straight past level, the
+  // hips swinging forward of the shoulders.
+  hanging_leg_raise: {
+    like: 'pullup',
+    top: { rise: 0.006, back: 0, trunk: -10, thigh: 108, shin: -108, shrug: 13 },
+    camera: { target: [0, 1.5, 0.3], halfHeight: 1.35, azimuth: 110, elevation: 8 },
+  },
+
+  // Between the dip handles, the back to the upright and facing out along them: from locked arms
+  // down to the elbows at about 90°, the forearms near upright and the trunk leaning forward, the
+  // knees bent and the feet behind.
+  dip: {
+    equipment: 'bodyweight',
+    motion: 'support',
+    kit: { power_rack: { handles: 'dip' } },
+    top: { sink: -0.004, over: 0, trunk: 8, thigh: 8, shin: 45, shrug: -6 },
+    bottom: { sink: 0.285, over: 0.26, trunk: 30, thigh: 12, shin: 60, shrug: 6 },
+    feet: { stance: 0.09, point: 30 },
+    grip: { pole: [0.25, 0, -1], swing: 80 },
+    camera: { target: [0, 1.3, 0], halfHeight: 1.2, azimuth: -60, elevation: 8 },
+  },
+  // Near the crosshead, the shoulders ahead of the hands so the hips clear it, the legs hanging
+  // almost straight and the upper arms behind the trunk.
+  close_grip_dip: {
+    like: 'dip',
+    kit: { power_rack: { handles: 'dipClose' } },
+    top: { sink: 0.005, over: 0.1, trunk: 4, thigh: 10, shin: 14 },
+    bottom: { over: 0.24, trunk: 22, thigh: 16, shin: 28 },
+  },
+
+  // The plain lift with a plate on a dip belt's chain.
+  weighted_pullup: { like: 'pullup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
+  weighted_chinup: { like: 'chinup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
+  '2_grip_pullup_weighted': { like: '2_grip_pullup', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
+  weighted_dip: { like: 'dip', equipment: 'weighted_bodyweight', kit: { dip_belt: {} } },
 
   // The library's first dumbbell exercises (#127, the dumbbell batch): first poses for the owner to tune.
 

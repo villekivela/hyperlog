@@ -12,7 +12,7 @@ export const withoutChoices = (tuned) => Object.fromEntries(Object.entries(tuned
 /** What a motion does that an entry may leave unsaid: a lever with a default, offered all the same. */
 export const OPTIONAL = {
   pulldown: { 'grip.elbows': 0.8, 'grip.elbowZ': -0.3, 'top.shrug': 0, 'bottom.shrug': 0 },
-  bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0] },
+  bench_press: { 'body.head': 0, 'body.arch': [0, 0, 0], 'grip.pole': [0.2, -1, 0.55] },
   dumbbell_press: { 'body.lean': 0, 'body.head': 0, 'top.rotate': 0, 'bottom.rotate': 0, 'top.tilt': 0, 'bottom.tilt': 0 },
   arms: { 'grip.rotate': 0, 'grip.pole': [0.2, -1, -0.4], 'feet.y': 0, 'feet.stagger': 0, 'top.armOut': 0, 'bottom.armOut': 0 },
   free_arms: { 'grip.rotate': 0, 'grip.pole': [1, -0.3, -0.5], 'feet.stagger': 0 },
@@ -24,12 +24,14 @@ export const OPTIONAL = {
   chest_pad: { 'grip.pole': [0.5, 0.4, -1], 'body.look': -0.3, 'feet.kneesOut': 0.2 },
   bridge: { 'body.head': 0, 'grip.pole': [0.6, -1, 0.2], 'feet.kneesOut': 0.2 },
   hinge: { 'top.shrug': 0, 'bottom.shrug': 0, 'feet.y': 0 },
+  hang: { 'body.look': 0.1, 'feet.kneesOut': 0 },
+  support: { 'body.look': 0.1, 'feet.kneesOut': 0 },
   // A back squat's elbows, [out, up, forward]: down and back by default, as the motion has them.
   squat: { 'feet.y': 0, 'grip.spot': [0.02, 0.06, 0.07], 'grip.pole': [0.3, -1, -0.8] },
 };
 
 const SKIP = new Set(['camera', 'shadow', 'trace', 'tempo', 'like', 'bench']);
-const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'armOut', 'leg', 'turn', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel']);
+const DEGREES = new Set(['wrist', 'trunk', 'thigh', 'shin', 'upperArm', 'forearm', 'armOut', 'leg', 'turn', 'head', 'toeOut', 'knee', 'arch', 'shrug', 'tilt', 'lean', 'ankle', 'angle', 'lever', 'levers', 'heel', 'point']);
 const RATIOS = new Set(['elbows', 'elbowZ', 'kneesOut', 'press', 'pole']);
 
 const isNumber = (v) => typeof v === 'number';
@@ -56,7 +58,7 @@ const STRAIGHT_WRIST = [0, 0];
 export const baseAt = (entry, path) => valueAt(entry, path) ?? OPTIONAL[entry.motion]?.[path]
   ?? (entry.grip && /^(top|bottom)\.wrist$/.test(path) ? STRAIGHT_WRIST : undefined)
   ?? (OFFSET.test(path) ? NO_OFFSET : undefined)
-  ?? (OFFSET.test(path.replace(/\.[012]$/, '')) ? 0 : undefined);
+  ?? (/\.\d+$/.test(path) ? baseAt(entry, path.replace(/\.\d+$/, ''))?.[Number(path.split('.').at(-1))] : undefined);
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 

@@ -3,7 +3,8 @@
 // - hands: each hand holds its grip, the point across the palm within 1.5 cm of it, and no finger
 //   folds into the next (their joints at least 1.3 cm apart);
 // - feet: each foot is planted where the pose puts it, flat on the floor or the plate it stands
-//   on, ankle and ball at their standing heights within 2 cm;
+//   on, ankle and ball at their standing heights within 2 cm; a body held up by its hands keeps
+//   its feet at least 2 cm off the floor;
 // - equipment: no part of the body is more than 2 cm inside a solid part of the kit (only the
 //   hands close round what they hold), and never through a thin one, nor more than 1.5 cm into the
 //   floor; every cable ends within 1 cm of its handle's hook, and stays 2 cm clear of the head and
@@ -33,7 +34,7 @@ import { contactOf, holdsNothing, partUnder } from './grip.mjs';
 export const CHECKS = ['hands', 'feet', 'equipment', 'joints', 'trace', 'contact', 'linkage'];
 
 const LIMITS = {
-  grip: 0.015, fingers: 0.013, foot: 0.02, inside: 0.02, floor: 0.015, wrist: 5, cable: 0.01, rack: 0.015,
+  grip: 0.015, fingers: 0.013, foot: 0.02, offFloor: 0.02, inside: 0.02, floor: 0.015, wrist: 5, cable: 0.01, rack: 0.015,
   bend: 155, kneeTurn: 60, hipFlex: 140, hipExtend: 30, head: 60, ankle: [55, 160], trace: 10,
   contact: 0.002,
   // The palm's skin is measured on a grid over large triangles, so it is held to a little more.
@@ -300,6 +301,12 @@ export function checkStage(entry, { rig, kit, pose }, frames = FRAMES) {
     vertices.forEach((b, i) => {
       if (skinned[i].y < 0) note('equipment', -skinned[i].y - LIMITS.floor, f, `${b.bone} ${(-skinned[i].y * 100).toFixed(1)} cm into the floor`);
     });
+    // A body held up by its hands bears on nothing: its feet stay clear of the floor.
+    if (P.offFloor) {
+      vertices.forEach((b, i) => {
+        if (LIMBS.feet.test(b.bone)) note('feet', LIMITS.offFloor - skinned[i].y, f, `${b.bone} ${(skinned[i].y * 100).toFixed(1)} cm off the floor`);
+      });
+    }
     for (const s of parts) {
       const near = new THREE.Box3().setFromObject(s.mesh).expandByScalar(0.01);
       const inverse = s.mesh.matrixWorld.clone().invert();

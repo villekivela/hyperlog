@@ -11,12 +11,19 @@ import { POSES } from './poses.mjs';
 import { holdOf } from './grip.mjs';
 
 const byPath = (list) => Object.fromEntries(list.map((t) => [t.path, t]));
+/** Pose `id` as if its entry set no wrist. */
+const withNoWrist = (id) => {
+  const entry = structuredClone(prepare(id));
+  delete entry.top.wrist;
+  delete entry.bottom.wrist;
+  return entry;
+};
 
 test('the bench press offers its own numbers, points one element at a time, and not the camera', () => {
   const t = byPath(tunables(prepare('barbell_bench_press')));
   assert.equal(t['grip.width'].value, 0.4);
   assert.equal(t['feet.z'].value, 0.445);
-  assert.equal(t['top.bar.0'].value, 1.1435);
+  assert.equal(t['top.bar.0'].value, 1.1297);
   assert.equal(t['body.arch.1'].value, -16.5);
   assert.ok(!Object.keys(t).some((p) => p.startsWith('camera') || p.startsWith('shadow')));
   // Metres, degrees and ratios get ranges that suit them.
@@ -48,7 +55,7 @@ test('tuned values go into a copy, arrays whole, and the entry is untouched', ()
   assert.deepEqual(tuned.top.bar, [1.2, -0.2]);
   assert.equal(tuned.grip.elbowZ, 0.5);
   assert.equal(entry.grip.width, 0.4);
-  assert.deepEqual(entry.top.bar, [1.1435, -0.2]);
+  assert.deepEqual(entry.top.bar, [1.1297, -0.2]);
 });
 
 // The studio's h and l step a number by one step, H and L by a tenth of one (owner, 2026-11-03).
@@ -100,7 +107,7 @@ test('every pose offers its grip\'s turn at the top and the bottom, each from gr
 // The owner, #127: on a pose whose entry sets no wrist (close_grip_bench_press, then), the wrist
 // sliders did nothing, since there was no point to put the one number into.
 test('a wrist slider moved on a pose that sets no wrist puts the whole wrist in, from straight', () => {
-  const entry = prepare('barbell_bench_press');
+  const entry = withNoWrist('barbell_bench_press');
   assert.deepEqual(withTuned(entry, {}, 'top.wrist.1', -15), { 'top.wrist': [0, -15] });
   assert.deepEqual(withTuned(entry, { 'top.wrist': [0, -15] }, 'top.wrist.0', 10), { 'top.wrist': [10, -15] });
   // Back at straight, it comes out again.
@@ -227,6 +234,19 @@ test('a thumb\'s swing is an angle: a degree a step, 0 to 90, and every value th
   assert.equal(held(90), 90);
   // A drag or a fine step lands between degrees: the hand takes the nearest whole one.
   assert.equal(held(52.37), 52);
+});
+
+test('resetting a number of a point the entry leaves unset takes it back, and its slider stays', () => {
+  const entry = withNoWrist('barbell_bench_press');
+  const listed = (tuned) => tunables(applyTuned(entry, tuned)).map((n) => n.path);
+  for (const path of ['top.wrist.0', 'top.wrist.1', 'bottom.wrist.0', 'bottom.wrist.1']) {
+    const moved = withTuned(entry, {}, path, 7);
+    assert.ok(Object.keys(moved).length, `${path} moved nothing`);
+    assert.equal(baseAt(entry, path), 0, `${path} starts straight`);
+    const back = withTuned(entry, moved, path, baseAt(entry, path));
+    assert.deepEqual(back, {}, `${path} left something tuned`);
+    assert.ok(listed(back).includes(path), `${path} has no slider after a reset`);
+  }
 });
 
 test('Tune offers no slider for which tower, ankle or foot a lift uses: each is a choice, not a place', () => {

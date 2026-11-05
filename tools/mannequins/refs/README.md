@@ -23,7 +23,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 1 | [`t_bar_row_machine`](t_bar_row_machine/ref.md) | 3 | Titan Chest-Supported T-Bar Row (adjustable); built (#176), posed (#188) |
 | 2 | [`cable_crossover`](cable_crossover/ref.md) | 25 | Rogue CC-1 Cable Crossover; built (#181), 19 not yet posed on it (6 are posed on `cable_column`) |
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°); built (#182), not yet posed |
-| 4 | [`power_rack`](power_rack/ref.md) | 16 | Rogue Monster Lite Rack (RML-390BT) with the Rogue Crown Pull-up Bar and Monster Lite Matador dip handles as add-ons; built (#189, named the pull-up and dip station in the issue), not yet posed |
+| 4 | [`power_rack`](power_rack/ref.md) | 16 | Rogue Monster Lite Rack (RML-390BT) with the Rogue Crown Pull-up Bar and Monster Lite Matador dip handles as add-ons; built (#189, named the pull-up and dip station in the issue), posed (#196) |
 | 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar; built (#209), not yet posed |
 | 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY); built (#208), not yet posed |
 | 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise; built (#212, seated only), not yet posed |

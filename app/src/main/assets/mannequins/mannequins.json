@@ -126,6 +126,115 @@
         }
       ]
     },
+    "2_grip_pullup": {
+      "clip": "2_grip_pullup_wide.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ],
+      "grips": [
+        {
+          "name": "wide",
+          "clip": "2_grip_pullup_wide.glb",
+          "camera": {
+            "target": [
+              0,
+              1.4,
+              0.1
+            ],
+            "halfHeight": 1.45,
+            "azimuth": 150,
+            "elevation": 8
+          }
+        },
+        {
+          "name": "narrow",
+          "clip": "2_grip_pullup_narrow.glb",
+          "camera": {
+            "target": [
+              0,
+              1.4,
+              0.1
+            ],
+            "halfHeight": 1.45,
+            "azimuth": 150,
+            "elevation": 8
+          }
+        }
+      ]
+    },
+    "2_grip_pullup_weighted": {
+      "clip": "2_grip_pullup_weighted_wide.glb",
+      "equipment": "weighted_bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dip_belt.bin",
+        "kit_power_rack.bin"
+      ],
+      "grips": [
+        {
+          "name": "wide",
+          "clip": "2_grip_pullup_weighted_wide.glb",
+          "camera": {
+            "target": [
+              0,
+              1.4,
+              0.1
+            ],
+            "halfHeight": 1.45,
+            "azimuth": 150,
+            "elevation": 8
+          }
+        },
+        {
+          "name": "narrow",
+          "clip": "2_grip_pullup_weighted_narrow.glb",
+          "camera": {
+            "target": [
+              0,
+              1.4,
+              0.1
+            ],
+            "halfHeight": 1.45,
+            "azimuth": 150,
+            "elevation": 8
+          }
+        }
+      ]
+    },
     "back_squat_high_bar": {
       "clip": "back_squat_high_bar.glb",
       "equipment": "barbell",
@@ -849,6 +958,54 @@
         "kit_t_bar_row_machine.bin"
       ]
     },
+    "chinup": {
+      "clip": "chinup.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
+    "chinup_wide_grip": {
+      "clip": "chinup_wide_grip.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
     "close_grip_bench_press": {
       "clip": "close_grip_bench_press.glb",
       "equipment": "barbell",
@@ -874,6 +1031,54 @@
         "kit_bench.bin"
       ]
     },
+    "close_grip_chinup": {
+      "clip": "close_grip_chinup.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
+    "close_grip_dip": {
+      "clip": "close_grip_dip.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.3,
+          0
+        ],
+        "halfHeight": 1.2,
+        "azimuth": -60,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
     "close_grip_lat_pulldown": {
       "clip": "close_grip_lat_pulldown.glb",
       "equipment": "cable",
@@ -896,6 +1101,30 @@
       "resources": [
         "mannequin.bin",
         "kit_cable_tower.bin"
+      ]
+    },
+    "close_grip_pullup": {
+      "clip": "close_grip_pullup.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
       ]
     },
     "db_bench_press": {
@@ -1217,6 +1446,30 @@
         "kit_dumbbells.bin"
       ]
     },
+    "dead_hang": {
+      "clip": "dead_hang.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
     "deadlift": {
       "clip": "deadlift.glb",
       "equipment": "barbell",
@@ -1291,6 +1544,30 @@
         "kit_platform.bin"
       ]
     },
+    "dip": {
+      "clip": "dip.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.3,
+          0
+        ],
+        "halfHeight": 1.2,
+        "azimuth": -60,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
     "floor_press": {
       "clip": "floor_press.glb",
       "equipment": "barbell",
@@ -1361,6 +1638,30 @@
       "resources": [
         "mannequin.bin",
         "kit_squat_machine.bin"
+      ]
+    },
+    "hanging_leg_raise": {
+      "clip": "hanging_leg_raise.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.5,
+          0.3
+        ],
+        "halfHeight": 1.35,
+        "azimuth": 110,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
       ]
     },
     "high_cable_lateral_raise": {
@@ -1603,6 +1904,30 @@
         "kit_pulldown_machine.bin"
       ]
     },
+    "neutral_grip_pullup": {
+      "clip": "neutral_grip_pullup.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
     "overhead_cable_triceps_extension": {
       "clip": "overhead_cable_triceps_extension.glb",
       "equipment": "cable",
@@ -1625,6 +1950,54 @@
       "resources": [
         "mannequin.bin",
         "kit_cable_column.bin"
+      ]
+    },
+    "pullup": {
+      "clip": "pullup.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
+      ]
+    },
+    "pullup_wide_grip": {
+      "clip": "pullup_wide_grip.glb",
+      "equipment": "bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_power_rack.bin"
       ]
     },
     "reverse_cable_crossover": {
@@ -1920,6 +2293,81 @@
       "resources": [
         "mannequin.bin",
         "kit_cable_tower.bin"
+      ]
+    },
+    "weighted_chinup": {
+      "clip": "weighted_chinup.glb",
+      "equipment": "weighted_bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dip_belt.bin",
+        "kit_power_rack.bin"
+      ]
+    },
+    "weighted_dip": {
+      "clip": "weighted_dip.glb",
+      "equipment": "weighted_bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.3,
+          0
+        ],
+        "halfHeight": 1.2,
+        "azimuth": -60,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dip_belt.bin",
+        "kit_power_rack.bin"
+      ]
+    },
+    "weighted_pullup": {
+      "clip": "weighted_pullup.glb",
+      "equipment": "weighted_bodyweight",
+      "camera": {
+        "target": [
+          0,
+          1.4,
+          0.1
+        ],
+        "halfHeight": 1.45,
+        "azimuth": 150,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_dip_belt.bin",
+        "kit_power_rack.bin"
       ]
     }
   }

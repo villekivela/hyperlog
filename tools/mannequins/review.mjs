@@ -46,6 +46,11 @@ export const BATCHES = {
   ],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
+  // The power rack's pull-ups, chin-ups, hangs and dips, the feet off the floor (#196).
+  'power-rack': [
+    'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
+    'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
+  ],
   // The library's first dumbbell exercises (#127), ahead of the rest of the barbell ones (owner).
   dumbbell: [
     'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',

@@ -202,7 +202,7 @@ One piece from the kits' shared library that a recipe places: tubing with its ca
 _Avoid_: Component, mesh
 
 **Body**:
-A piece of a recipe that moves as one: on a joint (a lever, a sled, a stack), or free, on no joint, where the hands carry it (a barbell, a cable's attachment).
+A piece of a recipe that moves as one: on a joint (a lever, a sled, a stack), or free, on no joint, where the mannequin carries it (a barbell, a cable's attachment, a dip belt's plate).
 _Avoid_: Link, moving part
 
 **Joint**:
