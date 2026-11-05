@@ -1201,4 +1201,16 @@ export const POSES = {
     camera: { target: [0, 1.05, 0.05], halfHeight: 1.22, azimuth: 66, elevation: 10 },
     shadow: { size: [0.9, 1.8], at: [0, 0.1] },
   },
+
+  // The glute-ham raise on its developer (#230): kneeling on the pads, the soles on the plate, the body
+  // lowering about the knees from upright to level, the hips straight. Machine-first on a static kit.
+  glute_ham_raise: {
+    equipment: 'machine',
+    motion: 'glute_ham_raise',
+    kit: { glute_ham_raise: {} },
+    top: { lean: 0 },
+    bottom: { lean: 78 },
+    camera: { target: [0, 1.0, 0.45], halfHeight: 1.0, azimuth: 62, elevation: 8 },
+    shadow: { size: [1.6, 1.3], at: [0, 0.25] },
+  },
 };

@@ -51,6 +51,8 @@ export const BATCHES = {
     'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
     'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
   ],
+  // The glute-ham developer's one exercise (#230), kneeling on its pads with the ankles in its rollers.
+  'glute-ham-raise': ['glute_ham_raise'],
   // The library's first dumbbell exercises (#127), ahead of the rest of the barbell ones (owner).
   dumbbell: [
     'db_bench_press', 'seated_db_shoulder_press', 'db_bicep_curl', 'db_hammer_curl', 'db_lateral_raise', 'db_flye',

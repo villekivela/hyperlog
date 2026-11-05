@@ -1,0 +1,81 @@
+{
+  "sources": [
+    "technique video psdbgvbdd_M at 0:04.5 (top) and 0:09.5 (bottom)",
+    "refs/glute_ham_raise/ref.md, Motion: about 90° of knee at the top to 0-10° at the bottom; the hip doesn't flex",
+    "exercises.json: keep your hips straight"
+  ],
+  "lines": [
+    {
+      "says": "the knees go from bent about 90°, thighs upright, to nearly straight, the body level",
+      "moves": "knee_*",
+      "ends": [
+        [
+          85,
+          112
+        ],
+        [
+          158,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the hips stay straight: the thigh and the trunk make one line through the rep",
+      "moves": "hip_*",
+      "ends": [
+        [
+          150,
+          180
+        ],
+        [
+          150,
+          180
+        ]
+      ]
+    },
+    {
+      "says": "the hip angle holds: the hamstrings work, not a hinge at the hips",
+      "still": "hip_*",
+      "within": 15
+    },
+    {
+      "says": "the feet stay planted on the plate",
+      "still": "ankle_*.at",
+      "within": 0.01
+    },
+    {
+      "says": "the hips travel forward and down about the knees as the body lowers",
+      "travels": "pelvis.at",
+      "least": 0.35
+    },
+    {
+      "says": "the arms hang and take no load",
+      "never": "elbow_*",
+      "past": 175
+    },
+    {
+      "says": "the knees rest on the pads at the top, the thighs along them at the bottom",
+      "look": "pads",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the ankles sit between the rollers and the soles are flat on the plate",
+      "look": "ankles",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    },
+    {
+      "says": "the body lowers as one straight line, the head in line with the spine",
+      "look": "line",
+      "at": [
+        "ends"
+      ],
+      "view": "side"
+    }
+  ]
+}
