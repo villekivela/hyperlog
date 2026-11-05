@@ -928,7 +928,7 @@ export const MOTIONS = {
     const phi = Math.atan2(-shin.y, shin.z);
     const toeOut = rad(e.feet.toeOut ?? 0);
     // The sole lies on a plane tilted `feet.dorsi` degrees from square to the shin, the toes lifted toward the knee.
-    const dorsi = rad(e.feet.dorsi ?? 35);
+    const dorsi = rad(e.feet.dorsi ?? 20);
     const square = sideOn(phi - Math.PI / 2);
     const heading = square.clone().multiplyScalar(Math.cos(dorsi)).addScaledVector(shin.clone().negate(), Math.sin(dorsi));
     const top = shin.clone().negate().multiplyScalar(Math.cos(dorsi)).addScaledVector(square, -Math.sin(dorsi));
@@ -941,7 +941,7 @@ export const MOTIONS = {
       support: (side) => ({ point: ankles[side < 0 ? 0 : 1].clone().addScaledVector(top, -L.ankleY), normal: top.clone() }),
       offFloor: true,
       hand: handle, across,
-      armPole: elbowsTo(e, [0.8, 0.8, 0.3]),
+      armPole: elbowsTo(e, [0.5, 1, 0.3]),
     };
   },
 

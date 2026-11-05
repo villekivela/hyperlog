@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import {
-  UPRIGHTS, WHEEL, basePlate, endCap, hub, mitered, padGeometry, part, pivotJoint, pulley, rod, rollerGeometry, span, stackFrame, tube,
+  UPRIGHTS, WHEEL, basePlate, endCap, hub, mitered, padGeometry, part, pivotJoint, pulley, rod, rollerGeometry, span, tube,
   turnedPart, weightStack, wheelGeometry, wire,
 } from '../parts.mjs';
 import { V, X, forwardOf, rad } from '../rig.mjs';
@@ -26,6 +26,9 @@ const at = (x, y, z) => V(x, y, -z);
 
 // From rest, the back pad level, through 40° of curl (the ref's Motion).
 const LIMITS = [0, rad(40)];
+// At rest the back pad is tilted 12° up toward the head, carrying on the seat's incline as the demo's rest frame shows it,
+// and curls to about 52° from level: the ref's 40° is the arm's travel from there.
+const REST = rad(12);
 // The cam axis, 780 mm up beside the waist, on the machine's left, the far side from the demo's camera: the arm turns on a hub 270 mm out from the
 // middle, outside the lifter's hips, and reaches in under the back pad (the photo and the demo show the arm and
 // the cam on one side only, the far one).
@@ -35,27 +38,33 @@ const HUB = at(SIDE, 0.78, 0);
 // The seat: 600 mm long and 360 wide, inclined 15° rising toward the head, its high end's top 530 mm up
 // 40 mm toward the feet from the axis.
 const INCLINE = rad(15);
-const SEAT = { length: 0.62, width: 0.36, thick: 0.1, highZ: 0.02, highY: 0.53 };
+const SEAT = { length: 0.74, width: 0.36, thick: 0.1, highZ: 0.14, highY: 0.53 };
 // Up out of the seat's face, and up along it toward the head.
 const SEAT_UP = V(0, Math.cos(INCLINE), Math.sin(INCLINE));
 const SEAT_ALONG = V(0, Math.sin(INCLINE), -Math.cos(INCLINE));
 /** The seat's face `s` metres down it from its high end. */
 const seatAt = (s) => at(0, SEAT.highY, SEAT.highZ).addScaledVector(SEAT_ALONG, -s);
 /** How far down the seat from its high end the hips lie. */
-const HIPS_ON = 0.16;
+const HIPS_ON = 0.17;
 /**
  * How far the hip centre stands off the seat's face, lying on it: the skin's depth behind the spine's line,
  * less the 80 mm the pelvis stands nearer than the back does (measured on the mannequin, `crunch-machine.test.mjs`).
  */
 const hipDepth = (L) => L.back - 0.08;
 // The arm, built in its own frame about the axis at rest: z toward the head, y up, the back pad's face
-// level 120 mm under the axis (660 mm up), 430 mm long from 100 mm out, a head pad 50 mm above it at the far end.
-const BACK = { from: 0.17, length: 0.38, width: 0.34, thick: 0.11, top: -0.12 };
-const HEAD = { z: 0.61, length: 0.12, width: 0.26, thick: 0.09, raised: 0.06 };
+// 120 mm under the axis (660 mm up), 430 mm long from 100 mm out, a head pad 50 mm above it at the far end.
+const BACK = { from: 0.10, length: 0.38, width: 0.34, thick: 0.11, top: -0.26 };
+const HEAD = { z: 0.57, length: 0.12, width: 0.26, thick: 0.09, raised: 0.06 };
 // The arm's tube runs under the pad's board.
 const ARM = { y: BACK.top - BACK.thick - 0.012 - 0.035 };
-// The handles stand 200 mm tall either side of the head pad, 400 mm apart.
-const HANDLE = { x: 0.2, length: 0.2, radius: 0.016, z: 0.6, from: BACK.top - 0.05 };
+// The handles: a dark foam grip 200 mm long, 32 mm across, on a 70 mm silver stem from the pad's corner, either side of the head
+// pad, 400 mm apart, leaning 18° from upright toward the head, as the photo and the demo show them. The fist closes on the
+// grip's upper half.
+const HANDLE = { x: 0.2, stem: 0.07, length: 0.2, radius: 0.016, z: 0.6, from: BACK.top - 0.03, lean: rad(18) };
+/** Up the handle's axis, toward the head as it leans. */
+const UP_HANDLE = at(0, Math.cos(HANDLE.lean), Math.sin(HANDLE.lean));
+/** The point `d` metres up the axis of the handle on side `s`, in the arm's frame. */
+const onHandle = (s, d) => at(s * HANDLE.x, HANDLE.from, HANDLE.z).addScaledVector(UP_HANDLE, d);
 // The cam, a 250 mm disc outside the upright, on the far side from the camera in the ref's photo;
 // the cable leaves its rim up and toward the feet.
 const CAM = { x: -0.405, radius: 0.25, rim: at(-0.405, 0.17, -0.18) };
@@ -69,20 +78,20 @@ const STACK_X = -0.24;
 const FRAME_TOP = 1.365;
 // The cam winds the cable 250 mm a radian.
 const RATIO = CAM.radius;
-// The hand lies up the handle, thumb end up, tipped a little in and toward the feet end: the way the wrist stays
-// straight on a vertical handle from forearms that come in from the elbows out beside the head.
-const HOLD = V(0.4, 1, 0.4).normalize();
+// The bar lies up the handle in the hand, tipped a little toward the feet end, which keeps the wrist straight on a handle that
+// leans toward the head from forearms that come down beside it; the pose turns the hold 180° about the forearm (`grip.rotate`).
+const HOLD = V(0.15, 1, 0.38).normalize();
 /** Where the ankles hook, between the pairs of rollers, just toward the hips from the front frame. */
 const ANKLES = at(0, (FRONT.rollers[0] + FRONT.rollers[1]) / 2, FRONT.z + FRONT.roller * 2 + 0.01);
 
 /** A point in the arm's frame, in the world with the arm turned `value` about the axis. */
-const turned = (p, value) => p.clone().applyAxisAngle(X, value).add(PIVOT);
+const turned = (p, value) => p.clone().applyAxisAngle(X, value + REST).add(PIVOT);
 /** The arm's back pad's face, at `value`: a point on it at `along` metres from the axis along the pad, and its up. */
 const padAt = (along, value) => turned(at(0, BACK.top, along), value);
-const padUp = (value) => V(0, 1, 0).applyAxisAngle(X, value);
+const padUp = (value) => V(0, 1, 0).applyAxisAngle(X, value + REST);
 
 /** How far the upper back's skin stands off the spine's line, lying on the pad: the rig's depth and the 40 mm the shoulder blades add (measured, `crunch-machine.test.mjs`). */
-const backDepth = (L) => L.back + 0.04;
+const backDepth = (L) => L.back + 0.02;
 
 /**
  * The side-on direction of the trunk, hips to head, for a body whose hips are at `hipC` lying on the
@@ -132,11 +141,11 @@ export default recipe({
       hip: [hipC.y, hipC.z],
       at: (value) => {
         const { u } = trunkAt(hipC, value, L);
-        const grip = (s) => turned(at(s * HANDLE.x, HANDLE.from + HANDLE.length / 2, HANDLE.z), value);
+        const grip = (s) => turned(onHandle(s, HANDLE.stem + HANDLE.length * 0.65), value);
         return {
           handle: grip,
           // The hand lies up the handle, thumb end up as the arm turns.
-          across: (side) => HOLD.clone().multiply(V(side, 1, 1)).applyAxisAngle(X, value),
+          across: (side) => HOLD.clone().multiply(V(side, 1, 1)).applyAxisAngle(X, value + REST),
           spine: u,
           ankle: ANKLES.clone(),
         };
@@ -165,18 +174,25 @@ export default recipe({
       tube(0.07, at(STACK_X - UPRIGHTS - 0.03, 0.035, STACK_Z), at(0.06, 0.035, STACK_Z), M.frame),
       ...[-1, 1].flatMap((s) => [endCap(s * 0.42, 0, M), endCap(s * 0.3, -FRONT.z, M), endCap(s < 0 ? STACK_X - UPRIGHTS - 0.03 : 0.06, -STACK_Z, M)]),
     ];
-    // The seat on two rear posts and a diagonal from the front crossbar's middle up under it.
+    // The seat on a runner across the floor under its legs: each leg runs from the runner up to the seat's underside and
+    // bends there, mitered, into a rail along the incline; a diagonal from the front crossbar's middle meets a cross rail.
+    const legZ = -0.12;
+    const railEnd = -0.5;
     const seatFrame = [
-      ...[-1, 1].flatMap((s) => [tube(0.06, at(s * 0.15, 0.07, -0.12), at(s * 0.15, under(-0.12) + 0.01, -0.12), M.frame), basePlate(s * 0.15, 0.12, M)]),
-      tube(0.08, at(0, 0.07, FRONT.z + 0.04), at(0, under(-0.4) + 0.01, -0.4), M.frame),
+      tube(0.07, at(-0.2, 0.035, legZ), at(0.2, 0.035, legZ), M.frame),
+      ...[-1, 1].map((s) => mitered([
+        at(s * 0.15, 0.035, legZ), at(s * 0.15, under(legZ) - 0.03, legZ), at(s * 0.15, under(railEnd) - 0.03, railEnd),
+      ], 0.06, M.frame)),
+      tube(0.06, at(-0.15, under(railEnd) - 0.03, railEnd), at(0.15, under(railEnd) - 0.03, railEnd), M.frame),
+      tube(0.08, at(0, 0.035, FRONT.z + 0.04), at(0, under(railEnd) - 0.03, railEnd), M.frame),
     ];
     // The two uprights at the axis, and the axle through them, fixed; the arm turns on it.
-    const posts = [tube(0.08, at(POST.x, 0.07, 0), at(POST.x, POST.top, 0), M.frame), basePlate(POST.x, 0, M)];
+    const posts = [tube(0.08, at(POST.x, 0.035, 0), at(POST.x, POST.top, 0), M.frame)];
     const joint = pivotJoint(M, HUB, X);
     const axle = rod(0.014, HUB.clone().setX(SIDE + 0.05), HUB.clone().setX(CAM.x - 0.03), M.metal);
     // The front frame: a post that curves forward at its foot in two bends, like the photo's, its rollers' axles through it, a roller either side of each.
     const front = [
-      mitered([at(0, 0.07, FRONT.z + 0.3), at(0, 0.22, FRONT.z + 0.1), at(0, 0.4, FRONT.z), at(0, FRONT.rollers[1] + 0.12, FRONT.z)], 0.09, M.frame),
+      mitered([at(0, 0.035, FRONT.z + 0.3), at(0, 0.22, FRONT.z + 0.1), at(0, 0.4, FRONT.z), at(0, FRONT.rollers[1] + 0.12, FRONT.z)], 0.09, M.frame),
       basePlate(0, -FRONT.z, M),
     ];
     const rollers = FRONT.rollers.flatMap((y) => [
@@ -193,8 +209,12 @@ export default recipe({
     const drop = wire(M);
     const camCable = wire(M);
     camCable.userData.role = 'cable';
-    const frameOfStack = stackFrame(-STACK_Z, FRAME_TOP, M);
-    frameOfStack.forEach((m) => { m.position.x += STACK_X; });
+    // The stack's frame: an upright either side joined across the top, one mitred length.
+    const sz = -STACK_Z;
+    const frameOfStack = [
+      mitered([V(STACK_X - UPRIGHTS, 0.035, sz), V(STACK_X - UPRIGHTS, FRAME_TOP, sz), V(STACK_X + UPRIGHTS, FRAME_TOP, sz), V(STACK_X + UPRIGHTS, 0.035, sz)], 0.07, M.frame),
+      ...[-1, 1].map((k) => basePlate(STACK_X + k * UPRIGHTS, sz, M)),
+    ];
     const stackParts = [...frameOfStack, ...pulley(wheel, M), basePlate(STACK_X, -STACK_Z, M), ...weights.parts, drop, camCable];
 
     // The arm, built in its frame about the axis, at rest.
@@ -211,10 +231,14 @@ export default recipe({
     backBoard.userData.role = undefined;
     const headPad = padPart(HEAD.width, HEAD.thick, HEAD.length, at(0, BACK.top + HEAD.raised - HEAD.thick / 2, HEAD.z), M.vinyl, 0.02, 'headPad');
     const handles = [-1, 1].map((s) => {
-      const h = rod(HANDLE.radius, PIVOT.clone().add(at(s * HANDLE.x, HANDLE.from, HANDLE.z)), PIVOT.clone().add(at(s * HANDLE.x, HANDLE.from + HANDLE.length, HANDLE.z)), M.vinyl, { held: true });
+      const h = rod(HANDLE.radius, PIVOT.clone().add(onHandle(s, HANDLE.stem)), PIVOT.clone().add(onHandle(s, HANDLE.stem + HANDLE.length)), M.vinyl, { held: true });
       h.userData.role = 'handle';
       return h;
     });
+    const stems = [-1, 1].flatMap((s) => [
+      rod(0.012, PIVOT.clone().add(onHandle(s, 0)), PIVOT.clone().add(onHandle(s, HANDLE.stem)), M.metal),
+      rod(0.019, PIVOT.clone().add(onHandle(s, HANDLE.stem + HANDLE.length)), PIVOT.clone().add(onHandle(s, HANDLE.stem + HANDLE.length + 0.012)), M.metal),
+    ]);
     const cross = ARM.y + 0.03;
     arm.add(
       // The housing on the axle, a shaft out to the cam on the right, and the cam.
@@ -222,10 +246,10 @@ export default recipe({
       part(wheelGeometry(CAM.radius, 0.03), M.metal, { solid: true }).translateX(CAM.x).translateY(PIVOT.y),
       hub(M, HUB.clone()),
       // The arm: down from the hub, in under the back pad, then along it to the head pad.
-      tube(0.07, HUB.clone().add(at(0, -0.02, 0)), HUB.clone().add(at(0, ARM.y, 0.08)), M.metal),
-      tube(0.07, HUB.clone().add(at(0, ARM.y, 0.08)), PIVOT.clone().add(at(0, ARM.y, 0.16)), M.metal),
-      tube(0.07, PIVOT.clone().add(at(0, ARM.y, 0.16)), PIVOT.clone().add(at(0, ARM.y, HEAD.z + HEAD.length / 2 - 0.02)), M.metal),
-      backPad, backBoard, headPad, ...handles,
+      // Down from the hub, along beside the seat's end (outside its width), then in under the pad's near end and on to the head pad.
+      mitered([HUB.clone().add(at(0, -0.02, 0)), HUB.clone().add(at(0, ARM.y, 0.04)), HUB.clone().add(at(0, ARM.y, 0.2))], 0.07, M.metal),
+      mitered([HUB.clone().add(at(0, ARM.y, 0.2)), PIVOT.clone().add(at(0, ARM.y, 0.27)), PIVOT.clone().add(at(0, ARM.y, HEAD.z + HEAD.length / 2 - 0.02))], 0.07, M.metal),
+      backPad, backBoard, headPad, ...handles, ...stems,
       // The handles' bracket, a U under the head pad from one handle's foot to the other's.
       mitered([
         at(-HANDLE.x, BACK.top - 0.03, HANDLE.z), at(-HANDLE.x, cross, HANDLE.z - 0.02), at(HANDLE.x, cross, HANDLE.z - 0.02), at(HANDLE.x, BACK.top - 0.03, HANDLE.z),
@@ -257,12 +281,12 @@ export default recipe({
       drive(P) {
         const value = P.linkage?.value ?? LIMITS[0];
         arm.position.copy(PIVOT);
-        arm.rotation.set(value, 0, 0);
+        arm.rotation.set(value + REST, 0, 0);
         layCable();
         return {
           joints: { arm: { value, origin: PIVOT.clone() } },
           points: {
-            handles: P.linkage ? [-1, 1].map((s) => P.linkage.handle(s)) : [-1, 1].map((s) => turned(at(s * HANDLE.x, HANDLE.from + HANDLE.length / 2, HANDLE.z), value)),
+            handles: P.linkage ? [-1, 1].map((s) => P.linkage.handle(s)) : [-1, 1].map((s) => turned(onHandle(s, HANDLE.stem + HANDLE.length * 0.65), value)),
             backPad: [padAt(BACK.from + BACK.length / 2, value)],
             seat: [seatAt(HIPS_ON)],
             rollers: [ANKLES.clone()],

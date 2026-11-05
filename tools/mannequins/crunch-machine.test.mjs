@@ -73,38 +73,47 @@ test('the seat pad is 620 mm long, inclined 15° rising toward the head, its hig
   assert.ok(top.clone().add(along).z < top.clone().sub(along).z, 'the high end toward the head');
 });
 
-test('the back pad lies level at rest 660 mm up, its head pad 600 mm from the axis, and tips 40° with the arm', () => {
+test('the back pad rests tilted 12° up toward the head, close to the seat, its head pad 600 mm from the axis, and tips 40° more with the arm', () => {
   const kit = machine();
   const back = only(kit, 'backPad');
   const head = only(kit, 'headPad');
   const { origin } = kit.joints.arm;
-  close(leanOf(back), 0, 0.5, 'the back pad\'s lean at rest');
-  close(boxOf(back).max.y, 0.66, 0.02, 'its top');
+  close(leanOf(back), 12, 0.5, 'the back pad\'s lean at rest');
+  // The seat's head end and the pad's near end read as one support: within 4 cm of each other.
+  const seatEnd = new THREE.Vector3(0, 0.53, -0.14);
+  const nearEnd = new THREE.Vector3(0, boxOf(back).min.y, 0);
+  const g = back.geometry; g.computeBoundingBox();
+  const padStart = new THREE.Vector3(0, g.boundingBox.max.y, g.boundingBox.max.z).applyMatrix4(back.matrixWorld);
+  assert.ok(seatEnd.distanceTo(padStart) < 0.04, `the pad ${(seatEnd.distanceTo(padStart) * 100).toFixed(1)} cm from the seat's head end`);
+  assert.ok(nearEnd.y < 0.6, 'the pad low enough to carry the back');
   const rest = centre(head);
   close(Math.hypot(rest.y - origin.y, rest.z - origin.z), 0.6, 0.05, 'the head pad from the axis');
   assert.ok(rest.z < origin.z - 0.4, 'the head pad toward the head');
   kit.scrub('arm', rad(40));
   kit.group.updateMatrixWorld(true);
-  close(leanOf(back), 40, 0.5, 'tipped toward the knees, in degrees');
+  close(leanOf(back), 52, 0.5, 'tipped toward the knees, in degrees');
   close(centre(head).distanceTo(rest), 0.41, 0.03, 'how far the head pad moved');
   assert.ok(centre(head).y > rest.y + 0.25, 'the head pad rose');
   kit.scrub('arm', rad(80));
   close(deg(kit.joints.arm.value), 40, 1e-9, 'held at its upper limit');
 });
 
-test('two vertical handles 200 mm long stand 400 mm apart either side of the head pad, held by the hands', () => {
+test('two foam grips 200 mm long lean 18° toward the head, 400 mm apart either side of the head pad, held by the hands', () => {
   const kit = machine();
   const handles = byRole(kit, 'handle');
   assert.equal(handles.length, 2);
   for (const h of handles) {
     assert.ok(h.userData.held, 'held');
-    close(boxOf(h).getSize(new THREE.Vector3()).y, 0.2, 0.02, 'a handle\'s length');
+    const size = boxOf(h).getSize(new THREE.Vector3());
+    close(Math.hypot(size.y, size.z), 0.2, 0.025, 'a grip\'s length');
+    close(deg(Math.atan2(size.z, size.y)), 18, 5, 'its lean from upright, in degrees');
   }
   close(Math.abs(centre(handles[0]).x - centre(handles[1]).x), 0.4, 0.02, 'their spacing');
   const c = contact(kit, 'handles');
   assert.equal(c.landmark, 'hands');
   assert.equal(c.body, 'arm');
-  for (const p of c.at) assert.ok(handles.some((h) => p.distanceTo(centre(h)) < 0.01), 'a hand on each handle');
+  // Each hand's point is on a grip's axis, in its upper half.
+  for (const p of c.at) assert.ok(handles.some((h) => { const b = boxOf(h); const k = centre(h); return Math.abs(p.x - k.x) < 0.01 && p.y > k.y && p.y < b.max.y; }), 'a hand on each handle\'s upper half');
 });
 
 test('two pairs of foot rollers on the front frame, at 360 and 600 mm, the ankles between them', () => {
@@ -201,7 +210,7 @@ const skinOf = ({ rig }, named) => {
 const aboveSeat = (points) => {
   const up = new THREE.Vector3(0, Math.cos(rad(15)), Math.sin(rad(15)));
   const along = new THREE.Vector3(0, Math.sin(rad(15)), -Math.cos(rad(15)));
-  const high = new THREE.Vector3(0, 0.53, 0.04);
+  const high = new THREE.Vector3(0, 0.53, -0.14);
   return Math.min(...points.filter((p) => Math.abs(p.x) < 0.18 && p.clone().sub(high).dot(along) < 0.05 && p.clone().sub(high).dot(along) > -0.6).map((p) => p.clone().sub(high).dot(up)));
 };
 
@@ -266,5 +275,22 @@ test('posed, the cable from the cam to the stack passes clear of the body on eve
     const line = new THREE.Line3(a, b);
     const near = Math.min(...body.map((p) => line.closestPointToPoint(p, true, new THREE.Vector3()).distanceTo(p)));
     assert.ok(near > 0.03, `the cable ${(near * 100).toFixed(1)} cm from the body at ${d} of the rep`);
+  }
+});
+
+test('posed, the moving pad sits behind the shoulders at rest and carries them through the rep', async () => {
+  const { stage, kit, at } = await posed();
+  const pad = only(kit, 'backPad');
+  pad.geometry.computeBoundingBox();
+  const { min, max } = pad.geometry.boundingBox;
+  for (const d of [0, 0.25, 0.5, 0.75, 1]) {
+    at(d);
+    const inverse = pad.matrixWorld.clone().invert();
+    for (const k of ['l', 'r']) {
+      const shoulder = wpos(stage.rig.bones['upperarm_' + k]).applyMatrix4(inverse);
+      assert.ok(shoulder.z > min.z + 0.02 && shoulder.z < max.z - 0.02, `the ${k} shoulder ${(shoulder.z * 100).toFixed(0)} cm along the pad (it spans ${(min.z * 100).toFixed(0)} to ${(max.z * 100).toFixed(0)}) at ${d} of the rep`);
+      assert.ok(Math.abs(shoulder.x) < (max.x - min.x) / 2 + 0.03, `the ${k} shoulder off the pad's width at ${d} of the rep`);
+      assert.ok(shoulder.y - max.y < 0.2, `the ${k} shoulder ${((shoulder.y - max.y) * 100).toFixed(0)} cm above the pad's face at ${d} of the rep`);
+    }
   }
 });
