@@ -823,14 +823,15 @@ export const POSES = {
   },
 
   // On the right knee facing the left tower, a handle from a high pulley in the left hand: the elbow
-  // drives from the arm long overhead down to the side, the free hand resting on the kneeling thigh.
+  // drives from the arm long overhead down to the ribs, the hand by the chest, the free hand resting
+  // on the kneeling thigh.
   '1_arm_cable_pulldown': {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 15, faces: true, hands: [1], at: [-0.965, 1.12] } },
     body: { kneel: -1 },
     top: { thigh: 0, trunk: 6, hand: [0.24, 1.5, 0.4], rotate: 90 },
-    bottom: { thigh: 0, trunk: 6, hand: [0.27, 0.88, 0.2], rotate: 90 },
+    bottom: { thigh: 0, trunk: 6, hand: [0.27, 0.93, 0.3], rotate: 90 },
     feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
     grip: { rotate: 90, pole: [0.8, -1, -0.5], one: 1, rest: [-0.13, 0.42, 0.11], restPole: [0.3, -1, -0.3], restFlat: { palm: [0.6, 0, -1], fingers: [0.3, -1, 0] } },
