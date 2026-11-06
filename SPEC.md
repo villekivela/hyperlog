@@ -1685,8 +1685,8 @@ gallery (Technique videos).
       follow the contacts, and the recipe's fit rules set its adjustments (an entry can override
       them, and the studio has a slider for each). The rep runs from one limit of the joint to the
       other unless the entry gives its own range, and every frame is checked for a joint past its
-      limit, a handle off its arc, a hand off its handle and a pad off its limb (#160). A free weight, and a cable's attachment, is a free body on no joint, which the hands
-      carry (#159). A contact can also tie the fixed frame (a seat's handles, a thigh pad), and
+      limit, a handle off its arc, a hand off its handle and a pad off its limb (#160). A free weight, and a cable's attachment, is a free body on no joint, which the body
+      carries: the hands, or the ankle for an ankle cuff (#159). A contact can also tie the fixed frame (a seat's handles, a thigh pad), and
       besides the hands, shins and feet it meets the thighs (a calf raise's or a pulldown's pads),
       the shoulders (a hack squat's pads) or the chest (the T-bar row machine's pad, #176). A weight stack rises by a ratio of a joint's travel: a
       lever's turn on a selectorised machine, and on a cable machine the stack's own joint, the

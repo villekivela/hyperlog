@@ -166,9 +166,9 @@ const GIVE = 6;
 /** The furthest a shin leans in the search for one that clears the bar. */
 const SHIN_MOST = 80;
 /** How many steps of the rep `clearOf` reads for the heights the bar has already passed. */
-const PASSED = 60;
+const REP_STEPS = 60;
 
-/** The shin that just clears the bar at its height `s.bar` (the room shrinks as the shin leans in), or `SHIN_MOST` if any does. */
+/** The shin that just clears the bar at its height `s.bar` (the room shrinks as the shin leans in), or `Infinity` if any does. */
 function clearShin(e, s, L) {
   const ankleY = (e.feet.y ?? 0) + L.ankleY;
   // How far in front of the legs the bar runs at its height, with the shins at `shin`.
@@ -188,7 +188,7 @@ function clearShin(e, s, L) {
     return e.bar.z - legZ - (SHIN_FRONT + (THIGH_FRONT - SHIN_FRONT) * k);
   };
   let [lo, hi] = [-10, SHIN_MOST];
-  if (room(hi) >= 0) return SHIN_MOST;
+  if (room(hi) >= 0) return Infinity;
   for (let i = 0; i < 30; i++) {
     const m = (lo + hi) / 2;
     if (room(m) >= 0) lo = m; else hi = m;
@@ -200,13 +200,13 @@ function clearShin(e, s, L) {
  * A pull's legs with the knees out of the bar's way: where the bar, at its height `s.bar` on its
  * line at `bar.z`, would run into the shins or the thighs, the shins stand back, as far as it takes.
  * Knees that gave way stay back: the limit is the tightest at this height or any the bar has risen
- * through, so they never come forward again on the lift. They start to give a little before the
- * bar reaches them, so they give way smoothly.
+ * through, so they don't come forward again as the bar passes them. They start to give a little
+ * before the bar reaches them, so they give way smoothly.
  */
 function clearOf(e, s, L) {
-  const passed = Array.from({ length: PASSED + 1 }, (_, i) => stateAt(e, i / PASSED)).filter((b) => b.bar < s.bar);
-  const limit = Math.min(clearShin(e, s, L), ...passed.map((b) => clearShin(e, b, L)));
-  if (limit === SHIN_MOST) return s;
+  const passed = Array.from({ length: REP_STEPS + 1 }, (_, i) => stateAt(e, i / REP_STEPS)).filter((lower) => lower.bar < s.bar);
+  const limit = Math.min(clearShin(e, s, L), ...passed.map((lower) => clearShin(e, lower, L)));
+  if (limit === Infinity) return s;
   // The traced shin eased onto the limit: a smooth minimum, never past it.
   return { ...s, shin: (s.shin + limit - Math.hypot(s.shin - limit, GIVE)) / 2 };
 }

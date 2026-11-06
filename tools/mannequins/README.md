@@ -119,7 +119,8 @@ last 4 mm, so an elbow never snaps open at lockout.
 The motion has no jumps: each side's arm, and each finger's closing, is followed through the rep
 from both ends, the cheaper way kept, and averaged over a few frames, so where the best arm
 changes branch the elbow travels there instead of jumping; and the knees give way smoothly as a
-pull's bar passes them, the legs' front rounded over the kneecap and the give eased in. A test
+pull's bar passes them: the bar is measured against the shin below the knee and the thigh above
+it, the give eased in, and knees that gave way stay back until the bar is past them. A test
 fails any joint whose step between two frames stands out from the steps either side of it by more
 than 2°, in every clip.
 
