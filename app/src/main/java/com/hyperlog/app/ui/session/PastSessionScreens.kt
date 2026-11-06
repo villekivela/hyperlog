@@ -4,6 +4,7 @@ import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -91,24 +93,19 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
             Segment(i, list.size, onClick = { onOpen(s.id) }) {
             Column(
                 Modifier.fillMaxWidth().heightIn(min = 72.dp)
-                    .padding(horizontal = CardPadding, vertical = 12.dp),
+                    .padding(horizontal = CardPadding, vertical = 8.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row {
                     Text(
                         s.title ?: stringResource(R.string.past_ad_hoc),
-                        Modifier.weight(1f),
+                        Modifier.weight(1f).alignByBaseline(),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     Spacer(Modifier.width(16.dp))
-                    Text(day(s.startedAt), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    // On the title's first line, however far a long title wraps.
+                    Text(day(s.startedAt), Modifier.alignByBaseline(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
-                Text(
-                    (listOfNotNull(s.gym) + s.exercises.map { it.name }).joinToString(" · "),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = cs.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                SessionPreview(listOfNotNull(s.gym) + s.exercises.map { it.name })
             }
             }
         }
@@ -246,5 +243,27 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                 onClose = { correctingBenchAngle = false },
             )
         }
+    }
+}
+
+/** The start of [parts] as one line that [fits], whole names only, ending with [more] of how many it left out. */
+internal fun previewLine(parts: List<String>, more: (Int) -> String, fits: (String) -> Boolean): String {
+    fun line(shown: Int) = (parts.take(shown) + listOfNotNull(more(parts.size - shown).takeIf { shown < parts.size })).joinToString(" · ")
+    return (parts.size downTo 1).map(::line).firstOrNull(fits) ?: line(1)
+}
+
+/** Where a session was and what it held, on one line of whole names. */
+@Composable
+private fun SessionPreview(parts: List<String>) {
+    val style = MaterialTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val room = constraints.maxWidth
+        val format = stringResource(R.string.past_preview_more)
+        Text(
+            previewLine(parts, { format.format(it) }) { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width <= room },
+            style = style,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -69,6 +68,8 @@ import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.scopeText
 import com.hyperlog.app.ui.coach.shortDate
 import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.theme.NextAction
+import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.EmptyState
@@ -107,6 +108,10 @@ fun ProgramScreen(
     sessions: List<PastSessionItem> = emptyList(),
     /** Opens a finished session in History. */
     onOpenSession: (Long) -> Unit = {},
+    /** A session is running, so the next action resumes it. */
+    running: Boolean = false,
+    /** The next action: on to Today, or back to the session running. */
+    onNext: () -> Unit = {},
     /**
      * What Program shows, kept by the host so it survives a session opened in History or a
      * review; null keeps it here.
@@ -226,7 +231,7 @@ fun ProgramScreen(
                 }
                 active == null -> NoProgram(onImport, openPrograms.takeIf { listedPrograms.isNotEmpty() })
                 else -> ProgramWeeks(
-                    active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, shown.week,
+                    active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, running, onNext, shown.week,
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan),
                     weekdayPlanTurns = weekdayPlanTurns(weekdayPlan, active.program.blockAt(active.week)?.days?.size),
                     onOpenWeekdayPlan = { editingWeekdayPlan = true },
@@ -302,6 +307,8 @@ private fun ProgramWeeks(
     names: Map<String, String>,
     sessions: List<PastSessionItem>,
     onOpenSession: (Long) -> Unit,
+    running: Boolean,
+    onNext: () -> Unit,
     /** The week picked; null for the week you're in. */
     picked: Int?,
     onWeek: (Int) -> Unit,
@@ -331,8 +338,10 @@ private fun ProgramWeeks(
             val changes = if (count == 0) stringResource(R.string.program_changes_none) else pluralStringResource(R.plurals.program_changes_in_force, count, count)
             val chevron = cs.onSurfaceVariant
             val nextDay = next?.let { stringResource(R.string.program_week_day, it.position.week, it.day.name) }
+            // The next day comes first: nothing else here is as worth doing.
+            nextDay?.let { NextCard(NextAction(stringResource(if (running) R.string.next_resume else R.string.next_open_today), it, onNext), Modifier.padding(top = 8.dp)) }
             SegmentedList(Modifier.padding(top = 8.dp)) {
-                item { ProgramHeader(program.title, program.author, nextDay) }
+                item { ProgramHeader(program.title, program.author, finished = nextDay == null) }
                 row(
                     title = weekdayPlanLine,
                     supporting = weekdayPlanTurns,
@@ -361,27 +370,18 @@ private fun ProgramWeeks(
     }
 }
 
-/** The program's title and author, then the next day, or "Program finished" with a flag. */
+/** The program's title and author, then "Program finished" with a flag once it is. */
 @Composable
-internal fun ProgramHeader(title: String, author: String?, next: String?) {
+internal fun ProgramHeader(title: String, author: String?, finished: Boolean) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.padding(horizontal = CardPadding).padding(top = 16.dp, bottom = 16.dp)) {
         Text(interFigures(title), style = MaterialTheme.typography.headlineSmall)
         author?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
-        Spacer(Modifier.height(16.dp))
-        Row(verticalAlignment = if (next != null) Alignment.Top else Alignment.CenterVertically) {
-            if (next != null) {
-                Text(
-                    stringResource(R.string.program_next),
-                    // Its column grows with the text, so large text never runs it into the day.
-                    Modifier.widthIn(min = 56.dp).padding(end = 8.dp).alignByBaseline(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = cs.primary,
-                )
-                Text(next, Modifier.weight(1f).alignByBaseline(), style = MaterialTheme.typography.bodyLarge)
-            } else {
-                // The flag takes Next's column, so the words start where the next day's do.
-                Box(Modifier.width(56.dp)) { SymbolIcon(Symbol.Flag, null, Modifier.size(20.dp), tint = cs.primary) }
+        if (finished) {
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SymbolIcon(Symbol.Flag, null, Modifier.size(20.dp), tint = cs.primary)
+                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.program_finished), style = MaterialTheme.typography.bodyLarge)
             }
         }

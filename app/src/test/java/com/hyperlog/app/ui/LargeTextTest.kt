@@ -46,13 +46,14 @@ import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.PastSession
+import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.navItem
 import com.hyperlog.app.ui.coach.TileCard
 import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.history.HistoryScreen
-import com.hyperlog.app.ui.program.ProgramHeader
+import com.hyperlog.app.ui.program.BlockChoice
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.session.PastSessionScreen
 import com.hyperlog.app.ui.session.Recording
@@ -64,6 +65,8 @@ import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.ui.theme.NextAction
+import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.today.SlotRows
 import org.junit.Assert.assertEquals
@@ -77,6 +80,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 private val Scales = listOf(1.15f, 1.3f, 1.5f, 1.8f, 2f)
+
+/** Last as the table writes them, with no-break spaces inside a set. */
+private const val ShortLast = "50\u00A0×\u00A010"
+private const val LongLast = "50\u00A0×\u00A010 +\u00A05"
 
 /**
  * Screens at the owner's system text size (115 %) on a phone a little narrower than theirs: what
@@ -147,15 +154,16 @@ class LargeTextTest {
     }
 
     @Test
-    fun theNextLabelKeepsClearOfTheDayItNames() {
-        val day = "Week 3 · Day B"
-        atEveryScale({ ProgramHeader("Full body", null, day) }) { scale ->
-            val label = compose.onNodeWithText("Next", useUnmergedTree = true)
-            val next = compose.onNodeWithText(day, useUnmergedTree = true)
-            assertEquals("Next splits at $scale", 1, label.layout().lineCount)
-            val ink = label.getBoundsInRoot().left + with(compose.density) { label.layout().getLineRight(0).toDp() }
-            assertTrue("Next is ${next.getBoundsInRoot().left - ink} from the day at $scale", next.getBoundsInRoot().left - ink >= 8.dp)
-            assertFalse("The day is cut short at $scale", next.cutShort())
+    fun theNextCardKeepsItsDayWholeAndClearOfItsButton() {
+        val day = "Week 8 · Day A — Heavy bench, squat, pulldown"
+        atEveryScale({ NextCard(NextAction("Go to Today", day) {}) }) { scale ->
+            val title = compose.onNodeWithText(day, useUnmergedTree = true)
+            val label = compose.onNodeWithText("Next", useUnmergedTree = true).getBoundsInRoot()
+            val button = compose.onNodeWithText("Go to Today", useUnmergedTree = true)
+            assertFalse("The day is cut short at $scale", title.cutShort())
+            assertFalse("The button is cut short at $scale", button.cutShort())
+            assertTrue("Next sits beside the day at $scale", label.bottom <= title.getBoundsInRoot().top)
+            assertTrue("The day runs into the button at $scale", title.getBoundsInRoot().right + 8.dp <= button.getBoundsInRoot().left)
         }
     }
 
@@ -186,10 +194,10 @@ class LargeTextTest {
 
     /** The logging screen with one exercise and rest over, so the Next row reads `Last exercise` beside the clock. */
     @Composable
-    private fun Session() {
+    private fun Session(lastTime: List<LoggedSet> = listOf(LoggedSet(50.0, 10, 5, 1))) {
         val exercise = SessionExercise(
-            id = 1, exercise = bench, sets = emptyList(), lastTime = listOf(LoggedSet(50.0, 10, 5, 1)), ladder = DefaultPlates.ladder(), ladderKnown = true,
-            prescription = listOf(SetPrescription(RepRange(4, 6), 1, 180)), plates = DefaultPlates,
+            id = 1, exercise = bench, sets = emptyList(), lastTime = lastTime, ladder = DefaultPlates.ladder(), ladderKnown = true,
+            prescription = List(lastTime.size) { SetPrescription(RepRange(4, 6), 1, 180) }, plates = DefaultPlates,
         )
         val entry = SetEntry("100", "6", "", 1, Field.Reps, partialMode = false, fresh = true)
         val session = ActiveSession(id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = entry, padVisible = true, restEndsAt = 1, restTotalMs = 180_000)
@@ -199,8 +207,8 @@ class LargeTextTest {
     @Test
     fun lastTimesSetStaysWhole() {
         atEveryScale({ Session() }) { scale ->
-            compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))).performScrollToNode(hasText("50 × 10 + 5"))
-            assertFalse("Last time is cut short at $scale", compose.onNodeWithText("50 × 10 + 5", useUnmergedTree = true).cutShort())
+            compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))).performScrollToNode(hasText(LongLast))
+            assertFalse("Last time is cut short at $scale", compose.onNodeWithText(LongLast, useUnmergedTree = true).cutShort())
         }
     }
 
@@ -257,6 +265,69 @@ class LargeTextTest {
         }) { scale -> assertFalse("The title is cut short at $scale", compose.onNodeWithText(title, useUnmergedTree = true).cutShort()) }
     }
 
+    /** Round 1's score: a date centred on a wrapped title, and 5.5 sessions to a screen, down from 8. */
+    @Test
+    fun aSessionsDateSitsOnItsTitlesFirstLine() {
+        val title = "Day B — Hinge, close-grip bench, leg curl"
+        val session = PastSessionItem(1, 0, 3_600_000, title, "Kalliokoski", emptyList())
+        show {
+            HistoryScreen(
+                listOf(session), emptyList(), emptyList(), emptyList(), tab = 0, onTab = {}, onOpenSession = {}, onOpenExercise = {},
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {},
+            )
+        }
+        val name = compose.onNodeWithText(title, useUnmergedTree = true)
+        val date = compose.onNodeWithText("Thu 1 Jan", useUnmergedTree = true)
+        val nameBase = name.getBoundsInRoot().top + with(compose.density) { name.layout().firstBaseline.toDp() }
+        val dateBase = date.getBoundsInRoot().top + with(compose.density) { date.layout().firstBaseline.toDp() }
+        assertTrue("The date's baseline is ${dateBase - nameBase} off the title's", (dateBase - nameBase).value in -1f..1f)
+    }
+
+    @Test
+    fun sevenSessionsFitAScreen() {
+        val names = listOf("Barbell RDL", "Chest-Supported Machine Row", "Leg Extension", "Bayesian Cable Curl", "Hack Squat")
+        val sessions = (1L..10L).map {
+            val exercises = names.map { n -> ExerciseSummary(n, emptyList()) }
+            PastSessionItem(it, it * 86_400_000, it * 86_400_000 + 3_600_000, "Day B — Hinge, close-grip bench, row $it", "Kalliokoski", exercises)
+        }
+        show {
+            HistoryScreen(
+                sessions, emptyList(), emptyList(), emptyList(), tab = 0, onTab = {}, onOpenSession = {}, onOpenExercise = {},
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {},
+            )
+        }
+        val seventh = compose.onNodeWithText("Day B — Hinge, close-grip bench, row 7", useUnmergedTree = true).getBoundsInRoot()
+        // The navigation bar takes the last 80 dp on the phone.
+        // Its preview line and padding come under the title.
+        assertTrue("The seventh session ends at ${seventh.bottom + 28.dp}", seventh.bottom + 28.dp <= 834.dp)
+    }
+
+    @Test
+    fun aSessionsPreviewEndsOnAWholeNameAndACount() {
+        val names = listOf("Barbell RDL", "Chest-Supported Machine Row", "Leg Extension", "Bayesian Cable Curl", "Hack Squat")
+        val session = PastSessionItem(1, 0, 3_600_000, "Day B", "Kalliokoski", names.map { ExerciseSummary(it, emptyList()) })
+        atEveryScale({
+            HistoryScreen(
+                listOf(session), emptyList(), emptyList(), emptyList(), tab = 0, onTab = {}, onOpenSession = {}, onOpenExercise = {},
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {},
+            )
+        }) { scale ->
+            val preview = compose.onNode(hasText("more", substring = true), useUnmergedTree = true)
+            assertFalse("The preview is cut at $scale", preview.cutShort())
+            assertEquals("The preview wraps at $scale", 1, preview.layout().lineCount)
+        }
+    }
+
+    /** Stacked, four phases pushed the weeks off screen; on one row of chips they stay in reach (#273). */
+    @Test
+    fun thePhasesStayOnOneRow() {
+        val names = listOf("Ramp-in", "Build", "Intensify", "Deload + test")
+        atEveryScale({ BlockChoice(names, 0) {} }) { scale ->
+            val tops = names.take(2).map { compose.onNodeWithText(it, useUnmergedTree = true).getBoundsInRoot().top }
+            assertEquals("Phases stack at $scale", tops[0].value, tops[1].value, 1f)
+        }
+    }
+
     @Test
     fun aCoachTilesLabelStaysWhole() {
         val label = "Different gym or none"
@@ -283,6 +354,51 @@ class LargeTextTest {
             (0 until layout.lineCount).forEach {
                 val line = text.substring(layout.getLineStart(it), layout.getLineEnd(it)).trimEnd()
                 assertFalse("`$line` ends mid-set at $scale", line.endsWith("×"))
+            }
+        }
+    }
+
+    /** Round 1's score: fitting each alone left Today larger than Program. */
+    @Test
+    fun theNavigationLabelsShareOneSize() {
+        val labels = listOf("Today", "Program", "Coach", "History", "Settings")
+        // Ink, not the style: autosized text keeps its style's size whatever it draws at. One size
+        // means every label grows by the same factor from the first scale.
+        var first = emptyMap<String, Float>()
+        atEveryScale({ AppNavigationBar(Screen.Today) {} }) { scale ->
+            val ink = labels.associateWith { compose.onNode(navItem(it), useUnmergedTree = true).layout().let { l -> l.getLineRight(0) - l.getLineLeft(0) } }
+            if (first.isEmpty()) first = ink
+            val growth = labels.map { ink.getValue(it) / first.getValue(it) }
+            // Hinted glyph widths at the test's density wobble a few percent; fitted alone they differ by 50.
+            assertTrue("Labels grew by $growth at $scale", growth.max() - growth.min() < 0.1f)
+        }
+    }
+
+    /** One size for the whole column, the smallest any row needs, and never under the floor. */
+    @Test
+    fun theLastColumnSharesOneSizeAndHoldsItsFloor() {
+        val sets = listOf(LoggedSet(50.0, 10, 0, 2), LoggedSet(50.0, 10, 5, 2))
+        val table = hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))
+        atEveryScale({ Session(sets) }) { scale ->
+            // The first figure's own box: the same glyph, so the same width at the same size.
+            val widths = listOf(ShortLast, LongLast).map {
+                compose.onNode(table).performScrollToNode(hasText(it))
+                compose.onNodeWithText(it, useUnmergedTree = true).layout().getBoundingBox(0).width
+            }
+            assertEquals("Last sizes differ at $scale: $widths", widths[0], widths[1], 0.01f)
+            val long = compose.onNodeWithText(LongLast, useUnmergedTree = true)
+            assertTrue("Last is ${long.layout().layoutInput.style.fontSize} at $scale", long.layout().layoutInput.style.fontSize.value >= 12f)
+            assertFalse("Last is cut at $scale", long.cutShort())
+        }
+    }
+
+    @Test
+    fun theSetTablesHeadsHoldTheFloor() {
+        atEveryScale({ Session() }) { scale ->
+            listOf("Last", "kg", "Reps", "RIR").forEach {
+                val head = compose.onAllNodes(hasText(it) and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)[0]
+                val size = head.layout().layoutInput.style.fontSize.value
+                assertTrue("$it is $size sp at $scale", size >= 11f)
             }
         }
     }

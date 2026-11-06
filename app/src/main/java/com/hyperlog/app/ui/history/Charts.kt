@@ -22,7 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.lerp
@@ -41,6 +44,8 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hyperlog.app.R
+import com.hyperlog.app.history.WeekTotal
 import com.hyperlog.app.domain.formatKg
 import java.time.LocalDate
 import kotlin.math.abs
@@ -249,6 +254,73 @@ fun SetsBar(
                 )
             }
         }
+    }
+}
+
+/**
+ * The work sets of [weeks] (oldest first) as bars from zero, with the sets on a tick column and the
+ * first and last week under them. Tap or drag selects the nearest week; [selected] is in full ink.
+ */
+@Composable
+fun WeeklySetsChart(
+    weeks: List<WeekTotal>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    description: String,
+    modifier: Modifier = Modifier,
+    height: Dp = 72.dp,
+) {
+    val cs = MaterialTheme.colorScheme
+    val measurer = rememberTextMeasurer()
+    val tick = MaterialTheme.typography.labelSmall.copy(color = cs.onSurfaceVariant)
+    val unit = stringResource(R.string.history_sets_axis)
+    val scale = remember(weeks) {
+        Scale.of(0.0, weeks.maxOf { it.workSets }.toDouble().coerceAtLeast(1.0)).let { s -> s.copy(min = 0.0, ticks = s.ticks.filter { it >= 0 }) }
+    }
+    fun nearestWeek(px: Float, width: Float) = (px / (width / weeks.size)).toInt().coerceIn(0, weeks.lastIndex)
+    Canvas(
+        modifier.fillMaxWidth().height(height + DateAxis)
+            .semantics { contentDescription = description }
+            .pointerInput(weeks) { detectTapGestures { onSelect(nearestWeek(it.x, size.width - TickColumn.toPx())) } }
+            .pointerInput(weeks) { detectHorizontalDragGestures { change, _ -> onSelect(nearestWeek(change.position.x, size.width - TickColumn.toPx())) } },
+    ) {
+        val plotW = size.width - TickColumn.toPx()
+        val plotH = height.toPx()
+        fun y(v: Double) = (plotH * (1 - (v - scale.min) / (scale.max - scale.min))).toFloat()
+        scale.ticks.forEach { t ->
+            drawLine(cs.outlineVariant, Offset(0f, y(t)), Offset(plotW, y(t)), strokeWidth = 1.dp.toPx())
+            label(measurer, scale.format(t), tick, Offset(plotW + 8.dp.toPx(), y(t)), centerY = true)
+        }
+        val slot = plotW / weeks.size
+        val bar = slot * 0.6f
+        weeks.forEachIndexed { i, week ->
+            val top = y(week.workSets.toDouble())
+            val left = slot * i + (slot - bar) / 2
+            drawRoundRect(
+                if (i == selected) cs.primary else cs.primary.copy(alpha = 0.38f),
+                topLeft = Offset(left, top), size = Size(bar, plotH - top), cornerRadius = CornerRadius(4.dp.toPx()),
+            )
+        }
+        val ay = plotH + 4.dp.toPx()
+        label(measurer, short(weeks.first().start), tick, Offset(0f, ay))
+        if (weeks.size > 1) label(measurer, short(weeks.last().start), tick, Offset(plotW, ay), alignEnd = true)
+        label(measurer, unit, tick, Offset(size.width, ay), alignEnd = true)
+    }
+}
+
+/**
+ * [sets] as a bar from zero over the band of the range [low]–[high], on a scale up to [most]: the
+ * band says where the bar should reach, in tone, so being short never reads as a fault.
+ */
+@Composable
+fun TargetBar(sets: Double, low: Int, high: Int, most: Double, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Canvas(modifier.height(12.dp)) {
+        fun x(v: Double) = (size.width * (v / most.coerceAtLeast(1.0))).toFloat()
+        val radius = CornerRadius(4.dp.toPx())
+        drawRoundRect(cs.surfaceContainerHighest, topLeft = Offset(x(low.toDouble()), 0f), size = Size(x(high.toDouble()) - x(low.toDouble()), size.height), cornerRadius = radius)
+        val bar = 6.dp.toPx()
+        if (sets > 0) drawRoundRect(cs.primary, topLeft = Offset(0f, (size.height - bar) / 2), size = Size(x(sets), bar), cornerRadius = CornerRadius(bar / 2))
     }
 }
 

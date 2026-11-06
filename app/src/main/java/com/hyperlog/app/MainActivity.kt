@@ -72,7 +72,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.layout.BoxWithConstraints
+import com.hyperlog.app.ui.theme.sharedFontSize
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarItemDefaults
@@ -81,6 +82,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hyperlog.app.coach.ProgramVolume
+import com.hyperlog.app.ui.theme.NextAction
 import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.update.UpdateViewModel
 import com.hyperlog.app.update.Updates
@@ -218,23 +221,28 @@ private val Tabs = listOf(
 @Composable
 internal fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val labels = Tabs.map { (tab) ->
+        stringResource(
+            when (tab) {
+                Screen.Program -> R.string.program_title
+                Screen.Coach -> R.string.coach_title
+                Screen.History -> R.string.history_title
+                Screen.Settings -> R.string.settings
+                else -> R.string.today_title
+            },
+        )
+    }
+    BoxWithConstraints {
+    // Five items share the width: at large text all five step down together.
+    val labelSize = sharedFontSize(labels.map { it to maxWidth / Tabs.size - 8.dp }, MaterialTheme.typography.labelMedium, floor = 8.sp)
     ShortNavigationBar(Modifier.testTag(NavigationBarTag), containerColor = Tones.bar) {
-        Tabs.forEach { (tab, symbol, filled) ->
-            val label = stringResource(
-                when (tab) {
-                    Screen.Program -> R.string.program_title
-                    Screen.Coach -> R.string.coach_title
-                    Screen.History -> R.string.history_title
-                    Screen.Settings -> R.string.settings
-                    else -> R.string.today_title
-                },
-            )
+        Tabs.forEachIndexed { i, (tab, symbol, filled) ->
+            val label = labels[i]
             ShortNavigationBarItem(
                 selected = tab == selected,
                 onClick = { onSelect(tab) },
                 icon = { SymbolIcon(if (tab == selected) filled else symbol, null) },
-                // Five items share the width: at large text a label steps down rather than split a word.
-                label = { Text(label, Modifier.padding(horizontal = 2.dp), maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = MaterialTheme.typography.labelMedium.fontSize)) },
+                label = { Text(label, Modifier.padding(horizontal = 2.dp), fontSize = labelSize, maxLines = 1) },
                 colors = ShortNavigationBarItemDefaults.colors(
                     selectedIndicatorColor = cs.primaryContainer,
                     selectedIconColor = cs.onPrimaryContainer,
@@ -242,6 +250,7 @@ internal fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
                 ),
             )
         }
+    }
     }
 }
 
@@ -498,6 +507,9 @@ private fun App(
     val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview ||
         checkInStep is com.hyperlog.app.coach.CheckInStep.ProgramReview
     if (running != null) AskForNotifications()
+    // The next action on Program and Progress: Today has the Start, and the session its own screen.
+    val goNext = { screen = Screen.Today; left = false }
+    val standingVolume = trainingStyle?.targets?.volume ?: com.hyperlog.app.coach.TrainingTargets().volume
     // Its notifications say when Claude's reply is ready while you're away; asked at the first check-in only.
     if (checkIn != null) AskForNotifications(once = "check_in")
     // A Change under review covers whatever proposed it: the Program screen or the session.
@@ -788,6 +800,8 @@ private fun App(
             exerciseNames = exercises.associate { it.id to it.name },
             sessions = pastSessions.orEmpty(),
             onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Program; screen = Screen.History },
+            running = running != null,
+            onNext = goNext,
             view = programView,
             onView = { programView = it },
             weekdayPlan = weekdayPlan,
@@ -909,6 +923,15 @@ private fun App(
             onBodyweight = { bodyweightOpen = true },
             onLogBodyweight = historyModel::logBodyweight,
             onBack = { screen = Screen.Today },
+            standing = standingVolume,
+            range = { ProgramVolume.range(program?.program, it, standingVolume) },
+            next = program?.next?.day?.let { day ->
+                NextAction(
+                    stringResource(if (running != null) R.string.next_resume else R.string.next_open_today),
+                    stringResource(R.string.program_week_day, day.position.week, day.day.name),
+                    goNext,
+                )
+            },
         )
         screen == Screen.Mannequins -> com.hyperlog.app.ui.mannequin.MannequinGallery(
             com.hyperlog.app.ui.mannequin.rememberMannequins(),

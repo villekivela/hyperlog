@@ -6,6 +6,12 @@ import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.session.RirText
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import com.hyperlog.app.ui.theme.connectedChoiceFits
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -90,7 +96,7 @@ internal fun LazyListScope.blockItems(
     /** Review on a finished block's card, with its id. */
     onReview: (String) -> Unit = {},
 ) {
-    item(key = "blocks") { BlockChoice(program, program.blocks.indexOf(block), onBlock) }
+    item(key = "blocks") { BlockChoice(program.blocks.map { it.name }, program.blocks.indexOf(block), onBlock) }
     val finished = block in BlockReviews.finished(program, active.position)
     item(key = "block") { BlockCard(block, active, comparison, week, names, onWeek, onReview = if (finished) ({ onReview(block.id) }) else null) }
     days.forEach { day ->
@@ -130,24 +136,30 @@ internal fun LazyListScope.blockItems(
 
 /** The blocks, the picked one filled: a connected group while they fit, else a row of chips. */
 @Composable
-private fun BlockChoice(program: Program, picked: Int, onBlock: (Int) -> Unit) {
-    val names = program.blocks.map { it.name }
-    Column(Modifier.padding(top = 16.dp)) {
-        if (names.size <= MaxConnected && names.sumOf { it.length } <= MaxConnectedChars) {
+internal fun BlockChoice(names: List<String>, picked: Int, onBlock: (Int) -> Unit) {
+    BoxWithConstraints(Modifier.padding(top = 16.dp)) {
+        val padding = PaddingValues(horizontal = 8.dp)
+        val fits = connectedChoiceFits(names, maxWidth - CardMargin * 2, padding, fitLabels = true)
+        if (fits && names.size <= MaxConnected && names.sumOf { it.length } <= MaxConnectedChars) {
             ConnectedChoice(
                 names, picked, onBlock,
                 Modifier.padding(horizontal = CardMargin),
                 // On the screen between the cards, not on one.
                 color = com.hyperlog.app.ui.theme.Tones.screen,
-                contentPadding = PaddingValues(horizontal = 8.dp),
+                contentPadding = padding,
                 fitLabels = true,
             )
         } else {
-            Row(
-                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = CardMargin),
+            // One row whatever the text size, so the weeks under it stay on screen.
+            val list = rememberLazyListState(picked)
+            LaunchedEffect(picked) { list.animateScrollToItem(picked) }
+            LazyRow(
+                Modifier.fillMaxWidth(),
+                state = list,
+                contentPadding = PaddingValues(horizontal = CardMargin),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                names.forEachIndexed { i, name ->
+                itemsIndexed(names) { i, name ->
                     FilterChip(selected = i == picked, onClick = { onBlock(i) }, label = { Text(name) }, colors = selectedChipColors())
                 }
             }

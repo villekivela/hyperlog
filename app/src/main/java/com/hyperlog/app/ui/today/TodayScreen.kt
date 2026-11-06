@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -84,6 +85,7 @@ import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.StarterOffer
 import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.theme.fadingEdges
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.update.UpdateBanner
@@ -612,7 +614,9 @@ private fun NextDay(
     isWorkout: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
-    LazyColumn(modifier.fillMaxSize().testTag(TodayDayListTag), contentPadding = PaddingValues(bottom = 24.dp)) {
+    val list = rememberLazyListState()
+    // The list fades into the lane under it, rather than stopping dead at the button.
+    LazyColumn(modifier.fillMaxSize().fadingEdges(list).testTag(TodayDayListTag), state = list, contentPadding = PaddingValues(bottom = 24.dp)) {
         item {
             Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
             Column(Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp)) {

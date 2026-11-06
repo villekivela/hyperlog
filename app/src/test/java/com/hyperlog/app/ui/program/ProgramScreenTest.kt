@@ -264,6 +264,7 @@ class ProgramScreenTest {
         compose.onNodeWithText("A deload week").assertIsDisplayed()
         // Week 12 is written afresh, every slot different, so the comparison folds after three.
         compose.onNodeWithText("Day B").assertDoesNotExist()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("20 more", substring = true))
         compose.onNodeWithText("20 more", substring = true).performClick()
         compose.onNodeWithText("Day B").assertExists()
         compose.onNodeWithText("Fewer").performScrollTo().performClick()

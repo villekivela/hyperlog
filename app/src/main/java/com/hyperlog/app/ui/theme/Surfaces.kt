@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.theme
 
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
@@ -61,6 +62,8 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.hyperlog.app.R
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
@@ -306,8 +309,7 @@ fun ConnectedChoice(
     /** It sits on the accent card (primaryContainer): the picked one in white (choiceColors). */
     onAccent: Boolean = false,
 ) {
-    // Each button's padding counts as a few characters, so short names still get room.
-    val weights = labels.map { if (fitLabels) it.length + 4f else 1f }
+    val weights = choiceWeights(labels, fitLabels)
     val gap = ButtonGroupDefaults.ConnectedSpaceBetween
     @Composable
     fun Option(i: Int, modifier: Modifier, shapes: ToggleButtonShapes) = ToggleButton(
@@ -319,7 +321,7 @@ fun ConnectedChoice(
         contentPadding = contentPadding,
     ) { Text(labels[i], maxLines = 1) }
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        if (labelsFit(labels, weights, maxWidth - gap * (labels.size - 1), contentPadding)) {
+        if (connectedChoiceFits(labels, maxWidth, contentPadding, fitLabels)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
                 labels.indices.forEach { i ->
                     Option(
@@ -341,9 +343,14 @@ fun ConnectedChoice(
     }
 }
 
-/** Whether every label fits its share of [room], by [weights], inside its button's padding. */
+/** Each button's padding counts as a few characters, so short names still get room. */
+private fun choiceWeights(labels: List<String>, fitLabels: Boolean) = labels.map { if (fitLabels) it.length + 4f else 1f }
+
+/** Whether every label fits its button side by side across [width], inside the button's padding. */
 @Composable
-private fun labelsFit(labels: List<String>, weights: List<Float>, room: Dp, contentPadding: PaddingValues): Boolean {
+fun connectedChoiceFits(labels: List<String>, width: Dp, contentPadding: PaddingValues, fitLabels: Boolean): Boolean {
+    val weights = choiceWeights(labels, fitLabels)
+    val room = width - ButtonGroupDefaults.ConnectedSpaceBetween * (labels.size - 1)
     val measurer = rememberTextMeasurer()
     val style = MaterialTheme.typography.labelLarge
     val direction = LocalLayoutDirection.current
@@ -400,6 +407,26 @@ data class AccentButton(val fill: Color, val words: Color)
 @Composable
 fun accentButtonColors(): ButtonColors = accentButton(MaterialTheme.colorScheme).let {
     ButtonDefaults.buttonColors(containerColor = it.fill, contentColor = it.words)
+}
+
+/** The one thing to do next: [title] is what it starts, [action] the button's word. */
+data class NextAction(val action: String, val title: String, val onClick: () -> Unit)
+
+/** [next] as the accent card, the strongest thing on a screen that isn't where training starts. */
+@Composable
+fun NextCard(next: NextAction, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer).padding(CardPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.program_next), style = MaterialTheme.typography.labelLarge, color = cs.onPrimaryContainer)
+            Text(next.title, style = MaterialTheme.typography.titleMedium, color = cs.onPrimaryContainer)
+        }
+        Spacer(Modifier.width(16.dp))
+        Button(onClick = next.onClick, colors = accentButtonColors()) { Text(next.action) }
+    }
 }
 
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */

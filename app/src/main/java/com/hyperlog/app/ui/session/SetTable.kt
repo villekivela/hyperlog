@@ -13,6 +13,7 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
@@ -63,6 +65,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -93,6 +96,8 @@ import com.hyperlog.app.session.WarmupEdit
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueName
 import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.theme.fadingEdges
+import com.hyperlog.app.ui.theme.sharedFontSize
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
 // The set table (docs/design/logging-screen.md): flat rows on the screen's surface, columns
@@ -197,8 +202,15 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         withFrameNanos { }
         listState.keepInView(activeIndex)
     }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+    // Every Last in the table at one size, the smallest any row needs.
+    val lastWidth = maxWidth - (TapInset + RowPad) * 2 - ColIndex - ColKg - ColReps - ColRir - ColCheck
+    val body = MaterialTheme.typography.bodyMedium
+    val lastSize = sharedFontSize(current.lastTime.map { it.short() to lastWidth }, body, floor = LastFloor)
+    val lastStyle = body.copy(fontSize = lastSize, lineHeight = lastSize * 1.2f)
     // A short table sits on the pad, in reach of the thumb; a long one fills the space and scrolls.
-    Column(modifier.fillMaxWidth().testTag(SetTableTag), verticalArrangement = Arrangement.Bottom) {
+    CompositionLocalProvider(LocalLastStyle provides lastStyle) {
+    Column(Modifier.fillMaxSize().testTag(SetTableTag), verticalArrangement = Arrangement.Bottom) {
         // The heads sit above the rows, so they stay while the rows scroll.
         Box(Modifier.padding(horizontal = TapInset)) {
             ColumnHeads(
@@ -214,7 +226,15 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
             items(items, key = { it.key }) { it.content() }
         }
     }
+    }
+    }
 }
+
+/** The Last column's style, sized for the whole table. */
+private val LocalLastStyle = staticCompositionLocalOf { TextStyle.Default }
+
+/** Below this a figure stops being large text; past it Last wraps instead. */
+private val LastFloor = 12.sp
 
 /**
  * Scrolls as little as it takes to show the item at [index] whole, so the warm-ups above it stay
@@ -231,23 +251,6 @@ private suspend fun LazyListState.keepInView(index: Int) {
         item.offset + item.size > end -> animateScrollBy(minOf(item.offset + item.size - end, item.offset - start).toFloat())
     }
 }
-
-/** Fades the list out at an edge that has more to scroll to, so it reads as scrollable. */
-private fun Modifier.fadingEdges(state: LazyListState): Modifier = this
-    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-    .drawWithContent {
-        drawContent()
-        val fade = 32.dp.toPx()
-        if (state.canScrollBackward) {
-            drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black, endY = fade), size = size.copy(height = fade), blendMode = BlendMode.DstIn)
-        }
-        if (state.canScrollForward) {
-            drawRect(
-                Brush.verticalGradient(0f to Color.Black, 1f to Color.Transparent, startY = size.height - fade, endY = size.height),
-                topLeft = Offset(0f, size.height - fade), size = size.copy(height = fade), blendMode = BlendMode.DstIn,
-            )
-        }
-    }
 
 // ---------------------------------------------------------------- building the rows
 
@@ -901,15 +904,13 @@ private fun RowScope.LastCell(row: String, last: LoggedSet?) = SubLast(row, last
 @Composable
 private fun RowScope.SubLast(row: String, last: String?) {
     val spoken = last?.let { stringResource(R.string.spoken_last, row, it.replace(" × ", " kg × ")) }
-    val style = MaterialTheme.typography.bodyMedium
     Text(
-        last.orEmpty(),
+        // A long one breaks before its `+`, never inside `50 × 10`.
+        last.orEmpty().replace(" × ", "\u00A0×\u00A0").replace(" + ", " +\u00A0"),
         Modifier.weight(1f).then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),
-        style = style,
+        style = LocalLastStyle.current,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 1,
-        // The number is what's read here, so it steps down rather than lose its end.
-        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+        maxLines = 2,
     )
 }
 
@@ -932,15 +933,14 @@ private fun ColumnHeads(showLast: Boolean, split: Boolean = false) {
     val st = MaterialTheme.typography.labelMedium
     Row(Modifier.fillMaxWidth().height(LabelHeight).padding(horizontal = RowPad), verticalAlignment = Alignment.Bottom) {
         Spacer(Modifier.width(ColIndex))
-        // The columns stay put at large text, so a head steps down rather than split.
+        val reps = stringResource(if (split) R.string.col_reps_split else R.string.col_reps)
+        // The columns stay put at large text, so the heads step down together rather than split.
+        val size = sharedFontSize(listOf(stringResource(R.string.col_kg) to ColKg, reps to ColReps, stringResource(R.string.col_rir) to ColRir), st, floor = 11.sp)
         @Composable
-        fun Head(text: String, modifier: Modifier, align: TextAlign = TextAlign.Center) = Text(
-            text, modifier, style = st, color = c, textAlign = align, maxLines = 1,
-            autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = st.fontSize),
-        )
+        fun Head(text: String, modifier: Modifier, align: TextAlign = TextAlign.Center) = Text(text, modifier, style = st, fontSize = size, color = c, textAlign = align, maxLines = 1)
         Head(if (showLast) stringResource(R.string.col_last) else "", Modifier.weight(1f), TextAlign.Start)
         Head(stringResource(R.string.col_kg), Modifier.width(ColKg))
-        Head(stringResource(if (split) R.string.col_reps_split else R.string.col_reps), Modifier.width(ColReps))
+        Head(reps, Modifier.width(ColReps))
         Head(stringResource(R.string.col_rir), Modifier.width(ColRir))
         Spacer(Modifier.width(ColCheck))
     }

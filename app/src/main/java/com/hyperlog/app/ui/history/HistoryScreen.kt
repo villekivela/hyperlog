@@ -38,6 +38,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
+import com.hyperlog.app.coach.NumberRange
+import com.hyperlog.app.coach.TrainingTargets
+import com.hyperlog.app.history.trainingGlance
+import com.hyperlog.app.ui.theme.NextAction
+import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.history.Bodyweight
 import com.hyperlog.app.history.ExerciseTrend
@@ -106,6 +111,13 @@ fun HistoryScreen(
     onLogBodyweight: (Double) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The training targets' weekly sets, what to aim for before there is anything to measure. */
+    standing: NumberRange = TrainingTargets().volume,
+    /** The weekly sets a muscle is measured against. */
+    range: (String) -> NumberRange = { standing },
+    today: LocalDate = LocalDate.now(),
+    /** What to do next, at the top of Progress; null when there is nothing to offer. */
+    next: NextAction? = null,
 ) {
     BackHandler(onBack = onBack)
     Scaffold(
@@ -142,7 +154,7 @@ fun HistoryScreen(
         if (tab == 0) {
             SessionList(sessions, onOpenSession, Modifier.padding(padding))
         } else {
-            Progress(weeks, exercises, bodyweights, onOpenExercise, onBodyweight, onLogBodyweight, Modifier.padding(padding))
+            Progress(weeks, exercises, bodyweights, onOpenExercise, onBodyweight, onLogBodyweight, standing, range, today, next, Modifier.padding(padding))
         }
     }
 }
@@ -155,12 +167,25 @@ private fun Progress(
     onOpenExercise: (String) -> Unit,
     onBodyweight: () -> Unit,
     onLogBodyweight: (Double) -> Unit,
+    standing: NumberRange,
+    range: (String) -> NumberRange,
+    today: LocalDate,
+    next: NextAction?,
     modifier: Modifier = Modifier,
 ) {
     val cs = MaterialTheme.colorScheme
     var logging by rememberSaveable { mutableStateOf(false) }
-    var week by rememberSaveable { mutableIntStateOf(0) }
+    var picked by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    val glance = weeks?.let { trainingGlance(it, exercises.orEmpty(), today, picked, range) }
     LazyColumn(modifier.fillMaxSize()) {
+        next?.let { item { NextCard(it); Spacer(Modifier.height(8.dp)) } }
+        glance?.let {
+            item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) { MusclesCard(it, standing, today) }; Spacer(Modifier.height(8.dp)) }
+            if (it.weeks.any { w -> w.workSets > 0 }) {
+                item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) { TrendCard(it) { w -> picked = w } }; Spacer(Modifier.height(8.dp)) }
+            }
+            item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) { MovingCard(it.moving, onOpenExercise) }; Spacer(Modifier.height(8.dp)) }
+        }
         item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) {
             SectionHead(stringResource(R.string.history_bodyweight)) {
                 IconButton(onClick = { logging = true }) { SymbolIcon(Symbol.Add, stringResource(R.string.history_log_bodyweight)) }
@@ -170,27 +195,6 @@ private fun Progress(
             }
             BodyweightSummary(bodyweights, onBodyweight, chartHeight = 64.dp)
         }; Spacer(Modifier.height(8.dp)) }
-        item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) {
-            val shown = weeks?.getOrNull(week)
-            SectionHead(if (week == 0 || shown == null) stringResource(R.string.history_sets_week) else weekRange(shown.start)) {
-                if (weeks != null) {
-                    IconButton(onClick = { week++ }, enabled = week < weeks.size - 1) {
-                        SymbolIcon(Symbol.ChevronLeft, stringResource(R.string.history_week_earlier))
-                    }
-                    IconButton(onClick = { week-- }, enabled = week > 0) {
-                        SymbolIcon(Symbol.ChevronRight, stringResource(R.string.history_week_later))
-                    }
-                }
-            }
-            if (shown != null) {
-                if (shown.sets.isEmpty()) {
-                    Muted(stringResource(R.string.history_sets_none))
-                } else {
-                    WeekSets(shown.sets)
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-        } }
         item {
             SectionHead(stringResource(R.string.history_exercises))
             if (exercises != null && exercises.isEmpty()) Muted(stringResource(R.string.history_exercises_none))

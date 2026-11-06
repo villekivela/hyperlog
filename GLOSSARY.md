@@ -339,6 +339,15 @@ _Avoid_: Body mass, weigh-in
 The work sets a muscle got in a week (Monday to Sunday), each counted as 1 for every primary muscle of its exercise and 0.5 for every secondary muscle, whatever partials, drops or mini-sets extend it.
 _Avoid_: Volume load, tonnage
 
+**Training glance**:
+What Progress opens on: a week's weekly sets per muscle against their ranges, the work sets of the last 8 weeks and the moving lifts, on one screen.
+
+**Moving lift**:
+A lift whose estimate moved 1 % or more over about the last 4 weeks, up or down, and which was done in that time. Progress shows the three that moved most.
+
+**Next action**:
+The one thing to do next, in an accent card at the top of Program and Progress: on to Today, or back to the session running.
+
 **Deload**:
 A planned week of reduced volume or effort, marked as one in the program file. It never lowers the estimate.
 

@@ -43,16 +43,22 @@ object ProgramVolume {
             listed += exercise.muscles
             exercise.addSets(slot.setsFor(slot.exercise).size, sets)
         }
-        val range = program.targets.volume ?: standing
         return Muscles.filter { it in listed }.map { muscle ->
             val focused = MuscleGroup.of(muscle) in program.focus
-            val measured = when {
-                focused -> range.raised()
-                program.focus.isNotEmpty() -> range.maintenance()
-                else -> range
-            }
+            val measured = range(program, muscle, standing)
             val n = sets.getValue(muscle)
             MuscleVolume(muscle, n, measured, focused, when { n < measured.low -> VolumeStatus.Under; n > measured.high -> VolumeStatus.Over; else -> VolumeStatus.Within })
+        }
+    }
+
+    /** The range [muscle] is measured against: the raised one in a focused group, maintenance beside a focus. */
+    fun range(program: Program?, muscle: String, standing: NumberRange): NumberRange {
+        val range = program?.targets?.volume ?: standing
+        val focus = program?.focus.orEmpty()
+        return when {
+            MuscleGroup.of(muscle) in focus -> range.raised()
+            focus.isNotEmpty() -> range.maintenance()
+            else -> range
         }
     }
 
