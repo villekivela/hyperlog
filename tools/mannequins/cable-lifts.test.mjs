@@ -46,3 +46,35 @@ test('the neutral-grip pulldown holds a close handle, palms facing, the elbows d
   assert.ok(Math.abs(out) < 0.1, `the elbow ${out.toFixed(3)} out from the shoulder: down by the sides`);
   assert.ok(bottom('lowerarm_l').y < bottom('upperarm_l').y - 0.15, 'the elbow below the shoulder at the bottom');
 });
+
+test('the rope hammer curl curls thumbs up, the elbows held at the sides', async () => {
+  const { stage, at } = await posed('cable_rope_hammer_curl');
+  assert.deepEqual(failing('cable_rope_hammer_curl', stage), []);
+  const low = at(1);
+  const [elbowLow, handLow] = [low('lowerarm_l').clone(), low('hand_l').clone()];
+  const up = at(0);
+  const [elbowUp, handUp] = [up('lowerarm_l').clone(), up('hand_l').clone()];
+  assert.ok(elbowUp.distanceTo(elbowLow) < 0.06, `the elbow moves ${elbowUp.distanceTo(elbowLow).toFixed(3)}`);
+  assert.ok(handUp.y - handLow.y > 0.3, `the hand rises ${(handUp.y - handLow.y).toFixed(3)}`);
+  assert.ok(handUp.y > elbowUp.y + 0.1, 'the hand ends above the elbow');
+  // Thumbs up: the knuckles run up and down, not across, through the rep.
+  for (const d of [0, 0.5, 1]) {
+    const g = at(d);
+    const knuckles = g('index_01_l').sub(g('pinky_01_l')).normalize();
+    assert.ok(Math.abs(knuckles.x) < 0.6, `the knuckles ${knuckles.x.toFixed(2)} across at ${d}: palms facing, not up`);
+  }
+});
+
+test('the 1-arm pulldown kneels on one knee and drives the elbow from long overhead down to the side', async () => {
+  const { stage, at } = await posed('1_arm_cable_pulldown');
+  assert.deepEqual(failing('1_arm_cable_pulldown', stage), []);
+  const top = at(0);
+  assert.ok(top('calf_r').y < 0.12, `the right knee ${top('calf_r').y.toFixed(3)} up`);
+  assert.ok(top('hand_l').y > top('Head').y, `the hand ${top('hand_l').y.toFixed(3)} at the top, over the head`);
+  const reach = top('upperarm_l').sub(top('lowerarm_l')).angleTo(top('hand_l').sub(top('lowerarm_l'))) * 180 / Math.PI;
+  assert.ok(reach > 145, `the elbow ${reach.toFixed(0)}° at the top: the arm long`);
+  const bottom = at(1);
+  const drop = bottom('upperarm_l').y - bottom('lowerarm_l').y;
+  assert.ok(drop > 0.2, `the elbow ${drop.toFixed(3)} below the shoulder at the bottom`);
+  assert.ok(bottom('hand_l').y < bottom('upperarm_l').y, 'the hand down below the shoulder');
+});

@@ -809,6 +809,34 @@ export const POSES = {
     camera: { target: [0, 0.5, 0.2], halfHeight: 0.9, azimuth: 65, elevation: 8 },
   },
 
+  // Standing facing the left tower, thumbs up on a rope from the lowest pulley, leaning back a touch:
+  // the elbows held at the sides, the forearms curl up from the thighs.
+  cable_rope_hammer_curl: {
+    equipment: 'cable',
+    motion: 'arms',
+    kit: { cable_crossover: { position: 1, faces: true, attachment: 'rope', at: [-1.105, 0.75] } },
+    top: { shin: 3, thigh: 3, trunk: -3, upperArm: 8, forearm: 130 },
+    bottom: { shin: 3, thigh: 3, trunk: -3, upperArm: 6, forearm: 12 },
+    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
+    grip: { width: 0.13, rotate: 90 },
+    camera: { target: [0, 1.0, 0.2], halfHeight: 1.1, azimuth: 62, elevation: 8 },
+  },
+
+  // On the right knee facing the left tower, a handle from a high pulley in the left hand: the elbow
+  // drives from the arm long overhead down to the side, the free hand resting on the kneeling thigh.
+  '1_arm_cable_pulldown': {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 15, faces: true, hands: [1], at: [-0.965, 1.12] } },
+    body: { kneel: -1 },
+    top: { thigh: 0, trunk: 6, hand: [0.24, 1.5, 0.4], rotate: 90 },
+    bottom: { thigh: 0, trunk: 6, hand: [0.27, 0.88, 0.2], rotate: 90 },
+    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
+    tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
+    grip: { rotate: 90, pole: [0.8, -1, -0.5], one: 1, rest: [-0.13, 0.42, 0.11], restPole: [0.3, -1, -0.3], restFlat: { palm: [0.6, 0, -1], fingers: [0.3, -1, 0] } },
+    camera: { target: [0, 0.8, 0.3], halfHeight: 1.15, azimuth: 65, elevation: 8 },
+  },
+
   // Back on an upright bench between the towers, the pulleys at the seated shoulder: the handles
   // sweep from wide behind the line of the chest to about shoulder width in front of it (owner, #127).
   seated_cable_flye: {
