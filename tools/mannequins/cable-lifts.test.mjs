@@ -92,3 +92,18 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   const low = at(1)('hand_l').y;
   assert.ok(high - low > 0.45, `the hands sweep ${(high - low).toFixed(3)} down`);
 });
+
+test('the 1-arm lat pull-in kneels on both knees and draws the long arm in and down to the side', async () => {
+  const { stage, at } = await posed('1_arm_lat_pull_in');
+  assert.deepEqual(failing('1_arm_lat_pull_in', stage), []);
+  const top = at(0);
+  for (const k of ['l', 'r']) assert.ok(top(`calf_${k}`).y < 0.12, `the ${k} knee ${top(`calf_${k}`).y.toFixed(3)} up`);
+  const out = top('hand_l').x - top('upperarm_l').x;
+  assert.ok(out > 0.35, `the hand ${out.toFixed(3)} out from the shoulder at the top`);
+  const long = top('upperarm_l').sub(top('lowerarm_l')).angleTo(top('hand_l').sub(top('lowerarm_l'))) * 180 / Math.PI;
+  assert.ok(long > 145, `the elbow ${long.toFixed(0)}° at the top: the arm long`);
+  const bottom = at(1);
+  const tucked = bottom('lowerarm_l').x - bottom('upperarm_l').x;
+  assert.ok(tucked < 0.12, `the elbow ${tucked.toFixed(3)} out at the bottom: in at the side`);
+  assert.ok(bottom('upperarm_l').y - bottom('lowerarm_l').y > 0.2, 'the elbow well below the shoulder');
+});
