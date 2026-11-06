@@ -1730,6 +1730,8 @@ gallery (Technique videos).
     waits on whom, and goes to the owner; it stays in the spec until the pose or the line changes.
     The review is tested cold (owner, 2026-11-04, #197): the second batch's specs are written before
     its poses and hidden from their worker, and the verdicts are written down before the owner looks.
+    That test is over (owner, 2026-11-06, #261): the owner compared the verdicts and review-after-merge
+    stays off, so the ten cold specs run in CI like the rest, their guessed lines corrected or marked open.
   - **Tracing a pose** (owner, 2026-11-02, #123): `trace <footage> <time range>` runs pose
     estimation on side-on footage of the lift (the owner's own filming, or a technique video), picks
     one clean rep, smooths it, and writes the side-on shin, thigh, trunk and arm angles over its

@@ -1,5 +1,4 @@
 {
-  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
   "sources": [
     "technique video fGm-ef-4PVk from 10:49",
     "exercises.json: back on the pad, sweep the handles together in front of the chest, let them pull the arms back for a deep stretch",
@@ -34,7 +33,8 @@
       "range": [
         -0.02,
         0.3
-      ]
+      ],
+      "open": "the owner's OK'd pose (#261): the hands close to 34 cm apart, about shoulder width, and the owner hasn't said to change it"
     },
     {
       "says": "the hands make a wide sweep",

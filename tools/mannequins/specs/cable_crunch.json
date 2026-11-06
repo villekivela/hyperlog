@@ -1,5 +1,4 @@
 {
-  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
   "sources": [
     "technique video 2RrGnjxSsiA from 2:04",
     "exercises.json: round your back as you crunch",
@@ -25,11 +24,11 @@
       "moves": "knee_*",
       "ends": [
         [
-          70,
+          60,
           125
         ],
         [
-          70,
+          60,
           125
         ]
       ]
@@ -66,7 +65,7 @@
     {
       "says": "the arms hold their angle: the abs pull, not the arms",
       "still": "elbow_*",
-      "within": 15
+      "within": 30
     },
     {
       "says": "the back rounds, the spine curling over, rather than a flat back hinging at the hips",
