@@ -209,8 +209,8 @@ internal const val NavigationBarTag = "navigation-bar"
 /** The five destinations, in the bar's order, with their symbols (outlined, filled when selected). */
 private val Tabs = listOf(
     Triple(Screen.Today, Symbol.Today, Symbol.TodayFill),
-    Triple(Screen.Program, Symbol.ViewTimeline, Symbol.ViewTimelineFill),
-    Triple(Screen.Coach, Symbol.Sports, Symbol.SportsFill),
+    Triple(Screen.Program, Symbol.FitnessCenter, Symbol.FitnessCenterFill),
+    Triple(Screen.Coach, Symbol.Forum, Symbol.ForumFill),
     Triple(Screen.History, Symbol.History, Symbol.History),
     Triple(Screen.Settings, Symbol.Settings, Symbol.SettingsFill),
 )

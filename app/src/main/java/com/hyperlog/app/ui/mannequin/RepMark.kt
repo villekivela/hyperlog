@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -115,7 +116,8 @@ internal fun RepMark(exercise: Exercise?, modifier: Modifier = Modifier, size: D
     val exact = figure?.second == true
     val ink = if (exact) cs.onSecondaryContainer else cs.onSurfaceVariant.copy(alpha = 0.6f)
     Canvas(
-        modifier.size(size).clip(RoundedCornerShape(size * 0.3f)).background(cs.secondaryContainer)
+        // Its own layer: the mark is recorded once, and a list scrolling only moves it.
+        modifier.size(size).graphicsLayer().clip(RoundedCornerShape(size * 0.3f)).background(cs.secondaryContainer)
             .testTag(if (exact) RepMarkTag else RepMarkFallbackTag),
     ) { figure?.let { drawRep(it.first, ink, ghost = exact) } }
 }

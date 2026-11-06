@@ -202,7 +202,7 @@ fun SettingsScreen(
                     item {
                         Box(Modifier.toggleable(on, role = Role.Switch, onValueChange = onScriptedCoach)) {
                             SegmentedRow(
-                                stringResource(R.string.settings_scripted_coach), stringResource(R.string.settings_scripted_coach_body), Symbol.Sports,
+                                stringResource(R.string.settings_scripted_coach), stringResource(R.string.settings_scripted_coach_body), Symbol.Forum,
                                 trailing = { Switch(checked = on, onCheckedChange = null) },
                             )
                         }

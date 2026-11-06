@@ -1364,6 +1364,9 @@ gallery (Technique videos).
   are baked from the mannequin's clips by `tools/exercise-poses/bake.py` into a small table the
   app draws, so a list scrolls with no 3D view in it. An exercise not yet posed takes its movement
   pattern's figure, muted and with no ghost, so it reads as a stand-in.
+- **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
+  its own. The navigation bar's symbols read without their labels at 24 dp: a calendar, a dumbbell, a
+  conversation, a clock and a gear.
 - **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
   with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
   tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.

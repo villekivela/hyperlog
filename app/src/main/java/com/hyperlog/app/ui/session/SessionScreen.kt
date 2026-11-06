@@ -1130,7 +1130,7 @@ internal fun ExerciseSheet(
                 Spacer(Modifier.height(24.dp))
                 val label = stringResource(R.string.sheet_program_note)
                 Row(Modifier.semantics { contentDescription = label }) {
-                    SymbolIcon(Symbol.ViewTimeline, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                    SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
                     Spacer(Modifier.width(16.dp))
                     Text(note, style = MaterialTheme.typography.bodyLarge)
                 }

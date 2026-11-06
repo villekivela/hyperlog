@@ -118,7 +118,7 @@ internal val TileLooks = mapOf(
     Tile.Tired to TileLook(R.string.checkin_tile_tired, Symbol.AirlineSeatFlat),
     Tile.ChangeProgram to TileLook(R.string.checkin_tile_change, Symbol.Tune),
     Tile.Workout to TileLook(R.string.checkin_tile_workout, Symbol.FitnessCenter),
-    Tile.NewProgram to TileLook(R.string.checkin_tile_new_program, Symbol.ViewTimeline),
+    Tile.NewProgram to TileLook(R.string.checkin_tile_new_program, Symbol.FitnessCenter),
     Tile.SomethingElse to TileLook(R.string.checkin_tile_else, Symbol.Edit),
 )
 

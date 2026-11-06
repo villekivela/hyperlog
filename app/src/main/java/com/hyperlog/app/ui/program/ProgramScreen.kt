@@ -202,7 +202,7 @@ fun ProgramScreen(
                                     // A run of it left mid-way picks up again rather than starting over.
                                     DropdownMenuItem(
                                         text = { Text(stringResource(if (starterLeft != null) R.string.starter_resume_named else R.string.starter_run_named, starter.title)) },
-                                        leadingIcon = { SymbolIcon(Symbol.ViewTimeline, null) },
+                                        leadingIcon = { SymbolIcon(Symbol.FitnessCenter, null) },
                                         onClick = { menu = false; confirmReplace = if (starterLeft != null) Replacement.ResumeStarter else Replacement.Starter },
                                     )
                                 }
@@ -292,7 +292,7 @@ data class ProgramView(val week: Int? = null, val changesOpen: Boolean = false, 
 
 @Composable
 private fun NoProgram(onImport: () -> Unit, onOpenPrograms: (() -> Unit)?) {
-    EmptyState(Symbol.ViewTimeline, stringResource(R.string.today_empty_title), stringResource(R.string.program_none_body)) {
+    EmptyState(Symbol.FitnessCenter, stringResource(R.string.today_empty_title), stringResource(R.string.program_none_body)) {
         Button(onClick = onImport) { Text(stringResource(R.string.program_import)) }
         onOpenPrograms?.let { TextButton(onClick = it) { Text(stringResource(R.string.programs_title)) } }
     }

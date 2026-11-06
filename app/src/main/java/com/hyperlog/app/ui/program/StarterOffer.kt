@@ -47,7 +47,7 @@ fun StarterOffer(
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
         SectionCard(padding = 24.dp) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                ShapedSymbol(Symbol.ViewTimeline)
+                ShapedSymbol(Symbol.FitnessCenter)
                 Spacer(Modifier.height(24.dp))
                 Text(stringResource(R.string.starter_label), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                 Spacer(Modifier.height(4.dp))

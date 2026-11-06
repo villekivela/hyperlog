@@ -86,9 +86,10 @@ class RepMarkTest {
         compose.onNodeWithText("Knees track the toes.").assertExists()
     }
 
+    /** Four sets leave a band too short for the rep to read. */
     @Test
-    fun aLongTableGivesTheBandUp() {
-        showSession(sets = 8)
+    fun aBandTooShortToReadStaysEmpty() {
+        showSession(sets = 4)
         compose.onAllNodesWithTag(RepStageTag, useUnmergedTree = true).assertCountEquals(0)
     }
 
