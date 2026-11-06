@@ -27,7 +27,9 @@ test('the wide-grip pulldown holds the bar well outside the plain pulldown, from
   const plain = await posed('lat_pulldown');
   const wide = at(1)('hand_l').x;
   const narrow = plain.at(1)('hand_l').x;
-  assert.ok(wide > narrow + 0.08, `the hand ${wide.toFixed(3)} out, the plain pulldown's ${narrow.toFixed(3)}`);
+  assert.ok(wide > narrow + 0.02, `the hand ${wide.toFixed(3)} out, the plain pulldown's ${narrow.toFixed(3)}`);
+  const held = heldAt(stage.rig, 'l').x;
+  assert.ok(held > 0.3 && held < 0.46, `the hand at ${held.toFixed(3)} on the bar: on its sleeve, not its bent tip`);
   const top = at(0);
   assert.ok(top('hand_l').y > top('Head').y + 0.15, `the hands ${top('hand_l').y.toFixed(3)} up at the top, over the head`);
   const bottom = at(1);
@@ -37,7 +39,9 @@ test('the wide-grip pulldown holds the bar well outside the plain pulldown, from
 test('the neutral-grip pulldown holds a close handle, palms facing, the elbows driving down by the sides', async () => {
   const { stage, at } = await posed('neutral_grip_lat_pulldown');
   assert.deepEqual(failing('neutral_grip_lat_pulldown', stage), []);
-  assert.equal(prepare('neutral_grip_lat_pulldown').kit.cable_tower.attachment, 'v_handle');
+  // Two grips running front to back, each in its own fist, palms facing: a grip across the body would
+  // lie along the fingers.
+  assert.equal(prepare('neutral_grip_lat_pulldown').kit.cable_tower.attachment, 'handles');
   const bottom = at(1);
   // Where the hands hold, not the wrists, which a palm's thickness puts further out.
   const apart = heldAt(stage.rig, 'l').x - heldAt(stage.rig, 'r').x;
@@ -57,6 +61,8 @@ test('the rope hammer curl curls thumbs up, the elbows held at the sides', async
   assert.ok(elbowUp.distanceTo(elbowLow) < 0.06, `the elbow moves ${elbowUp.distanceTo(elbowLow).toFixed(3)}`);
   assert.ok(handUp.y - handLow.y > 0.3, `the hand rises ${(handUp.y - handLow.y).toFixed(3)}`);
   assert.ok(handUp.y > elbowUp.y + 0.1, 'the hand ends above the elbow');
+  // The rope runs up through each fist to its stop above the thumb, clear of the thighs.
+  assert.equal(prepare('cable_rope_hammer_curl').kit.cable_crossover.reversed, true);
   // Thumbs up: the knuckles run up and down, not across, through the rep.
   for (const d of [0, 0.5, 1]) {
     const g = at(d);
@@ -84,13 +90,24 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   assert.deepEqual(failing('cable_lat_pullover', stage), []);
   const elbow = (g) => g('upperarm_l').sub(g('lowerarm_l')).angleTo(g('hand_l').sub(g('lowerarm_l'))) * 180 / Math.PI;
   const angles = [0, 0.25, 0.5, 0.75, 1].map((d) => elbow(at(d)));
-  assert.ok(Math.min(...angles) > 140, `the elbow bends to ${Math.min(...angles).toFixed(0)}°: a pullover, not a pulldown`);
+  // The front thigh keeps the finish from locking out; a pulldown folds to under 60°.
+  assert.ok(Math.min(...angles) > 120, `the elbow bends to ${Math.min(...angles).toFixed(0)}°: a pullover, not a pulldown`);
   const top = at(0);
   const high = top('hand_l').y;
   assert.ok(top('calf_r').y < 0.12, `the right knee ${top('calf_r').y.toFixed(3)} up`);
   assert.ok(high > top('upperarm_l').y, 'the hands over the shoulders at the top');
   const low = at(1)('hand_l').y;
   assert.ok(high - low > 0.45, `the hands sweep ${(high - low).toFixed(3)} down`);
+  // The trunk rocks from well forward to near upright, and the arms finish down by the hips.
+  const lean = (g) => {
+    const up = g('neck_01').sub(g('pelvis'));
+    return Math.atan2(up.z, up.y) * 180 / Math.PI;
+  };
+  const end = at(1);
+  const swing = lean(at(0)) - lean(at(1));
+  assert.ok(swing > 25, `the trunk rocks ${swing.toFixed(0)}°`);
+  const arm = end('upperarm_l').sub(end('lowerarm_l')).angleTo(end('upperarm_l').sub(end('pelvis'))) * 180 / Math.PI;
+  assert.ok(arm < 35, `the upper arm ${arm.toFixed(0)}° off the trunk at the finish: by the hip`);
 });
 
 test('the 1-arm lat pull-in kneels on both knees and draws the long arm in and down to the side', async () => {
@@ -113,11 +130,15 @@ test('the cable lat pull-around reaches across the body and drives the elbow dow
   assert.deepEqual(failing('1_arm_cable_lat_pull_around', stage), []);
   const top = at(0);
   assert.ok(top('calf_r').y < 0.12, `the right knee ${top('calf_r').y.toFixed(3)} up`);
-  assert.ok(top('hand_l').x < 0, `the left hand ${top('hand_l').x.toFixed(3)} at the top: across the body`);
+  assert.ok(top('hand_l').x < top('upperarm_r').x - 0.05, `the left hand ${top('hand_l').x.toFixed(3)} at the top: past the far shoulder, ${top('upperarm_r').x.toFixed(3)}`);
+  const across = top('upperarm_l').sub(top('upperarm_r'));
+  const turned = Math.atan2(across.z, across.x) * 180 / Math.PI;
+  assert.ok(Math.abs(turned) > 15, `the shoulders turned ${turned.toFixed(0)}° toward the cable`);
   assert.ok(top('hand_l').y > top('upperarm_l').y, 'the hand above the shoulder at the top');
   const bottom = at(1);
   assert.ok(bottom('upperarm_l').y - bottom('lowerarm_l').y > 0.2, 'the elbow well below the shoulder at the bottom');
   const hip = bottom('lowerarm_l').distanceTo(bottom('thigh_l'));
   assert.ok(hip < 0.45, `the elbow ${hip.toFixed(3)} from the hip`);
-  assert.ok(bottom('hand_l').x > 0.1, `the hand back on its own side, ${bottom('hand_l').x.toFixed(3)}`);
+  const grip = heldAt(stage.rig, 'l').x;
+  assert.ok(Math.abs(grip) < 0.14, `the hand ${grip.toFixed(3)} at the finish: at the sternum`);
 });

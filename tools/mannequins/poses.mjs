@@ -102,18 +102,18 @@ export const POSES = {
   // Overhand out near the bar's bends, the elbows wide, pulled to the upper chest.
   lat_pulldown_wide_grip: {
     like: 'lat_pulldown',
-    grip: { width: 0.52, elbows: 1 },
+    grip: { width: 0.425, elbows: 1 },
     top: { bar: [1.58, 0.02] },
     bottom: { bar: [1.14, 0.02] },
   },
 
-  // A close neutral handle, the palms facing: the elbows drive straight down by the sides.
+  // Two close handles in front of the face, the palms facing: the elbows drive down by the sides.
   neutral_grip_lat_pulldown: {
     like: 'lat_pulldown',
-    kit: { cable_tower: { attachment: 'v_handle' } },
-    grip: { width: 0.09, rotate: 90, elbows: 0 },
-    top: { bar: [1.7, 0.02], shrug: 9 },
-    bottom: { bar: [1.11, 0.02], shrug: 0 },
+    kit: { cable_tower: { attachment: 'handles', spread: 0.095, pulley: [2.25, 0.14] } },
+    grip: { width: 0.095, rotate: 0, pole: [0.1, -1, 0.3] },
+    top: { bar: [1.62, 0.14], shrug: 9 },
+    bottom: { bar: [1.11, 0.14], shrug: 0 },
   },
 
   // A narrower grip, pulled to the upper chest rather than as low. The arms hang fully extended at
@@ -814,7 +814,7 @@ export const POSES = {
   cable_rope_hammer_curl: {
     equipment: 'cable',
     motion: 'arms',
-    kit: { cable_crossover: { position: 1, faces: true, attachment: 'rope', at: [-1.105, 0.75] } },
+    kit: { cable_crossover: { position: 1, faces: true, attachment: 'rope', reversed: true, at: [-1.105, 0.75] } },
     top: { shin: 3, thigh: 3, trunk: -3, upperArm: 8, forearm: 130 },
     bottom: { shin: 3, thigh: 3, trunk: -3, upperArm: 6, forearm: 12 },
     feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
@@ -838,16 +838,17 @@ export const POSES = {
     camera: { target: [0, 0.8, 0.3], halfHeight: 1.15, azimuth: 65, elevation: 8 },
   },
 
-  // On the right knee facing the left tower, leaning forward, a straight bar from a high pulley: the
-  // arms stay long as the bar sweeps from up in front down past the front knee.
+  // On the right knee facing the left tower, a straight bar from a high pulley: from leaning well
+  // forward the trunk rocks back upright as the long arms sweep the bar down to the hips, the front
+  // knee open to let it by.
   cable_lat_pullover: {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 15, faces: true, attachment: 'bar', at: [-1.105, 1.3] } },
     body: { kneel: -1 },
-    top: { thigh: 0, trunk: 24, hand: [0.18, 1.38, 0.68], rotate: 0 },
-    bottom: { thigh: 0, trunk: 24, hand: [0.18, 0.58, 0.74], rotate: 0 },
-    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
+    top: { thigh: 0, trunk: 42, hand: [0.11, 1.33, 0.76], rotate: 0 },
+    bottom: { thigh: 0, trunk: 6, hand: [0.11, 0.46, 0.34], rotate: 0 },
+    feet: { stance: 0.22, ahead: 0.5, kneesOut: 0.5 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
     grip: { arc: true, rotate: 0, thumb: 'wrapped', pole: [0.3, -1, -0.5] },
     camera: { target: [0, 0.85, 0.35], halfHeight: 1.15, azimuth: 65, elevation: 8 },
@@ -868,15 +869,16 @@ export const POSES = {
     camera: { target: [0, 0.75, 0.1], halfHeight: 1.05, azimuth: 20, elevation: 8 },
   },
 
-  // On the right knee between the towers, the left hand reaching across the body to the right tower's
-  // high pulley: the elbow drives down round the trunk to the hip, the free hand on the kneeling thigh.
+  // On the right knee between the towers, the trunk turned toward the right tower's high pulley and
+  // the left hand reaching past the far shoulder: the trunk comes square as the elbow drives down to
+  // the hip and the hand to the sternum, the free hand on the kneeling thigh.
   '1_arm_cable_lat_pull_around': {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 13, hands: [1], crossed: true, at: [0, 0.05] } },
     body: { kneel: -1 },
-    top: { thigh: 0, trunk: 8, hand: [-0.22, 1.1, 0.55], rotate: 90 },
-    bottom: { thigh: 0, trunk: 8, hand: [0.24, 0.9, 0.3], rotate: 90 },
+    top: { thigh: 0, trunk: 8, hand: [-0.34, 1.12, 0.5], rotate: 90, offsets: { spine_01: [0, -10, 0], spine_02: [0, -10, 0], spine_03: [0, -10, 0] } },
+    bottom: { thigh: 0, trunk: 8, hand: [0.08, 0.92, 0.34], rotate: 90, offsets: { spine_01: [0, 0, 0], spine_02: [0, 0, 0], spine_03: [0, 0, 0] } },
     feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
     grip: { rotate: 90, pole: [0.4, -1, 0.2], one: 1, rest: [-0.13, 0.42, 0.11], restPole: [0.3, -1, -0.3], restFlat: { palm: [0.6, 0, -1], fingers: [0.3, -1, 0] } },
