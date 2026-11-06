@@ -19,6 +19,26 @@ for (const id of ['barbell_row', 'deficit_pendlay_row', 'deadlift', 'deficit_dea
   });
 }
 
+// The owner, #127: the knees moved back as the bar reached them, then forward again. They give way
+// steadily from the floor until the bar is well past them. Above that the legs are all but straight
+// and the knees ride forward a few millimetres with the hips, finishing the lockout.
+for (const id of ['deadlift', 'deficit_deadlift']) {
+  test(`${id}'s knees never come forward again as the bar passes them`, async () => {
+    const stage = await buildStage(prepare(id));
+    const lift = Array.from({ length: FRAMES }, (_, f) => {
+      const { bar } = stage.pose(1 - f / (FRAMES - 1));
+      stage.scene.updateMatrixWorld(true);
+      const knee = wpos(stage.scene.getObjectByName('calf_l'));
+      return { z: knee.z, past: bar.y - knee.y };
+    });
+    const passing = lift.filter(({ past }) => past < 0.2);
+    assert.ok(passing.at(-1).past > 0.15, 'the bar never gets past the knees');
+    passing.slice(1).forEach(({ z }, f) => {
+      assert.ok(z - passing[f].z < 0.001, `frame ${f + 1} of the lift: the knee came forward ${((z - passing[f].z) * 1000).toFixed(1)} mm`);
+    });
+  });
+}
+
 test('a deadlift\'s bar sits where bottom.bar puts it, on the floor', async () => {
   const entry = prepare('deadlift', { ...POSES, deadlift: { ...POSES.deadlift, bottom: { ...POSES.deadlift.bottom, bar: 0.24 } } });
   const P = (await buildStage(entry)).pose(1);
