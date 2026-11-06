@@ -60,6 +60,7 @@ import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueName
 import com.hyperlog.app.ui.program.techniqueText
 import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.theme.techniqueColor
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
 // The pad's strip during a technique, and the set sheet.
@@ -71,13 +72,13 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 @Composable
 internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, actions: PadActions) {
     val cs = MaterialTheme.colorScheme
-    val (symbol, text) = when (followUp) {
-        is FollowUp.Drop -> TechniqueLook.Dropset.symbol to stringResource(R.string.follow_drop, followUp.index + 1, followUp.count)
-        is FollowUp.MiniSet -> TechniqueLook.MyoReps.symbol to stringResource(R.string.follow_mini_set, followUp.index + 1)
-        is FollowUp.Hold -> TechniqueLook.IsoHold.symbol to stringResource(R.string.follow_hold, followUp.seconds)
+    val (look, text) = when (followUp) {
+        is FollowUp.Drop -> TechniqueLook.Dropset to stringResource(R.string.follow_drop, followUp.index + 1, followUp.count)
+        is FollowUp.MiniSet -> TechniqueLook.MyoReps to stringResource(R.string.follow_mini_set, followUp.index + 1)
+        is FollowUp.Hold -> TechniqueLook.IsoHold to stringResource(R.string.follow_hold, followUp.seconds)
     }
     Spacer(Modifier.width(8.dp))
-    SymbolIcon(symbol, null, Modifier.size(20.dp), tint = cs.tertiary)
+    SymbolIcon(look.symbol, null, Modifier.size(20.dp), tint = techniqueColor(look.kind, isDarkSurface()))
     Spacer(Modifier.width(8.dp))
     Text(text, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
     if (followUp is FollowUp.Hold) {
@@ -203,6 +204,6 @@ private fun TechniqueOption(technique: Technique?, selected: Boolean, name: Stri
             Text(name, style = MaterialTheme.typography.bodyLarge)
             Text(detail, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        technique?.let { SymbolIcon(it.symbol(), null, Modifier.size(20.dp), tint = cs.tertiary) }
+        technique?.let { SymbolIcon(it.symbol(), null, Modifier.size(20.dp), tint = techniqueColor(it.kind, isDarkSurface())) }
     }
 }

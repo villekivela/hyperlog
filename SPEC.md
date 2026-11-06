@@ -37,7 +37,13 @@ configuration, iOS, web, any server.
   Sessions | Progress and Program's blocks (the owner on #138, replacing #58's white card in light). Tertiary follows primary;
   secondary and tertiaryContainer (advice cards, technique pills) are greys of their own step. The
   RIR, progression, plate and error colours stay fixed; a coloured accent would have to keep 30° of
-  hue from each of them, and a neutral one never competes. Light and dark follow the system
+  hue from each of them, and a neutral one never competes. **Technique colours** are the exception
+  (owner, #248): the technique's circle holds an icon and the RIR chip a number, so they don't keep
+  the 30° rule and red and teal may share hues with the chip. Red for a drop set, teal for
+  lengthened partials, violet for myo-reps, orange for to failure, blue for an iso hold; darker in
+  light, lighter in dark, each at 3:1 on every neutral surface (`TechniqueColourTest`). The colour
+  shows wherever the technique's icon does: its set's index circle, the tall pill joining its drops
+  or mini-sets, the Program plan text, the set sheet's list and the pad's strip. Light and dark follow the system
   setting; there is no in-app theme picker. **On the accent** (a primaryContainer card or strip:
   the hero, the gym's setup card, Claude's reply, Day done), a filled button or a picked choice is
   onPrimaryContainer with the card's accent for its words, as the hero's Start, and the choices not
@@ -301,7 +307,7 @@ logging, and computed loads where it needs them.
   mini-set row shows the first one's target; the pad reads "Mini-set N". There is no `+` on a myo
   pill. Programs and stored sets that still carry `maxMiniSets` load, and it is ignored.
 - **Iso hold**: the hold follows the set's full reps as its own sub-row. **Start** on the pad's
-  strip runs a hold timer in the header pill, filling toward the target and buzzing when it is
+  strip runs a hold timer on the Next row, filling toward the target and buzzing when it is
   reached; ✓ (or Stop) records the whole seconds held. Seconds can be typed instead.
 - **Lengthened partials**: the first ✓ moves to partials entry, prefilled with the target count if
   the program gives one; the second ✓ logs.
@@ -839,20 +845,29 @@ each planned day with the training day it lands on, and never changes the day:
      logged, so takebacks stay in order, nor as a double tap within a second of logging it);
      earlier rows are fixed by tapping the row. The check of a drop, mini-set or hold being done logs it as shown.
    - **The index column** shows `W` for a warm-up and the set number for a work set, on a circle.
-     A set with a technique (drop set, myo-reps, lengthened partials, to failure, rest-pause) has
-     a tinted circle with the technique's Material Symbol as a small badge on its corner, so it
-     reads without colour. A back-off set has no mark: its lowered weight shows it. A set's drops
-     or mini-sets join it in one tall pill down the index column, with `+` at a drop
+     A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to failure) has
+     no number: its circle is the technique's colour (Palette → Technique colours) with the
+     technique's Material Symbol filling it, so it reads without colour too. Nothing else is added
+     to the row: no words, no badge. A back-off set has no mark: its lowered weight shows it. A set's drops
+     or mini-sets join it in one tall pill of its colour down the index column, with `+` at a drop
      set's foot to add another drop, before the set or while it is under way. Before a myo-reps set,
      one muted planned mini-set row shows in its pill; myo-reps have no `+` and no maximum. A tap on a circle explains
      the technique and opens the set's sheet.
    - **The active row has no highlight.** The row being done (a set, a drop, a mini-set, a hold,
      a warm-up on the pad or a row being corrected) sits flat like the others; its kg and reps
-     are outlined cells, the focused one outlined in primary. A set's index circle is filled with
-     primary while it is being done, and stays so through its drops or mini-sets, so a
-     technique's tall pill is never cut by a row shape.
+     are outlined cells, the focused one outlined in primary. A plain set's index circle is filled with
+     primary while it is being done; a technique set's keeps its colour, through its drops or
+     mini-sets too, so a technique's tall pill is never cut by a row shape.
    - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
      when rest ends (no sound unless it's turned on in the system's settings).
+     - **The Next row is the session's clock** (owner, 2026-11-05): the header has no timer. During
+       rest the whole row drains from full to empty with the time left in large digits, and the set
+       table stays visible, with the pad shown or hidden. A tap on the digits opens the rest sheet
+       (−15, +15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
+       is muted and counts up in large digits (`+0:12`) until the next set is logged, and the phone
+       still vibrates when rest ends. The myo breathing countdown and the iso hold use the same
+       row; the hold fills toward its target instead of draining. The lock screen notification and
+       the rest rules don't change.
    - **Plate calculator** for barbell and plate-loaded exercises.
      - Barbell exercises use the gym's plates; machines whose ladder is plates use the gym's too,
        or their own pairs if they have them. While
@@ -884,7 +899,7 @@ each planned day with the training day it lands on, and never changes the day:
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
      set rows (index, last time, kg, reps, RIR, check) flat on the screen with no card behind them,
      techniques and their planned drops/mini-sets visible before the set, and a compact in-app pad
-     drawn like the system number keyboard. The top is the exercise name with the rest pill and ⋮,
+     drawn like the system number keyboard. The top is the exercise name with ⋮,
      the swap or superset chip, and the why-line. **Next** is the pad's top row, on the pad's
      surface, and stays at the bottom as the same row when the pad is hidden.
    - **Rest rules**: no rest before drops, between myo mini-sets (a short breathing countdown
@@ -1236,7 +1251,8 @@ each planned day with the training day it lands on, and never changes the day:
      (a line) with each session's top set weight (dots), and the sessions as a table (date, top
      set, estimate), newest first; a row opens that session. A tap or drag on the chart reads the
      nearest session above it. Machines and cables get one chart per machine, headed
-     `Cable left · Harbour`, the machine used last first, each on its own scale (ADR 0002).
+     `Cable left · Harbour`, the machine used last first, each on its own scale (ADR 0002), and
+     each section set apart from the one above by a 24 dp gap (the owner's call, 2026-11-06).
      - The top set is the session's heaviest work set that counts (a kept weight nothing confirmed
        doesn't), with the most reps at that weight.
      - The estimate after a session is the estimate as suggestions read it then: the last 12
@@ -1679,6 +1695,18 @@ gallery (Technique videos).
       joint turning them would be left behind by a scrub along the rods; the hooks' turn, about
       45°, stays the wrists'. A fit rule picks the notch it hangs on and the one its safety stops
       lie on, and the bar can go no lower than the stops.
+    - **The shoulder press** (#225) is a machine-first exercise (`machine_shoulder_press`, the `shoulder-press`
+      batch): the lifter sits on the seat, the back on the pad, the feet on the floor, both hands closed on
+      the overhand grips (palms forward, wrists straight), a level bar a side across the machine, which the yoke carries from level with the shoulders to the arms near straight
+      overhead. The yoke is one body on a revolute joint about the bearings behind the back pad, 980 mm up,
+      its value the angle up from level ahead: 0° at the bottom of the rep (the grips 700 apart on a 900 mm
+      arm) to 40° at the top (580 mm higher, about 200 mm further back). It lifts its stack, which stands
+      beside the lifter, on their right, its front level with the grips (the demo's front view). The seat is
+      the one adjustment (`seat`, its top in metres), solved from the mannequin so the shoulders are level
+      with the grips at the bottom, held to the ref's range of 330 to 500 mm; the pad follows the spine. The
+      kit stands 1.52 m deep, 1.63 m tall and 1.42 m across, a closed tower with a rounded header, a Y yoke of
+      flat arms ending in curved hook grips. It was built from where the ref's photos put each part, and
+      reviewed against them by a reviewer who had not seen how it was built, until it found nothing that matters.
     - **The shrug machine's levers** (#223) are one body on a revolute joint about the axle at the top
       of the rear uprights, 600 mm up and 760 mm behind the grips, its value the angle up from level
       ahead: 7.5° on the stop (the grips 700 mm up) to 26.3° at the top of a shrug (940 mm up).

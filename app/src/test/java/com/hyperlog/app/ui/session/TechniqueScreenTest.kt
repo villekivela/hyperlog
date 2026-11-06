@@ -9,7 +9,9 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -66,7 +68,7 @@ class TechniqueScreenTest {
         compose.waitFor("Drop 1 of 2")
         compose.onNodeWithText("Finish set").assertIsDisplayed()
         // No rest before a drop.
-        compose.onAllNodesWithContentDescription("Rest").assertCountEquals(0)
+        compose.onAllNodesWithTag(ClockDigitsTag, useUnmergedTree = true).assertCountEquals(0)
     }
 
     @Test
@@ -81,7 +83,7 @@ class TechniqueScreenTest {
         compose.onNodeWithContentDescription("Myo-reps").assertIsDisplayed()
         compose.press("2"); compose.press("0"); compose.press("Next"); compose.press("1"); compose.press("2"); compose.press("Log set")
         compose.waitFor("Mini-set 1")
-        compose.onNodeWithContentDescription("Breathe").assertIsDisplayed()
+        compose.onNodeWithTag(ClockDigitsTag, useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test
