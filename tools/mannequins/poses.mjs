@@ -313,6 +313,48 @@ export const POSES = {
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
+  // Back on the leaning pad, the hands on the vertical grips: from level with the shoulders, the arms
+  // long and a little bent, sweeping together in front of the chest.
+  pec_deck: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: {} },
+    body: { trunk: -7 },
+    bottom: { left: 104 },
+    feet: { stance: 0.17, z: 0.38, toeOut: 12 },
+    grip: { pole: [1, -0.25, -0.3] },
+    camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 40, elevation: 10 },
+    shadow: { size: [1.5, 1.6], at: [0, -0.2] },
+  },
+
+  // Astride the same seat, the chest on the pad, the hands overhand on the short grips: from the arms
+  // reaching ahead of the chest, sweeping out until they are in line with the shoulders.
+  reverse_pec_deck: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: { facing: 'pad', hips: -0.02 } },
+    body: { trunk: 7, look: 0 },
+    bottom: { left: 57, wrist: [0, -10] },
+    feet: { stance: 0.2, z: 0.2, toeOut: 15, kneesOut: 0.4 },
+    grip: { pole: [0.4, 0.1, -1] },
+    camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 140, elevation: 10 },
+    shadow: { size: [1.5, 1.6], at: [0, 0.2] },
+  },
+
+  // Sat across the seat, side-on to the machine, the pad on the left: the right arm sweeps from the
+  // grip across the chest out toward the side, the left hand on its thigh.
+  '1_arm_reverse_pec_deck': {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: { facing: 'side', one: true } },
+    body: { trunk: 0, look: 0.1 },
+    bottom: { left: 55 },
+    feet: { stance: 0.17, z: 0.55, toeOut: 12 },
+    grip: { one: -1, rest: [0.14, 0.625, 0.38], pole: [1, -0.3, -0.2], restPole: [0, -1, 0.3] },
+    camera: { target: [0, 1.05, 0.1], halfHeight: 1.12, azimuth: 40, elevation: 10 },
+    shadow: { size: [1.6, 1.5], at: [0.2, 0.1] },
+  },
+
   // Lying back on the crunch machine's seat, the ankles hooked between its rollers and the hands on
   // the handles by the head: from the back on the pad, the arm at rest, the shoulders curl up toward
   // the knees through the arm's 40°.

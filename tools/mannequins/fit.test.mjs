@@ -25,6 +25,9 @@ const MACHINES = {
   chest_supported_t_bar_row: 'lever',
   t_bar_row: 'lever',
   kelso_shrug: 'lever',
+  pec_deck: 'left',
+  reverse_pec_deck: 'left',
+  '1_arm_reverse_pec_deck': 'right',
   machine_crunch: 'arm',
   machine_lateral_raise: 'arm_l',
   seated_dip_machine: 'arms',
@@ -69,8 +72,10 @@ for (const [id, joint] of Object.entries(MACHINES)) {
     const stage = await buildStage(prepare(id));
     for (let f = 0; f < FRAMES; f++) {
       stage.pose(f / (FRAMES - 1));
-      const points = kitOf(stage).contacts.filter((c) => c.landmark === 'hands').flatMap((c) => c.at);
-      for (const k of ['l', 'r']) {
+      const points = kitOf(stage).contacts.filter((c) => c.landmark === 'hands' && !c.optional).flatMap((c) => c.at);
+      // With `grip.one` the other hand rests, on no contact.
+      const one = prepare(id).grip?.one;
+      for (const k of one ? [one > 0 ? 'l' : 'r'] : ['l', 'r']) {
         const miss = Math.min(...points.map((p) => p.distanceTo(heldAt(stage.rig, k))));
         assert.ok(miss < 0.015, `the ${k} hand ${(miss * 100).toFixed(1)} cm off its contact on frame ${f}`);
       }
