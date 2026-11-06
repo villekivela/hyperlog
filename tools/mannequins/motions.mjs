@@ -1062,6 +1062,33 @@ export const MOTIONS = {
   },
 
   /**
+   * Face down along a hyperextension bench, the thighs on its pads, the calves under its rollers and
+   * the soles on its plate, where `s.linkage` has them: the legs stay and the trunk hinges at the
+   * hips. `lean` is the trunk's lean from upright forward, in degrees, from the top of the rep, in
+   * line with the legs, to the bottom. The arms are crossed on the chest, the hands open.
+   */
+  back_extension(e, s, L) {
+    const { hip, ankle, sole, soleUp, toes } = s.linkage;
+    const u = trunkUp(spineLean(s.lean, L));
+    const f = forwardOf(u);
+    const sh = shouldersOf(hip, u, L);
+    const across = e.feet?.stance ?? L.hipW;
+    const chest = sh.clone().addScaledVector(u, -0.14).addScaledVector(f, 0.15);
+    return {
+      hipC: hip.clone(), u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.1).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * across)),
+      toeOut: 0,
+      foot: () => ({ heading: toes.clone(), top: soleUp.clone() }),
+      kneePole: () => toes.clone(),
+      support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
+      openHands: true,
+      hand: (side) => chest.clone().addScaledVector(X, -side * 0.1).addScaledVector(u, side * 0.03),
+      armPole: elbowsTo(e, [0.35, -1, 0.1]),
+    };
+  },
+
+  /**
    * Seated on a low seat, the upper back against the pads of a carriage that turns about a pivot
    * behind the body, a belt over the hips, the feet flat on a platform ahead, the hands on the
    * handles the carriage carries: a machine hip thrust. The hips ride the carriage, and the spine

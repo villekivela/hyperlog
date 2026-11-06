@@ -1354,4 +1354,17 @@ export const POSES = {
     camera: { target: [0, 1.0, 0.45], halfHeight: 1.0, azimuth: 62, elevation: 8 },
     shadow: { size: [1.6, 1.3], at: [0, 0.25] },
   },
+
+  // Face down along the 45 degree bench, the thighs on the pads, the calves under the rollers and the
+  // arms crossed on the chest: from one straight line down the slope, the trunk hinges at the hips
+  // to a little below level.
+  '45_hyperextension': {
+    equipment: 'weighted_bodyweight',
+    motion: 'back_extension',
+    kit: { hyperextension_bench: {} },
+    top: { lean: 45 },
+    bottom: { lean: 100 },
+    camera: { target: [0, 0.75, 0.05], halfHeight: 0.95, azimuth: 80, elevation: 8 },
+    shadow: { size: [1.7, 1.0], at: [0, -0.1] },
+  },
 };
