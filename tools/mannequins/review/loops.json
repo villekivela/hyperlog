@@ -4,6 +4,16 @@
     "b": 619.342,
     "c": null
   },
+  "cable_wrist_curl": {
+    "a": 3.983,
+    "b": 5.05,
+    "c": 5.85
+  },
+  "cable_wrist_extension": {
+    "a": 5.817,
+    "b": 6.65,
+    "c": 7.25
+  },
   "db_bench_press": {
     "a": 5.45,
     "b": 7.45,

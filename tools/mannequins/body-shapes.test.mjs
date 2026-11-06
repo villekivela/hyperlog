@@ -7,7 +7,7 @@ import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { stateAt } from './motions.mjs';
 import { POSES } from './poses.mjs';
-import { wpos } from './rig.mjs';
+import { V, wpos } from './rig.mjs';
 
 const failing = (report) => CHECKS.filter((c) => !report.checks[c].ok);
 const poses = (entry) => ({ poses: { ...POSES, shape: entry } });
@@ -34,6 +34,43 @@ test('a kneeling body rests on its knees, shins back along the floor, and passes
     assert.ok(knee.y < 0.12, `the ${k} knee ${knee.y.toFixed(3)} up`);
     assert.ok(ankle.y < 0.2, `the ${k} ankle ${ankle.y.toFixed(3)} up`);
     assert.ok(ankle.z < knee.z - 0.3, `the ${k} shin runs back along the floor`);
+  }
+});
+
+test('a body on one knee rests that knee on the floor and stands the other foot flat ahead of it', async () => {
+  const entry = {
+    ...STAND, body: { kneel: -1 }, feet: { stance: 0.14, ahead: 0.5 }, grip: { width: 0.2 },
+    top: { thigh: 5, trunk: 20, ...arms }, bottom: { thigh: 5, trunk: 30, ...arms },
+  };
+  assert.deepEqual(failing(await checkPose('shape', poses(entry))), []);
+  const bones = (await staged(entry))(0);
+  const [knee, ankle] = [wpos(bones.calf_r), wpos(bones.foot_r)];
+  assert.ok(knee.y < 0.12, `the right knee ${knee.y.toFixed(3)} up`);
+  assert.ok(ankle.z < knee.z - 0.3, 'the right shin runs back along the floor');
+  const [front, frontKnee] = [wpos(bones.foot_l), wpos(bones.calf_l)];
+  assert.ok(Math.abs(front.z - 0.5) < 0.01, `the left ankle at z ${front.z.toFixed(3)}`);
+  assert.ok(front.y < 0.15, `the left ankle ${front.y.toFixed(3)} up, its foot flat on the floor`);
+  assert.ok(frontKnee.y > 0.35, `the left knee ${frontKnee.y.toFixed(3)} up, off the floor`);
+});
+
+test('with grip.restFlat the resting hand lies open, its palm and fingers set, whatever the working hand does', async () => {
+  const entry = {
+    ...STAND, grip: { ...STAND.grip, restFlat: { palm: [0, 0, -1], fingers: [0, -1, 0] } },
+    top: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [38, 0], rotate: 185 },
+    bottom: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [-38, 0], rotate: 170 },
+  };
+  const at = await staged(entry);
+  const off = (a, x, y, z) => (a.angleTo(V(x, y, z)) * 180) / Math.PI;
+  for (const d of [0, 0.5, 1]) {
+    const bones = at(d);
+    const fingers = wpos(bones.middle_01_r).sub(wpos(bones.hand_r));
+    // Fingers down and palm back, a right hand's thumb side is toward the left. The knuckles slant
+    // along the fingers, so it's their line square to the fingers.
+    const knuckles = wpos(bones.index_01_r).sub(wpos(bones.pinky_01_r)).projectOnPlane(fingers.clone().normalize());
+    assert.ok(off(fingers, 0, -1, 0) < 1, `the fingers ${off(fingers, 0, -1, 0).toFixed(1)}° off down at ${d}`);
+    assert.ok(off(knuckles, 1, 0, 0) < 1, `the knuckles ${off(knuckles, 1, 0, 0).toFixed(1)}° off across at ${d}`);
+    const tip = wpos(bones.middle_04_leaf_r).sub(wpos(bones.middle_01_r));
+    assert.ok(tip.angleTo(fingers) * 180 / Math.PI < 15, `the fingers curl ${(tip.angleTo(fingers) * 180 / Math.PI).toFixed(1)}° at ${d}`);
   }
 });
 

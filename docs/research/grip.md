@@ -219,7 +219,7 @@ The lat bar's vinyl grips run from 0.30 to 0.46 m either side of the middle, so 
 | dumbbell lateral_raise, rear_delt_fly | db_lateral_raise, incline_db_y_raise, bent_over_reverse_db_flye | dumbbell | 32 | finger base | wrapped | straight 0° |
 | dumbbell chest_fly | db_flye | dumbbell | 32 | mid-palm | wrapped | straight 0°, `rotate` 90 |
 | dumbbell hip_thrust | 1_leg_db_hip_thrust | dumbbell, on the working hip | 32 | mid-palm | wrapped | straight 0° |
-| dumbbell, cable wrist | db_wrist_curl, db_wrist_extension, cable_wrist_curl, cable_wrist_extension | dumbbell, or `straight_bar` | 32; 28.5 | finger base at the top, mid-fingers at the bottom of a wrist curl | wrapped | the rep's own range |
+| dumbbell, cable wrist | db_wrist_curl, db_wrist_extension, cable_wrist_curl, cable_wrist_extension | dumbbell, `straight_bar`, or a handle in one hand (cable_wrist_curl, owner #127) | 32; 28.5 | finger base at the top, mid-fingers at the bottom of a wrist curl | wrapped | the rep's own range |
 | cable horizontal_pull | seated_cable_row, wide_grip_seated_cable_row, seated_cable_deadlift | `v_handle`; `lat_bar` for the wide grip | 33.3; 28.6 | finger base | wrapped | straight 0° |
 | cable vertical_pull, wide | lat_pulldown_wide_grip | `lat_bar`, hands on its vinyl grips | 28.6 bare; kit 33 | finger base | wrapped | straight 0° |
 | cable vertical_pull, one arm | 1_arm_cable_pulldown, 1_arm_lat_pull_in, 1_arm_cable_lat_pull_around | `handle` (stirrup) | 25–45 | finger base | wrapped | straight 0° |
