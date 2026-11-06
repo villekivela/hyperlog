@@ -41,6 +41,7 @@ import com.hyperlog.app.domain.summary
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.BottomActions
@@ -128,6 +129,10 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
                 .padding(start = CardPadding, end = 12.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            e.exerciseId?.let {
+                RepMark(it)
+                Spacer(Modifier.width(12.dp))
+            }
             Column(Modifier.weight(1f)) {
                 // An adjustable-bench exercise names the angle it was done at.
                 Text(e.name + (e.benchAngle?.let { " · $it°" } ?: ""), style = MaterialTheme.typography.bodyLarge)

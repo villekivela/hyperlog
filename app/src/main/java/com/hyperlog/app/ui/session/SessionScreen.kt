@@ -121,6 +121,7 @@ import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
+import com.hyperlog.app.ui.mannequin.RepStage
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import kotlinx.coroutines.delay
@@ -323,7 +324,9 @@ fun SessionScreen(
                             openIndex = session.openIndex,
                             onBenchAngle = { benchFor = current.id },
                         )
-                        SetTable(table, Modifier.weight(1f))
+                        SetTable(table, Modifier.weight(1f)) {
+                            RepStage(current.exercise, current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
+                        }
                     }
                 }
             }

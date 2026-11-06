@@ -40,6 +40,7 @@ import com.hyperlog.app.R
 import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.coach.TrainingTargets
 import com.hyperlog.app.history.trainingGlance
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.theme.NextAction
 import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.domain.formatKg
@@ -252,6 +253,8 @@ private fun ExerciseRow(trend: ExerciseTrend) {
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        RepMark(trend.exercise)
+        Spacer(Modifier.width(12.dp))
         // A primary name wraps rather than truncates, at any text size.
         Text(trend.exercise.name, Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(16.dp))

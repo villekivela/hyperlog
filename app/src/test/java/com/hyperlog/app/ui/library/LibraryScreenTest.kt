@@ -12,6 +12,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -140,7 +141,8 @@ class LibraryScreenTest {
 
         compose.onNodeWithText("Cable Lateral Raise").performClick()
         compose.waitFor("Technique video · 10:53")
-        compose.onNodeWithText("Raise your arm \"out\", not \"up\". Mind-muscle connection with the middle fibers.").assertIsDisplayed()
+        // The sheet's copy; the rep stage behind it has the same cue.
+        compose.onAllNodesWithText("Raise your arm \"out\", not \"up\". Mind-muscle connection with the middle fibers.").onLast().assertIsDisplayed()
         compose.onNodeWithText("Cable · Side Delts").assertIsDisplayed()
         compose.click("Technique video · 10:53")
 

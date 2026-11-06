@@ -84,6 +84,7 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.StarterOffer
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.theme.fadingEdges
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -1045,6 +1046,8 @@ internal fun SlotRows(
                     SetSummary(slot.sets)
                 }
             }
+            Spacer(Modifier.width(12.dp))
+            RepMark(slot.exercise)
         }
     }
 }

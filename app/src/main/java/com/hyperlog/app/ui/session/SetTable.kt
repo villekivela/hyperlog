@@ -175,7 +175,7 @@ internal enum class Check { Todo, Ready, Done }
 private enum class Tone { Plain, Active, Technique }
 
 @Composable
-internal fun SetTable(table: TableState, modifier: Modifier) {
+internal fun SetTable(table: TableState, modifier: Modifier, stage: @Composable () -> Unit = {}) {
     val current = table.current
     val items = mutableListOf<TableItem>()
     var active: String? = null
@@ -211,6 +211,8 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
     // A short table sits on the pad, in reach of the thumb; a long one fills the space and scrolls.
     CompositionLocalProvider(LocalLastStyle provides lastStyle) {
     Column(Modifier.fillMaxSize().testTag(SetTableTag), verticalArrangement = Arrangement.Bottom) {
+        // What the rows leave free holds the [stage]; a long table leaves it nothing.
+        Box(Modifier.fillMaxWidth().weight(1f)) { stage() }
         // The heads sit above the rows, so they stay while the rows scroll.
         Box(Modifier.padding(horizontal = TapInset)) {
             ColumnHeads(
@@ -219,7 +221,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
             )
         }
         LazyColumn(
-            Modifier.fillMaxWidth().weight(1f, fill = false).fadingEdges(listState),
+            Modifier.fillMaxWidth().fadingEdges(listState),
             state = listState,
             contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
         ) {

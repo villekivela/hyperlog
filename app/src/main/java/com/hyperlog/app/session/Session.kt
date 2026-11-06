@@ -78,7 +78,7 @@ data class SessionExercise(
     val lastBenchAngle: Int? = null,
 ) {
     /** Its sets with their records, as summaries show them. */
-    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records, benchAngle)
+    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records, benchAngle, exercise.id)
 
     /** How to load [kg] on a pin-stack [machine] (`pin 40 + 2.5 on the pin`); null for any other equipment or a weight off it. */
     fun pinLoad(kg: Double): PinLoad? = (machine?.ladder as? LadderSpec.PinStack)?.load(kg, pinPlates)
@@ -257,6 +257,7 @@ data class ExerciseSummary(
     val records: List<Record?> = emptyList(),
     /** The bench angle it was done at, for an adjustable-bench exercise; null when not set. */
     val benchAngle: Int? = null,
+    val exerciseId: String? = null,
 )
 
 data class SessionSummary(val sessionId: Long, val startedAt: Long, val finishedAt: Long, val exercises: List<ExerciseSummary>)

@@ -259,7 +259,7 @@ class SessionLoggerTest {
         assertNull(logger.state.value)
         assertNull(logger().state.value)
         // Exercises with nothing logged are left out.
-        assertEquals(listOf(ExerciseSummary("Leg Extension", listOf(LoggedSet(60.0, 12, 0, 1)), records = listOf(null))), summary.exercises)
+        assertEquals(listOf(ExerciseSummary("Leg Extension", listOf(LoggedSet(60.0, 12, 0, 1)), records = listOf(null), exerciseId = "leg_extension")), summary.exercises)
     }
 
     @Test

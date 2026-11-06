@@ -345,6 +345,13 @@ What Progress opens on: a week's weekly sets per muscle against their ranges, th
 **Moving lift**:
 A lift whose estimate moved 1 % or more over about the last 4 weeks, up or down, and which was done in that time. Progress shows the three that moved most.
 
+**Rep mark**:
+Hyperlog's signature: an exercise's rep drawn flat, its end in full ink over its start as a ghost, on a tonal tile. An exercise not yet posed takes its movement pattern's figure, muted.
+_Avoid_: Thumbnail, exercise image
+
+**Rep stage**:
+The rep mark's figure, large, with the set's cue, in the space a short exercise leaves above its set table.
+
 **Next action**:
 The one thing to do next, in an accent card at the top of Program and Progress: on to Today, or back to the session running.
 

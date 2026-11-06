@@ -1352,8 +1352,18 @@ gallery (Technique videos).
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
 - **The session has a visible way out** (#269): an arrow left of the exercise's name, the same step as
   system Back. It steps out of a correction or a finished exercise first, and only then asks to
-  leave. A short table sits on the pad, its rows in reach of the thumb, with the spare space under
-  the exercise's name; a long one fills the screen and scrolls.
+  leave. A short table sits on the pad, its rows in reach of the thumb; a long one fills the screen
+  and scrolls.
+- **The rep mark is Hyperlog's signature** (#271): an exercise's rep drawn flat, its end in full ink
+  over its start as a ghost, on a tonal tile, so a screenshot with the title cropped still reads as
+  Hyperlog and a list shows how each lift moves. It is on every exercise row on Today, on Progress
+  and in a past session, in the colours of the tile, so it adds no colour of its own. The figures
+  are baked from the mannequin's clips by `tools/exercise-poses/bake.py` into a small table the
+  app draws, so a list scrolls with no 3D view in it. An exercise not yet posed takes its movement
+  pattern's figure, muted and with no ghost, so it reads as a stand-in.
+- **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
+  with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
+  tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.
 - **Today's one action has a lane of its own** (#269): Start and Resume sit under the list, not over
   it, so they never cover an exercise at any text size, and the list fades out above them.
 - **The set table reads aloud** (#268): every value on a row says which row it belongs to and its

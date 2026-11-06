@@ -32,6 +32,7 @@ import com.hyperlog.app.coach.VolumeStatus
 import com.hyperlog.app.history.MovingLift
 import com.hyperlog.app.history.MuscleWeek
 import com.hyperlog.app.history.TrainingGlance
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.session.Direction
 import com.hyperlog.app.ui.session.SessionPreview
 import com.hyperlog.app.ui.session.color
@@ -171,7 +172,7 @@ private fun MovingRow(lift: MovingLift, onOpen: (String) -> Unit) {
             .clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = if (up) onTargetColor() else direction.color)
+        RepMark(lift.exercise)
         Spacer(Modifier.width(12.dp))
         Text(lift.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(8.dp))
@@ -180,6 +181,8 @@ private fun MovingRow(lift: MovingLift, onOpen: (String) -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Text(percent, Modifier.padding(start = 8.dp), style = MaterialTheme.typography.labelLarge)
+        Spacer(Modifier.width(8.dp))
+        SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = if (up) onTargetColor() else direction.color)
+        Text(percent, Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelLarge)
     }
 }

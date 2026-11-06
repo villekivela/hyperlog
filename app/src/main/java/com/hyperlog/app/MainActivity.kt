@@ -110,7 +110,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         if (savedInstanceState == null) opened(intent)
         setContent {
-            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, trainingStyles, openCheckIn) }
+            val exercises by sessions.exercises.collectAsStateWithLifecycle()
+            val byId = androidx.compose.runtime.remember(exercises) { exercises.associateBy { it.id } }
+            HyperlogTheme { androidx.compose.runtime.CompositionLocalProvider(com.hyperlog.app.ui.mannequin.LocalExercises provides byId) { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, trainingStyles, openCheckIn) } }
         }
     }
 

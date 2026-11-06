@@ -91,7 +91,7 @@ class PastSessionEditor(
             val sets = stored.sets(se.id)
             val exercise = library[se.exerciseId]
             if (sets.isEmpty()) null
-            else ExerciseSummary(exercise?.name ?: se.exerciseId, sets, benchAngle = se.benchAngle.takeIf { exercise?.adjustableBench == true })
+            else ExerciseSummary(exercise?.name ?: se.exerciseId, sets, benchAngle = se.benchAngle.takeIf { exercise?.adjustableBench == true }, exerciseId = se.exerciseId)
         }
         return PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises,
             programId = row.programId.takeIf { row.workoutId == null },
