@@ -41,8 +41,8 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 19 | [`seated_row`](seated_row/ref.md) | 4 | Atlantis D124 Low Row; built and posed (#127) |
 
 The cable crossover serves the 25 cable exercises that use a free handle at an adjustable height.
-The other 16 cable exercises (the pulldowns, the seated rows, the pressdown and the rest named in
-its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids include
+The four seated rows have the `seated_row` station. The other 12 cable exercises (the pulldowns, the
+pressdown and the rest named in its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids include
 `ffe_smith_machine_lunge`, the same movement as `smith_machine_lunge` with the front foot raised.
 
 ## Not here

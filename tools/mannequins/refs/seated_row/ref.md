@@ -7,7 +7,7 @@ The lifter sits on the bench facing the tower, feet braced on the plates, and pu
 
 - `seated_cable_row`: close neutral handle. Trunk rocks a little, the elbows drive back.
 - `wide_grip_seated_cable_row`: wide overhand bar. Trunk stays upright, the elbows flare out and back.
-- `seated_cable_kelso_shrug`: long bar. Trunk upright, a short pull, about 1 second held at the top, then the shoulder blades peel apart under control (the library's note).
+- `seated_cable_kelso_shrug`: long bar. From upright the trunk rocks back about 15 from a still pelvis, arms long, about 1 second held at the top, then the shoulder blades peel apart under control (the library's note).
 - `seated_cable_deadlift`: long bar. Arms stay long, the trunk hinges forward over the legs and rocks back past upright.
 
 One machine, no variants. The lifts differ by attachment and body path.
@@ -89,7 +89,7 @@ In the videos the lifter is taken as 1.75 m, sitting 910 mm from seat to crown. 
 |---|---|---|---|---|
 | `seated_cable_row` | on the plates | about 50 at the reach, about 20 at the finish (5:00, 5:02) | about 30 forward at the reach to near upright, about 10 forward, at the finish | V handle, palms in, arms long at the reach; elbows behind the trunk at the finish, hands at the lower ribs, about 520 above the seat |
 | `wide_grip_seated_cable_row` | on the plates | about 25, little change (9:43, 9:46) | upright, no swing (9:43, 9:46) | long bar overhand, hands level at about 900 high, drawn to the lower chest, elbows out and back |
-| `seated_cable_kelso_shrug` | on the plates | about 30 | upright, within about 5 (0:11 to 0:13); 0:05 shows about 20 back, in the set-up | long bar, hands about 550 apart, about 830 high, in front of the lower chest, arms long, about 160 side-on (0:08 to 0:13); front-on frames foreshorten them and look bent |
+| `seated_cable_kelso_shrug` | on the plates | about 30 | upright at the start, about 15 back at the squeeze, the pelvis still (side-on frames, 0:01 to 0:13) | long bar, hands about 550 apart, about 830 high, in front of the lower chest, arms long, about 160 side-on (0:08 to 0:13); front-on frames foreshorten them and look bent |
 | `seated_cable_deadlift` | on the plates; one foot on the floor at 0:01 is the set-up | about 60 with the trunk forward, about 15 rocked back (0:05, 0:09) | about 40 forward (0:19) to about 65 back (0:09), through upright (0:12, 0:16) | long bar, arms long throughout, hands about 550 apart, reaching past the shins, then ending at the hips |
 
 Hips aren't fixed on the pad. In the deadlift video they sit at 570 from the plate at 0:05 and 830 at 0:19, and the row's shift about 120 between 5:00 and 5:02. How much is the pelvis rolling and how much a real slide isn't settled.
