@@ -760,11 +760,11 @@ export const POSES = {
   // On the right knee facing the left tower, the left forearm along the left thigh, palm up on a
   // handle from the lowest pulley: only the wrist moves, its joint still, the handle curling up from
   // the fingers (owner, #127). One hand, the other knee on the ground, that side's palm flat on its
-  // thigh.
+  // thigh. The tower stands out past the hand, on the line it rises along, so the stack rises with it.
   cable_wrist_curl: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 1, faces: true, hands: [1], at: [-0.965, 1.28] } },
+    kit: { cable_crossover: { position: 1, faces: true, hands: [1], at: [-0.72, 1.12] } },
     body: { kneel: -1 },
     top: { thigh: 0, trunk: 38, hand: [0.2139, 0.6346, 0.5441], wrist: [38, 0], rotate: 185 },
     bottom: { thigh: 0, trunk: 38, hand: [0.2753, 0.531, 0.565], wrist: [-38, 0], rotate: 170 },
@@ -779,14 +779,16 @@ export const POSES = {
   // In a deep squat facing the left tower, the elbows resting close to the knees to steady it, inside
   // them, the knees open wide enough to clear the elbows, palms down on a straight bar from the
   // lowest pulley: the backs of the hands rise toward the forearms, the wrists still (owner, #127).
+  // The forearms lie level and the tower stands close: the hands must rise away from the pulley for
+  // the stack to rise with them.
   cable_wrist_extension: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 1, faces: true, attachment: 'bar', at: [-1.105, 1.05] } },
-    top: { shin: 38, thigh: 100, trunk: 34, hand: [0.1271, 0.4013, 0.5664], wrist: [-38, 0], rotate: 0 },
-    bottom: { shin: 38, thigh: 100, trunk: 34, hand: [0.1898, 0.3213, 0.5067], wrist: [32, 0], rotate: 0 },
+    kit: { cable_crossover: { position: 1, faces: true, attachment: 'bar', at: [-1.105, 0.85] } },
+    top: { shin: 38, thigh: 100, trunk: 34, hand: [0.1261, 0.551, 0.5504], wrist: [-38, 0], rotate: 0 },
+    bottom: { shin: 38, thigh: 100, trunk: 34, hand: [0.1886, 0.4538, 0.528], wrist: [32, 0], rotate: 0 },
     feet: { stance: 0.2, toeOut: 16, kneesOut: 0.78 },
-    grip: { rotate: 0, thumb: 'wrapped', pole: [0.1, -1, -0.5], via: [0.156, 0.351, 0.5507] },
+    grip: { rotate: 0, thumb: 'wrapped', pole: [0.1, -1, -0.5], via: [0.1545, 0.4985, 0.5562] },
     camera: { target: [0, 0.5, 0.2], halfHeight: 0.9, azimuth: 65, elevation: 8 },
   },
 
