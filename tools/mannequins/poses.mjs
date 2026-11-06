@@ -838,6 +838,21 @@ export const POSES = {
     camera: { target: [0, 0.8, 0.3], halfHeight: 1.15, azimuth: 65, elevation: 8 },
   },
 
+  // On the right knee facing the left tower, leaning forward, a straight bar from a high pulley: the
+  // arms stay long as the bar sweeps from up in front down past the front knee.
+  cable_lat_pullover: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 15, faces: true, attachment: 'bar', at: [-1.105, 1.3] } },
+    body: { kneel: -1 },
+    top: { thigh: 0, trunk: 24, hand: [0.18, 1.38, 0.68], rotate: 0 },
+    bottom: { thigh: 0, trunk: 24, hand: [0.18, 0.58, 0.74], rotate: 0 },
+    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
+    tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
+    grip: { arc: true, rotate: 0, thumb: 'wrapped', pole: [0.3, -1, -0.5] },
+    camera: { target: [0, 0.85, 0.35], halfHeight: 1.15, azimuth: 65, elevation: 8 },
+  },
+
   // Back on an upright bench between the towers, the pulleys at the seated shoulder: the handles
   // sweep from wide behind the line of the chest to about shoulder width in front of it (owner, #127).
   seated_cable_flye: {

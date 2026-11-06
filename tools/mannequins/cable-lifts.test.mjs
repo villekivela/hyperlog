@@ -78,3 +78,17 @@ test('the 1-arm pulldown kneels on one knee and drives the elbow from long overh
   assert.ok(drop > 0.2, `the elbow ${drop.toFixed(3)} below the shoulder at the bottom`);
   assert.ok(bottom('hand_l').y < bottom('upperarm_l').y, 'the hand down below the shoulder');
 });
+
+test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elbows hardly bending', async () => {
+  const { stage, at } = await posed('cable_lat_pullover');
+  assert.deepEqual(failing('cable_lat_pullover', stage), []);
+  const elbow = (g) => g('upperarm_l').sub(g('lowerarm_l')).angleTo(g('hand_l').sub(g('lowerarm_l'))) * 180 / Math.PI;
+  const angles = [0, 0.25, 0.5, 0.75, 1].map((d) => elbow(at(d)));
+  assert.ok(Math.min(...angles) > 140, `the elbow bends to ${Math.min(...angles).toFixed(0)}°: a pullover, not a pulldown`);
+  const top = at(0);
+  const high = top('hand_l').y;
+  assert.ok(top('calf_r').y < 0.12, `the right knee ${top('calf_r').y.toFixed(3)} up`);
+  assert.ok(high > top('upperarm_l').y, 'the hands over the shoulders at the top');
+  const low = at(1)('hand_l').y;
+  assert.ok(high - low > 0.45, `the hands sweep ${(high - low).toFixed(3)} down`);
+});
