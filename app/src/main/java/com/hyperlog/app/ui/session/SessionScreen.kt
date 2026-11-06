@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -65,6 +66,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -80,6 +83,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.domain.Field
@@ -243,9 +247,7 @@ fun SessionScreen(
                     Header(
                         exercise = viewing,
                         session = session,
-                        now = now,
                         onName = { showDetails = true },
-                        onTimer = { showRest = true },
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
                         onSwap = null,
@@ -269,9 +271,7 @@ fun SessionScreen(
                     Header(
                         exercise = current,
                         session = session,
-                        now = now,
                         onName = { showDetails = true },
-                        onTimer = { showRest = true },
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
                         // Once a set is logged on it, the exercise is what was done.
@@ -325,10 +325,11 @@ fun SessionScreen(
             }
           }
             // Next is the pad's top row, and stays at the bottom as the same row when the pad is hidden or gone.
+            val clock = rowClock(session, now)
             val nextRow: @Composable () -> Unit = when {
                 current == null -> { {} }
                 viewing != null -> { {
-                    NextLine(stringResource(R.string.session_now), current.exercise.name, onClick = actions::closeView, symbol = Symbol.ChevronRight, description = stringResource(R.string.back))
+                    NextLine(stringResource(R.string.session_now), current.exercise.name, onClick = actions::closeView, symbol = Symbol.ChevronRight, description = stringResource(R.string.back), clock = clock, onClock = { showRest = true })
                 } }
                 else -> { {
                     val next = session.next
@@ -336,6 +337,8 @@ fun SessionScreen(
                         label = if (next != null) stringResource(R.string.session_next) else null,
                         name = next?.exercise?.name ?: stringResource(R.string.session_last_exercise),
                         onClick = { showList = true },
+                        clock = clock,
+                        onClock = { showRest = true },
                     )
                 } }
             }
@@ -521,9 +524,7 @@ fun SessionScreen(
 private fun Header(
     exercise: SessionExercise,
     session: ActiveSession,
-    now: Long,
     onName: () -> Unit,
-    onTimer: () -> Unit,
     onAddExercise: () -> Unit,
     onFinish: () -> Unit,
     onSwap: (() -> Unit)?,
@@ -540,32 +541,13 @@ private fun Header(
     var menu by remember { mutableStateOf(false) }
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-    // Name, the one clock and ⋮ on one row.
+    // Name and ⋮ on one row; the clock is on the Next row.
     Row(
         Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = Margin, end = 8.dp, top = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val details = stringResource(R.string.session_exercise_details)
         ExerciseName(exercise.exercise.name, Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName))
-        val hold = session.followUp as? com.hyperlog.app.session.FollowUp.Hold
-        val holdStarted = session.holdStartedAt
-        val restEnds = session.restEndsAt
-        // One clock: the hold timer, the breathing pause before a mini-set, or rest.
-        when {
-            hold != null && holdStarted != null -> {
-                Spacer(Modifier.width(8.dp))
-                HoldPill(now - holdStarted, hold.seconds * 1000L)
-            }
-            restEnds != null && session.breathing -> if (restEnds > now) {
-                Spacer(Modifier.width(8.dp))
-                BreathPill(restEnds - now, session.restTotalMs)
-            }
-            restEnds != null -> {
-                // A long name ellipsizes clear of the pill.
-                Spacer(Modifier.width(8.dp))
-                RestPill(restEnds - now, session.restTotalMs, onTimer)
-            }
-        }
         Box {
             IconButton(onClick = { menu = true }) {
                 SymbolIcon(Symbol.MoreVert, stringResource(R.string.session_menu), tint = cs.onSurfaceVariant)
@@ -769,25 +751,47 @@ private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
 
 /**
  * Next: the pad's top row, on the pad's surface: "Next" and the next exercise outside the one on
- * screen, or "Now" and the way back from a finished exercise.
+ * screen, or "Now" and the way back from a finished exercise. It is also the session's clock:
+ * with a [clock] its fill drains (or, for a hold, fills) across the whole row and the time is
+ * written large at the end; a tap on the digits calls [onClock], a tap elsewhere [onClick].
  */
 @Composable
-internal fun NextLine(label: String?, name: String, onClick: () -> Unit, symbol: Symbol = Symbol.ExpandLess, description: String? = null) {
+internal fun NextLine(
+    label: String?, name: String, onClick: () -> Unit, symbol: Symbol = Symbol.ExpandLess, description: String? = null,
+    clock: RowClock? = null, onClock: () -> Unit = {},
+) {
+    val cs = MaterialTheme.colorScheme
+    val (fill, ink) = clock?.kind?.colours() ?: (Color.Transparent to cs.onSurface)
+    if (clock != null && (clock.kind == ClockKind.Hold || clock.kind == ClockKind.HoldReached)) HoldReachedBuzz(clock.kind == ClockKind.HoldReached)
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
     Row(
-        Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick).height(48.dp).padding(start = 16.dp, end = 12.dp).testTag(NextRowTag),
+        Modifier.fillMaxWidth().clip(shape)
+            .drawBehind { if (clock != null) drawRect(fill, size = Size(size.width * clock.fraction, size.height)) }
+            .clickable(onClick = onClick).heightIn(min = if (clock != null) 64.dp else 48.dp)
+            .padding(start = 16.dp, end = 12.dp).testTag(NextRowTag),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         label?.let {
-            Text(it, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text(it, style = MaterialTheme.typography.labelLarge, color = if (clock != null) ink else cs.primary)
             Spacer(Modifier.width(16.dp))
         }
-        Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        SymbolIcon(symbol, description ?: stringResource(R.string.session_list), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, color = if (clock != null) ink else Color.Unspecified, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (clock != null) {
+            Spacer(Modifier.width(8.dp))
+            val rest = clock.kind == ClockKind.Rest || clock.kind == ClockKind.Over
+            Text(
+                clock.time,
+                Modifier.then(if (rest) Modifier.clickable(onClickLabel = stringResource(R.string.rest_title), onClick = onClock) else Modifier).heightIn(min = 48.dp).padding(horizontal = 8.dp).wrapContentHeight(Alignment.CenterVertically).testTag(ClockDigitsTag),
+                style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum", letterSpacing = 1.5.sp), color = ink, maxLines = 1,
+            )
+        } else {
+            SymbolIcon(symbol, description ?: stringResource(R.string.session_list), tint = cs.onSurfaceVariant)
+        }
     }
 }
 
 internal const val NextRowTag = "next-row"
+internal const val ClockDigitsTag = "clock-digits"
 
 /** The Next row alone at the bottom, on the pad's surface, when there is no pad. */
 @Composable
