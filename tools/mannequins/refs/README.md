@@ -86,8 +86,8 @@ gaps says why):
   range, the start position's step, the lever radius and the rear beam's reach stay chosen or rough; no top or
   straight-front view.
 - `lateral_raise_machine` (built, #212; seated raise posed, #241): the seat range is chosen and the pivot spacing is
-  rough. The standing exercise's video shows another, standing machine, with no reference model of its own, so it
-  stays unposed.
+  rough. The standing exercise's video shows another, standing machine, with no reference model of its own: it
+  stays unposed, as sitting is enough and no standing machine will be built (owner, #241).
 - `hip_machine` (built, #214; posed, #241): the seat range, closed pad spacing and the range of motion stay chosen or rough; no
   side-on photo, and the video is another make.
 - `safety_bar`: the handle arms' length and angle are chosen; the published width and height fit the

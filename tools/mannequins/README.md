@@ -403,8 +403,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   elbows, beyond the pad, each with a loaded horn on a stub below it. Every plate rises as the
   muscle works.
 - `lateral_raise_machine` (#212, #241, seated only; `machine_lateral_raise` is posed, and
-  `standing_machine_lateral_raise` stays unposed, as its video shows another, standing machine that has
-  no kit) sets its pivots on the mannequin's shoulders, 1.15 m up, whatever the pose, and the seat moves
+  `standing_machine_lateral_raise` stays unposed, as its video shows another, standing machine, and
+  sitting is enough, so none will be built: the owner's call) sets its pivots on the mannequin's shoulders, 1.15 m up, whatever the pose, and the seat moves
   to them (`seat`, solved to 0.56 m for this mannequin, in its 0.44 to 0.62 m range). One post leans
   forward from the floor between the legs and carries the seat, the chest pad and the bar the pivots
   turn on, with a plate and drum on a stub ahead of it. The tower stands at the far end of a spine 1.07

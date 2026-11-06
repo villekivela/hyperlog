@@ -74,5 +74,5 @@ Where each main part sits, from the hero photo, the demo at 0:08 and 0:09 and th
 - Seat range: no frame shows the seat at its ends, so it is chosen from the fit rule, low confidence.
 - The pivots stand at 1.15 m and the seat at 0.56 m for the mannequin, above the table's estimates (1.05 to 1.10 m, about 0.48 m), from their shares of the tower in the demo; the shoulder stays on the pivot.
 - The pivot spacing is rough (one oblique photo). A spacing narrower than the shoulders means the pads slide a little on the arms through the arc; the recipe sets the spacing to the mannequin's shoulders instead (#212: 0.192 m out each side).
-- The standing exercise has no reference model; its geometry comes from one video of two other makes. It needs a kit of its own, so it stays unposed: the owner's call (#241).
+- The standing exercise has no reference model; its geometry comes from one video of two other makes. It stays unposed and gets no kit of its own: sitting is enough, the owner's call (#241). This gap is closed, not waiting on a machine.
 - Left plain: an even stack where the real one is narrow over wide, round pads where the real ones are D sections. The pivots stand wider than the photo's, on the mannequin's shoulders, which is what keeps the pads on the arms.
