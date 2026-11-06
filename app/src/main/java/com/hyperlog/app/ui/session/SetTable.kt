@@ -59,6 +59,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -195,7 +196,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         withFrameNanos { }
         listState.keepInView(activeIndex)
     }
-    Column(modifier.fillMaxWidth()) {
+    Column(modifier.fillMaxWidth().testTag(SetTableTag)) {
         // The heads sit above the rows, so they stay while the rows scroll.
         Box(Modifier.padding(horizontal = TapInset)) {
             ColumnHeads(
@@ -370,15 +371,16 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                 val footPlus = if (join == Join.Foot) plus else null
                 val active = (open && j == logged.size) || table.corrects(index, j)
                 out += SubItem("ext-$index-$j", active) {
+                    val row = stringResource(R.string.row_drop, j + 1, index + 1)
                     when {
-                        table.corrects(index, j) -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, correcting = table.correction!!.entry, hold = false)
+                        table.corrects(index, j) -> ActiveSubRow(row, last, table, weightLocked = false, join = join, toFailure = true, correcting = table.correction!!.entry, hold = false)
                         j < logged.size -> DoneSubRow(
-                            last, logged[j].weightKg, "${logged[j].reps}", join,
+                            row, last, logged[j].weightKg, "${logged[j].reps}", join,
                             onCorrect = table.onCorrect?.let { { it(index, j) } },
                             description = stringResource(R.string.correct_drop_description, j + 1, index + 1),
                         )
-                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus)
-                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus)
+                        open && j == logged.size -> ActiveSubRow(row, last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus)
+                        else -> PlannedSubRow(row, last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus)
                     }
                 }
             }
@@ -387,19 +389,20 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
             val rows = logged.size + if (open) 1 else 0
             logged.forEachIndexed { j, mini ->
                 out += SubItem("ext-$index-$j", table.corrects(index, j)) {
-                    if (table.corrects(index, j)) ActiveSubRow(null, table, weightLocked = true, join = foot(j, rows), correcting = table.correction!!.entry, hold = false)
+                    val row = stringResource(R.string.row_mini_set, j + 1, index + 1)
+                    if (table.corrects(index, j)) ActiveSubRow(row, null, table, weightLocked = true, join = foot(j, rows), correcting = table.correction!!.entry, hold = false)
                     else DoneSubRow(
-                        null, mini.weightKg, "${mini.reps}", foot(j, rows),
+                        row, null, mini.weightKg, "${mini.reps}", foot(j, rows),
                         onCorrect = table.onCorrect?.let { { it(index, j) } },
                         description = stringResource(R.string.correct_mini_set_description, j + 1, index + 1),
                     )
                 }
             }
             when {
-                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot) }
+                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(stringResource(R.string.row_mini_set, logged.size + 1, index + 1), null, table, weightLocked = true, join = Join.Foot) }
                 // Before the set, one planned mini-set shows the target of the first, at the set's weight.
                 set == null -> out += SubItem("ext-$index-0", false) {
-                    PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", Join.Foot)
+                    PlannedSubRow(stringResource(R.string.row_mini_set, 1, index + 1), null, plannedKg, "${technique.miniSetReps}", Join.Foot)
                 }
             }
         }
@@ -407,15 +410,16 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
             val last = lastTime.firstOrNull { it.kind == Extension.Kind.Hold }?.let { seconds(it.reps) }
             when {
                 logged.isNotEmpty() -> out += SubItem("ext-$index-0", table.corrects(index, 0)) {
-                    if (table.corrects(index, 0)) ActiveSubRow(last, table, weightLocked = true, join = Join.Foot, correcting = table.correction!!.entry, hold = true)
+                    val row = stringResource(R.string.row_hold, index + 1)
+                    if (table.corrects(index, 0)) ActiveSubRow(row, last, table, weightLocked = true, join = Join.Foot, correcting = table.correction!!.entry, hold = true)
                     else DoneSubRow(
-                        last, logged[0].weightKg, seconds(logged[0].reps), Join.Foot,
+                        row, last, logged[0].weightKg, seconds(logged[0].reps), Join.Foot,
                         onCorrect = table.onCorrect?.let { { it(index, 0) } },
                         description = stringResource(R.string.correct_hold_description, index + 1),
                     )
                 }
-                open -> out += SubItem("ext-$index-0", true) { ActiveSubRow(last, table, weightLocked = true, join = Join.Foot) }
-                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(last, plannedKg, seconds(technique.seconds), Join.Foot) }
+                open -> out += SubItem("ext-$index-0", true) { ActiveSubRow(stringResource(R.string.row_hold, index + 1), last, table, weightLocked = true, join = Join.Foot) }
+                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(stringResource(R.string.row_hold, index + 1), last, plannedKg, seconds(technique.seconds), Join.Foot) }
             }
         }
         else -> Unit
@@ -458,13 +462,14 @@ private fun RowFrame(
 private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, table: TableState) {
     val cs = MaterialTheme.colorScheme
     val description = stringResource(R.string.warmup_description, i + 1, formatKg(w.weightKg), w.reps)
+    val row = stringResource(R.string.row_warmup, i + 1)
     val tick = Modifier.toggleable(value = done, role = Role.Checkbox, onValueChange = { table.onTickWarmup(i) })
         .semantics { contentDescription = description }
     if (editing != null) {
         RowFrame(RowHeight, modifier = Modifier.testTag(ActiveWarmupTag)) {
             IndexCell(stringResource(R.string.warmup_lead), Tone.Active, null, Join.None, RowHeight, bold = true)
             Spacer(Modifier.weight(1f))
-            EntryCells(editing, flagged = false, table.actions)
+            EntryCells(row, editing, flagged = false, table.actions)
             Spacer(Modifier.width(ColRir))
             CheckCell(if (done) Check.Done else Check.Todo, tick)
         }
@@ -476,8 +481,8 @@ private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, t
         Spacer(Modifier.weight(1f))
         // Planned looks planned, done looks done: muted like a prefill until ticked.
         val color = if (done) cs.onSurface else cs.outline
-        ValueText(formatKg(w.weightKg), ColKg, color)
-        ValueText("${w.reps}", ColReps, color)
+        ValueText(formatKg(w.weightKg), ColKg, color, spoken = spokenWeight(row, formatKg(w.weightKg)))
+        ValueText("${w.reps}", ColReps, color, spoken = spokenReps(row, "${w.reps}"))
         Spacer(Modifier.width(ColRir))
         CheckCell(if (done) Check.Done else Check.Todo, tick)
     }
@@ -490,6 +495,7 @@ private fun UpcomingSetRow(
     table: TableState, steppedBack: Boolean = false,
 ) {
     val color = MaterialTheme.colorScheme.outline
+    val row = stringResource(R.string.row_set, i + 1)
     // The set to do while a warm-up is typed or a later set picked: a tap brings the pad back to it.
     val back = when {
         !steppedBack -> null
@@ -506,10 +512,10 @@ private fun UpcomingSetRow(
         IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight,
             onClick = if (!steppedBack && table.current.editable(i) || table.current.prescription == null && !steppedBack) { { table.onSetOptions(i) } } else null,
             description = stringResource(R.string.set_options_description, i + 1))
-        LastCell(last)
-        ValueText(weight, ColKg, color)
-        ValueText(reps, ColReps, color)
-        RirCell { target?.rir?.let { RirChip(it, target = true) } }
+        LastCell(row, last)
+        ValueText(weight, ColKg, color, spoken = spokenWeight(row, weight))
+        ValueText(reps, ColReps, color, spoken = spokenReps(row, reps))
+        RirCell { target?.rir?.let { RirChip(it, target = true, spoken = spokenRir(row, it, target = true)) } }
         CheckCell(Check.Todo, null)
     }
 }
@@ -519,16 +525,17 @@ private fun ActiveSetRow(
     i: Int, last: LoggedSet?, entry: SetEntry, flagged: Boolean, table: TableState, target: SetPrescription?,
     technique: Technique?, join: Join, editing: Boolean = false,
 ) {
+    val row = stringResource(R.string.row_set, i + 1)
     RowFrame(RowHeight) {
         if (editing) EditCell(stringResource(R.string.correct_set_editing, i + 1))
         else IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Active, technique, join, RowHeight,
             onClick = { table.onSetOptions(i) }, description = stringResource(R.string.set_options_description, i + 1), bold = true)
-        LastCell(last)
-        EntryCells(entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
+        LastCell(row, last)
+        EntryCells(row, entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
         RirCell {
             when {
-                entry.rir != null -> RirChip(entry.rir, target = false)
-                target?.rir != null -> RirChip(target.rir, target = true)
+                entry.rir != null -> RirChip(entry.rir, target = false, spoken = spokenRir(row, entry.rir, target = false))
+                target?.rir != null -> RirChip(target.rir, target = true, spoken = spokenRir(row, target.rir, target = true))
             }
         }
         if (editing) CheckCell(Check.Done, null)
@@ -551,16 +558,17 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
     val color = MaterialTheme.colorScheme.onSurface
     val onClick = table.correctSet(i)
     val correct = stringResource(R.string.correct_set_description, i + 1)
+    val row = stringResource(R.string.row_set, i + 1)
     // Anything logged can be tapped and corrected.
     RowFrame(RowHeight, onClick = onClick, clickLabel = correct,
         modifier = if (onClick != null) Modifier.semantics { contentDescription = correct } else Modifier) {
         IndexCell("${i + 1}", if (technique != null) Tone.Technique else if (open) Tone.Active else Tone.Plain, technique, join, RowHeight, bold = open,
             record = table.current.recordAt(i))
-        LastCell(last)
-        ValueText(formatKg(set.weightKg), ColKg, color)
+        LastCell(row, last)
+        ValueText(formatKg(set.weightKg), ColKg, color, spoken = spokenWeight(row, formatKg(set.weightKg)))
         val reps = set.repsText()
-        ValueText(reps, ColReps, color, small = reps.length > 6)
-        RirCell { set.rir?.let { RirChip(it, target = false) } }
+        ValueText(reps, ColReps, color, small = reps.length > 6, spoken = spokenReps(row, reps))
+        RirCell { set.rir?.let { RirChip(it, target = false, spoken = spokenRir(row, it, target = false)) } }
         val logged = stringResource(R.string.check_logged, i + 1)
         val undo = stringResource(R.string.check_undo, i + 1)
         CheckCell(
@@ -634,29 +642,30 @@ private fun AddSetRow(onAdd: () -> Unit) {
 /** A drop or mini-set still to come: muted like every prefill; a drop is to failure, an outlined 0 chip. */
 @Composable
 private fun PlannedSubRow(
-    last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null,
+    row: String, last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null,
 ) {
     val color = MaterialTheme.colorScheme.outline
     RowFrame(SubRowHeight) {
         IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus)
-        SubLast(last)
-        ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
-        ValueText(reps, ColReps, color)
-        RirCell { if (toFailure) RirChip(0, target = true) }
+        SubLast(row, last)
+        val weight = kg?.let(::formatKg).orEmpty()
+        ValueText(weight, ColKg, color, spoken = spokenWeight(row, weight))
+        ValueText(reps, ColReps, color, spoken = spokenReps(row, reps))
+        RirCell { if (toFailure) RirChip(0, target = true, spoken = spokenRir(row, 0, target = true)) }
         CheckCell(Check.Todo, null, small = true)
     }
 }
 
 /** A drop or mini-set done: full contrast and a filled check. A tap loads it into the pad to correct it. */
 @Composable
-private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCorrect: (() -> Unit)?, description: String) {
+private fun DoneSubRow(row: String, last: String?, kg: Double, reps: String, join: Join, onCorrect: (() -> Unit)?, description: String) {
     val color = MaterialTheme.colorScheme.onSurface
     RowFrame(SubRowHeight, onClick = onCorrect, clickLabel = description,
         modifier = if (onCorrect != null) Modifier.semantics { contentDescription = description } else Modifier) {
         IndexCell(null, Tone.Technique, null, join, SubRowHeight)
-        SubLast(last)
-        ValueText(formatKg(kg), ColKg, color)
-        ValueText(reps, ColReps, color)
+        SubLast(row, last)
+        ValueText(formatKg(kg), ColKg, color, spoken = spokenWeight(row, formatKg(kg)))
+        ValueText(reps, ColReps, color, spoken = spokenReps(row, reps))
         Spacer(Modifier.width(ColRir))
         val logged = stringResource(R.string.sub_row_logged)
         CheckCell(Check.Done, Modifier.semantics { contentDescription = logged }, small = true)
@@ -669,6 +678,7 @@ private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCo
  */
 @Composable
 private fun ActiveSubRow(
+    row: String,
     last: String?,
     table: TableState,
     weightLocked: Boolean,
@@ -688,16 +698,16 @@ private fun ActiveSubRow(
     }
     RowFrame(SubRowHeight, modifier = Modifier.testTag(ActiveSubRowTag)) {
         if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus)
-        SubLast(last)
-        if (weightLocked) ValueText(entry.weight, ColKg, MaterialTheme.colorScheme.outline)
-        else Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(ColKg), height = SubCellHeight) { tap(Field.Weight) }
+        SubLast(row, last)
+        if (weightLocked) ValueText(entry.weight, ColKg, MaterialTheme.colorScheme.outline, spoken = spokenWeight(row, entry.weight))
+        else Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(ColKg), spoken = spokenWeight(row, entry.weight), height = SubCellHeight) { tap(Field.Weight) }
         val reps = when {
             correcting == null && table.holdSeconds != null -> AnnotatedString(seconds(table.holdSeconds))
             hold -> AnnotatedString(seconds(entry.full.toIntOrNull() ?: 0))
             else -> repsAnnotated(entry)
         }
-        Cell(reps, focused = entry.field == Field.Reps, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), height = SubCellHeight) { tap(Field.Reps) }
-        RirCell { if (toFailure) RirChip(0, target = true) }
+        Cell(reps, focused = entry.field == Field.Reps, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), spoken = spokenReps(row, reps.text), height = SubCellHeight) { tap(Field.Reps) }
+        RirCell { if (toFailure) RirChip(0, target = true, spoken = spokenRir(row, 0, target = true)) }
         if (correcting != null) CheckCell(Check.Done, null, small = true)
         else {
             val log = table.onLogShown
@@ -710,6 +720,7 @@ private fun ActiveSubRow(
 /** The index column of the row whose circle reads [label] (`W`, the set number). */
 internal fun indexTag(label: String) = "index-$label"
 
+internal const val SetTableTag = "set-table"
 internal const val RecordBadgeTag = "record-badge"
 
 internal const val ActiveSubRowTag = "active-sub-row"
@@ -717,15 +728,33 @@ internal const val ActiveWarmupTag = "active-warmup"
 
 // ---------------------------------------------------------------- cells
 
+/** [row]'s weight as a screen reader says it, `Set 1 weight, 100 kg`. */
+@Composable
+private fun spokenWeight(row: String, kg: String) =
+    if (kg.isEmpty()) stringResource(R.string.spoken_weight_empty, row) else stringResource(R.string.spoken_weight, row, kg)
+
+/** [row]'s reps as a screen reader says them, with the [target] while none are typed. */
+@Composable
+private fun spokenReps(row: String, reps: String, target: String? = null) = when {
+    reps.isNotEmpty() -> stringResource(R.string.spoken_reps, row, reps)
+    target != null -> stringResource(R.string.spoken_reps_target, row, target)
+    else -> stringResource(R.string.spoken_reps_empty, row)
+}
+
+/** [row]'s RIR as a screen reader says it, a [target] apart from one logged. */
+@Composable
+private fun spokenRir(row: String, rir: Int, target: Boolean) =
+    stringResource(if (target) R.string.spoken_rir_target else R.string.spoken_rir, row, if (rir >= 4) "4+" else "$rir")
+
 /** The kg and reps cells of the row being typed: tap either to type into it. */
 @Composable
-private fun RowScope.EntryCells(entry: SetEntry, flagged: Boolean, actions: PadActions, repsPlaceholder: String? = null) {
+private fun RowScope.EntryCells(row: String, entry: SetEntry, flagged: Boolean, actions: PadActions, repsPlaceholder: String? = null) {
     fun tap(field: Field) {
         actions.focus(field)
         actions.setPadVisible(true)
     }
-    Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), flagged = flagged, modifier = Modifier.width(ColKg)) { tap(Field.Weight) }
-    Cell(repsAnnotated(entry), focused = entry.field != Field.Weight, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), placeholder = repsPlaceholder) { tap(Field.Reps) }
+    Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), flagged = flagged, modifier = Modifier.width(ColKg), spoken = spokenWeight(row, entry.weight)) { tap(Field.Weight) }
+    Cell(repsAnnotated(entry), focused = entry.field != Field.Weight, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), spoken = spokenReps(row, entry.repsText, repsPlaceholder), placeholder = repsPlaceholder) { tap(Field.Reps) }
 }
 
 /**
@@ -790,6 +819,8 @@ private fun RowScope.IndexCell(
                 if (technique == null) {
                     Text(
                         label,
+                        // The circle's description says which set it is.
+                        Modifier.semantics { hideFromAccessibility() },
                         style = MaterialTheme.typography.titleSmall,
                         color = ink,
                         fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
@@ -863,13 +894,14 @@ private fun RowScope.RirCell(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun RowScope.LastCell(last: LoggedSet?) = SubLast(last?.short())
+private fun RowScope.LastCell(row: String, last: LoggedSet?) = SubLast(row, last?.short())
 
 @Composable
-private fun RowScope.SubLast(last: String?) {
+private fun RowScope.SubLast(row: String, last: String?) {
+    val spoken = last?.let { stringResource(R.string.spoken_last, row, it.replace(" × ", " kg × ")) }
     Text(
         last.orEmpty(),
-        Modifier.weight(1f),
+        Modifier.weight(1f).then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
@@ -878,10 +910,10 @@ private fun RowScope.SubLast(last: String?) {
 }
 
 @Composable
-private fun ValueText(text: String, width: Dp, color: Color, small: Boolean = false) {
+private fun ValueText(text: String, width: Dp, color: Color, small: Boolean = false, spoken: String? = null) {
     Text(
         text,
-        Modifier.width(width),
+        Modifier.width(width).then(if (spoken != null && text.isNotEmpty()) Modifier.semantics { contentDescription = spoken } else Modifier),
         color = color,
         textAlign = TextAlign.Center,
         style = (if (small) MaterialTheme.typography.figureMedium else MaterialTheme.typography.figureLarge),
@@ -951,6 +983,8 @@ internal fun Cell(
     focused: Boolean,
     description: String,
     modifier: Modifier,
+    /** What a screen reader says: the value with its set and unit. */
+    spoken: String? = null,
     /** The weight check is on this value: it reads in the error colour, like the check's reason. */
     flagged: Boolean = false,
     height: Dp = CellHeight,
@@ -980,7 +1014,8 @@ internal fun Cell(
         val style = (if (text.length > 6) MaterialTheme.typography.figureMedium else MaterialTheme.typography.figureLarge)
         Text(
             if (empty) AnnotatedString(placeholder!!) else text,
-            Modifier.padding(horizontal = CellPad),
+            // Outside the padding, so an empty cell's label keeps a size and stays in the tree.
+            (if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier).padding(horizontal = CellPad),
             style = style,
             autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = style.fontSize),
             color = when { empty -> cs.outline; flagged -> cs.error; else -> cs.onSurface },

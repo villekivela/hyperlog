@@ -41,6 +41,21 @@
     <string name="col_reps">Reps</string>
     <string name="col_reps_split">L / R</string>
     <string name="col_rir">RIR</string>
+    <!-- A set table row's name, which a screen reader puts before each of its values. -->
+    <string name="row_set">Set %1$d</string>
+    <string name="row_warmup">Warm-up %1$d</string>
+    <string name="row_drop">Drop %1$d of set %2$d</string>
+    <string name="row_mini_set">Mini-set %1$d of set %2$d</string>
+    <string name="row_hold">Hold of set %1$d</string>
+    <!-- A set table value as a screen reader says it; the first argument is the row's name. -->
+    <string name="spoken_weight">%1$s weight, %2$s kg</string>
+    <string name="spoken_weight_empty">%1$s weight, empty</string>
+    <string name="spoken_reps">%1$s reps, %2$s</string>
+    <string name="spoken_reps_empty">%1$s reps, empty</string>
+    <string name="spoken_reps_target">%1$s reps, empty, target %2$s</string>
+    <string name="spoken_rir">%1$s, %2$s RIR</string>
+    <string name="spoken_rir_target">%1$s, target %2$s RIR</string>
+    <string name="spoken_last">%1$s last time, %2$s</string>
 
     <string name="pad_rir">RIR</string>
     <string name="pad_full">F</string>

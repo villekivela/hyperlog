@@ -1328,6 +1328,12 @@ gallery (Technique videos).
   - **Text that leaves the app keeps `@ N`:** the Claude prompts (`@ N RIR` in the legend), backups,
     the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
+- **The set table reads aloud** (#268): every value on a row says which row it belongs to and its
+  unit, so TalkBack never reads a bare `50`: `Set 1 weight, 50 kg`, `Set 1 reps, 10`, `Set 1, 2 RIR`,
+  `Set 1 last time, 50 kg × 10 + 5`. A warm-up, drop, mini-set or hold names itself the same way
+  (`Drop 1 of set 1 weight, 17.5 kg`). An empty cell says so and gives the target
+  (`Set 1 reps, empty, target 4–6`), and a target RIR says it's a target. The figure in a set's circle is
+  silent, because the circle's own description already names the set.
 - **Scheduling**: with training days (below), the program's days take turns on them, and a missed
   day is skipped (Domain → Training days and the rotation, ADR 0006). Without them the program runs
   as a sequence (next day is whatever comes next, whenever you train). Training days also set the
