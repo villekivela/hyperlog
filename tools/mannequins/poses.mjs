@@ -792,6 +792,20 @@ export const POSES = {
     camera: { target: [0, 0.5, 0.2], halfHeight: 0.9, azimuth: 65, elevation: 8 },
   },
 
+  // On the row station's bench, the feet on its plates, two close handles from the cable between the
+  // shins: from the arms long and the trunk forward, the hips slide back as the trunk comes up and
+  // the elbows drive back past the ribs.
+  seated_cable_row: {
+    equipment: 'cable',
+    motion: 'seated_row',
+    kit: { seated_row: { attachment: 'handles', spread: 0.09 } },
+    top: { trunk: 28, slide: -0.01, bar: [0.72, 0.81] },
+    bottom: { trunk: -2, slide: -0.1, bar: [0.86, 0.23] },
+    feet: { stance: 0.17, down: 0, kneesOut: 0.47 },
+    grip: { width: 0.09, swing: 40 },
+    camera: { target: [0, 0.75, 0.5], halfHeight: 1.05, azimuth: 70, elevation: 10 },
+  },
+
   // Back on an upright bench between the towers, the pulleys at the seated shoulder: the handles
   // sweep from wide behind the line of the chest to about shoulder width in front of it (owner, #127).
   seated_cable_flye: {

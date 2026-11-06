@@ -531,6 +531,33 @@ export const MOTIONS = {
   },
 
   /**
+   * Sat on a low bench, the feet on two plates leaning away: the trunk at `trunk`, the hips `slide`
+   * metres along the pad from their place, and a bar or two handles at `bar` [y, z], `grip.width`
+   * either side. The ankles sit `feet.down` below the plates' middle, `feet.stance` out.
+   */
+  seated_row(e, s, L) {
+    const hipC = V(0, ...e.body.hip).add(V(0, 0, s.slide ?? 0));
+    const lean = spineLean(s.trunk, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const { plate, plateUp, plateOut } = s.linkage;
+    const ankle = plate.clone().addScaledVector(plateUp, -e.feet.down).addScaledVector(plateOut, L.ankleY);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().addScaledVector(X, side * e.feet.stance)),
+      foot: () => ({ heading: plateUp.clone(), top: plateOut.clone() }),
+      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0.2), 1, 0.4).normalize(),
+      support: () => ({ point: plate, normal: plateOut.clone() }),
+      bar: V(0, ...s.bar),
+      grip: e.grip.width,
+      ...(e.kit.seated_row.attachment === 'handles' ? { across: () => V(0, 1, 0) } : {}),
+      armPole: elbowsTo(e, [0.5, -1, -0.5]),
+      plate, plateUp,
+    };
+  },
+
+  /**
    * Standing at a high pulley, the upper arms by the sides and the elbows still, the forearms
    * pressing the bar down from in front of the chest to the thighs.
    */
