@@ -192,7 +192,7 @@ Myo-reps, mini-sets of 4 · `unfold_less` Lengthened partials to failure · `pan
 30 s, stretch · `local_fire_department` To failure). Sub-rows for drops and mini-sets come with
 #10.
 
-**Header.** A long exercise name ellipsizes 8 dp clear of the rest pill.
+**Header.** A long exercise name ellipsizes 8 dp clear of ⋮ (the clock is on the Next row).
 
 **Day done.** When every planned set is logged the pad gives way to a bar with "Day done" and a
 filled **Finish session** (the usual Finish dialog follows).

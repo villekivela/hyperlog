@@ -18,6 +18,7 @@ export const MOTION_TEMPOS = {
   pressdown: tempo(1, 0.2, 2, 0.5),
   leg_press: tempo(2, 0.3, 1, 0.6),
   chest_press: tempo(2, 0.3, 1, 0.6),
+  shoulder_press: tempo(2, 0.3, 1, 0.6),
   // Pushed down to the hips for the 1 s and let up in 2: the lowering is the return.
   dip_machine: tempo(2, 0.3, 1, 0.6),
   // The top of these is where the muscle is shortest (the curl's heels drawn up, the raise's arm
@@ -31,6 +32,8 @@ export const MOTION_TEMPOS = {
   // Pulled from arms long (a row, a machine pulldown): the clip's first half is the concentric.
   lever_handles: tempo(1, 0.3, 2, 0.5),
   chest_pad: tempo(1, 0.3, 2, 0.5),
+  // Curled up against the stack: the clip's first half is the concentric.
+  reclined_crunch: tempo(1, 0.5, 2, 0.5),
   // Driven up from the bottom: the clip's first half, the lowering, is the eccentric.
   hip_thrust: tempo(2, 0.5, 1, 1),
   bridge: tempo(2, 0.3, 1, 0.6),

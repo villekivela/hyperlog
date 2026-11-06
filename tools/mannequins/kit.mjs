@@ -25,14 +25,14 @@ export const MACHINES = {
   row_machine: { kit: 'row_machine', exercises: ['machine_row', 'chest_supported_machine_row'] },
   t_bar_row_machine: { kit: 't_bar_row_machine', exercises: ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'] },
   pulldown_machine: { kit: 'pulldown_machine', exercises: ['machine_pulldown', 'machine_lat_pullover'] },
-  shoulder_press: { kit: null, exercises: ['machine_shoulder_press'] },
+  shoulder_press: { kit: 'shoulder_press', exercises: ['machine_shoulder_press'] },
   lateral_raise_machine: { kit: 'lateral_raise_machine', exercises: ['machine_lateral_raise', 'standing_machine_lateral_raise'] },
   preacher_curl_machine: { kit: 'preacher_curl_machine', exercises: ['machine_preacher_curl'] },
   dip_machine: { kit: 'dip_machine', exercises: ['seated_dip_machine'] },
   hip_machine: { kit: 'hip_machine', exercises: ['machine_hip_abduction', 'machine_adduction'] },
   hip_thrust_machine: { kit: 'hip_thrust_machine', exercises: ['machine_hip_thrust'] },
   calf_raise_machine: { kit: 'calf_raise_machine', exercises: ['standing_calf_raise', 'seated_calf_raise', 'donkey_calf_raise'] },
-  crunch_machine: { kit: null, exercises: ['machine_crunch'] },
+  crunch_machine: { kit: 'crunch_machine', exercises: ['machine_crunch'] },
   shrug_machine: { kit: 'shrug_machine', exercises: ['machine_shrug'] },
 };
 
