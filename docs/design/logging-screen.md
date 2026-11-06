@@ -91,8 +91,8 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | ✓ / → key | primary (dimmed to surfaceContainerHigh when there is nothing to log) |
 | Weight warning | error (cell outline and value, strip text and `warning` symbol) |
 | Next row, resting | the row drains in primary at 24% across its width, name and digits in onSurface so they read on the fill and off it; no fill after rest, the digits in onSurfaceVariant |
-| Next row, breathing | drains in tertiary at 28% |
-| Next row, holding | fills in secondary at 24% toward the target; solid primary, text in onPrimary, once reached |
+| Next row, breathing | drains in the myo-reps violet at 24% |
+| Next row, holding | fills in the iso hold blue at 24% toward the target; solid iso hold blue, digits stopped, text in the technique ink, once reached |
 | Day done strip | primaryContainer, rounded 28 dp at the top; its records in onPrimaryContainer, the set line at 80% |
 | Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
@@ -264,8 +264,12 @@ end, so a glance tells how far through the rest you are. The set table stays vis
 shown or hidden. Tapping the digits (48 dp tall at least) opens the rest sheet: −15, the time, +15,
 End rest; tapping the rest of the row goes to the next exercise, as without a clock. After rest the
 row has no fill and counts up (`+0:12`) in onSurfaceVariant until the next set is logged. Before a
-myo mini-set the row is a 15 s breathing countdown, drained in a tertiary tint; the digits can't
-be tapped, and it goes away at zero.
+myo mini-set the row is a 15 s breathing countdown, drained in a tint of the myo-reps violet; the
+digits can't be tapped, and it goes away at zero. An iso hold fills toward its target in a tint of
+the iso hold blue; at the target the row turns solid blue, the digits stop at the target and the
+phone buzzes once, as before. The tints are the technique colours of the set's circles and pills,
+so the ink stays readable on them. The moving edge of every fill is rounded (16 dp, the row's own
+radius); rest keeps its primary tint and the count-up after it keeps its muted look.
 
 **Sheets** (modal bottom sheets, surfaceContainerLow, 28 dp text edge). Their rows sit in
 surfaceContainerHighest groups 12 dp in, with the picked or current row in secondaryContainer

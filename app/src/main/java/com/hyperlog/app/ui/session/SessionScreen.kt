@@ -67,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -763,10 +764,11 @@ internal fun NextLine(
     val cs = MaterialTheme.colorScheme
     val (fill, ink) = clock?.kind?.colours() ?: (Color.Transparent to cs.onSurface)
     if (clock != null && (clock.kind == ClockKind.Hold || clock.kind == ClockKind.HoldReached)) HoldReachedBuzz(clock.kind == ClockKind.HoldReached)
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+    val radius = 16.dp
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(radius)
     Row(
         Modifier.fillMaxWidth().clip(shape)
-            .drawBehind { if (clock != null) drawRect(fill, size = Size(size.width * clock.fraction, size.height)) }
+            .drawBehind { if (clock != null) drawRoundRect(fill, size = Size(size.width * clock.fraction, size.height), cornerRadius = CornerRadius(radius.toPx())) }
             .clickable(onClick = onClick).heightIn(min = if (clock != null) 64.dp else 48.dp)
             .padding(start = 16.dp, end = 12.dp).testTag(NextRowTag),
         verticalAlignment = Alignment.CenterVertically,

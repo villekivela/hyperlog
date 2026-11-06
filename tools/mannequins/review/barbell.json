@@ -16,14 +16,16 @@
   "barbell_curl": {
     "ok": true,
     "note": "",
-    "clip": "a0ea7586fe6969d8",
-    "tuned": "{}"
+    "clip": "3fb19754dfbe93a8",
+    "tuned": "{}",
+    "at": "2026-11-06T04:45:35.020Z"
   },
   "barbell_glute_bridge": {
     "ok": true,
     "note": "i cant position the barbell in bottom properly",
-    "clip": "c30d391cc6b521dd",
-    "tuned": "{}"
+    "clip": "c7c90771fe1b5851",
+    "tuned": "{}",
+    "at": "2026-11-06T04:45:42.434Z"
   },
   "barbell_hip_thrust": {
     "ok": true,
@@ -35,20 +37,23 @@
   "barbell_row": {
     "ok": true,
     "note": "the path arcs it should not",
-    "clip": "a85084f9f837747c",
-    "tuned": "{}"
+    "clip": "a1ef196cfc19790e",
+    "tuned": "{}",
+    "at": "2026-11-06T04:45:49.701Z"
   },
   "barbell_shrug": {
     "ok": true,
     "note": "",
-    "clip": "30d7ade359855b6b",
-    "tuned": "{}"
+    "clip": "aad3bbd8a6345f47",
+    "tuned": "{}",
+    "at": "2026-11-06T04:45:56.587Z"
   },
   "barbell_upright_row": {
     "ok": true,
     "note": "",
-    "clip": "0155227a10023c99",
-    "tuned": "{}"
+    "clip": "c16d48c8044f271b",
+    "tuned": "{}",
+    "at": "2026-11-06T04:46:02.574Z"
   },
   "deadlift": {
     "ok": false,
@@ -65,14 +70,16 @@
   "deficit_pendlay_row": {
     "ok": true,
     "note": "barbell path arcs",
-    "clip": "b656f077cc60a30e",
-    "tuned": "{}"
+    "clip": "3250e4539b7272ca",
+    "tuned": "{}",
+    "at": "2026-11-06T04:46:09.716Z"
   },
   "floor_press": {
     "ok": true,
     "note": "",
-    "clip": "93d39c5ae59c0016",
-    "tuned": "{}"
+    "clip": "d9a6f901bbfeaec9",
+    "tuned": "{}",
+    "at": "2026-11-06T04:46:17.435Z"
   },
   "front_squat": {
     "ok": true,
