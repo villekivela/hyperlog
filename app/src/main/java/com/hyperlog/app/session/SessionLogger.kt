@@ -1,6 +1,7 @@
 package com.hyperlog.app.session
 
 import androidx.room.withTransaction
+import com.hyperlog.app.rest.RestOverLimitMs
 import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.data.EntryColumns
 import com.hyperlog.app.data.HyperlogDatabase
@@ -985,10 +986,13 @@ class SessionLogger(
         }
         correction = null
         viewingId = null
-        dao.updateSession(dao.session(session.id)!!.copy(finishedAt = now, entry = null, restEndsAt = null))
+        // A session left open ended at its last set, not whenever it was remembered.
+        val lastSet = logged.flatMap { dao.sets(it.id) }.maxOf { it.loggedAt }
+        val ended = if (now - lastSet > RestOverLimitMs) lastSet else now
+        dao.updateSession(dao.session(session.id)!!.copy(finishedAt = ended, entry = null, restEndsAt = null))
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
         _state.value = null
-        SessionSummary(session.id, session.startedAt, now, logged.map { it.summary })
+        SessionSummary(session.id, session.startedAt, ended, logged.map { it.summary })
     }
 
     /**

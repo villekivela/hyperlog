@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.navItem
 import com.hyperlog.app.press
 import com.hyperlog.app.program.TestPrograms
 import com.hyperlog.app.ui.program.ProgramStore
@@ -132,6 +133,16 @@ class ProgramDayTest {
         // Back returns to Program, where the session was opened from.
         compose.onNodeWithContentDescription("Back").performClick()
         compose.waitFor("Main · weeks 1–2")
+    }
+
+    /** Start on Program does what Today's does, in one tap (round 2). */
+    @Test
+    fun startOnProgramStartsTheSession() {
+        importProgram()
+        compose.onNode(navItem("Program")).performClick()
+        compose.waitFor("Start")
+        compose.onNodeWithText("Start").performClick()
+        compose.waitFor("Reps")
     }
 
     /** The list ends above the button, so however long it is and however large the text, no row runs under it (#269). */

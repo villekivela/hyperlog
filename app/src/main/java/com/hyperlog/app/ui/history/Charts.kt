@@ -268,7 +268,7 @@ fun WeeklySetsChart(
     onSelect: (Int) -> Unit,
     description: String,
     modifier: Modifier = Modifier,
-    height: Dp = 64.dp,
+    height: Dp = 56.dp,
 ) {
     val cs = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer()
@@ -302,7 +302,9 @@ fun WeeklySetsChart(
                 topLeft = Offset(left, top), size = Size(bar, plotH - top), cornerRadius = CornerRadius(4.dp.toPx()),
             )
         }
-        val ay = plotH + 4.dp.toPx()
+        // The week read, on the axis, so an empty one is marked too.
+        drawCircle(cs.primary, radius = 3.dp.toPx(), center = Offset(slot * selected + slot / 2, plotH + 4.dp.toPx()))
+        val ay = plotH + 8.dp.toPx()
         label(measurer, short(weeks.first().start), tick, Offset(0f, ay))
         if (weeks.size > 1) label(measurer, short(weeks.last().start), tick, Offset(plotW, ay), alignEnd = true)
         label(measurer, unit, tick, Offset(size.width, ay), alignEnd = true)
@@ -310,18 +312,20 @@ fun WeeklySetsChart(
 }
 
 /**
- * [sets] as a bar from zero over the band of the range [low]–[high], on a scale up to [most]: the
- * band says where the bar should reach, in tone, so being short never reads as a fault.
+ * [sets] along one track from zero, with the range [low]–[high] a band on it, on a scale up to
+ * [most]: the band says where the bar should reach, in tone, so being short never reads as a fault.
  */
 @Composable
 fun TargetBar(sets: Double, low: Int, high: Int, most: Double, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     Canvas(modifier.height(12.dp)) {
         fun x(v: Double) = (size.width * (v / most.coerceAtLeast(1.0))).toFloat()
-        val radius = CornerRadius(4.dp.toPx())
-        drawRoundRect(cs.surfaceContainerHighest, topLeft = Offset(x(low.toDouble()), 0f), size = Size(x(high.toDouble()) - x(low.toDouble()), size.height), cornerRadius = radius)
         val bar = 6.dp.toPx()
-        if (sets > 0) drawRoundRect(cs.primary, topLeft = Offset(0f, (size.height - bar) / 2), size = Size(x(sets), bar), cornerRadius = CornerRadius(bar / 2))
+        val line = (size.height - bar) / 2
+        // One track from zero, the band a raised stretch of it, and the sets along the same line.
+        drawRoundRect(cs.surfaceContainerHighest, topLeft = Offset(0f, line), size = Size(size.width, bar), cornerRadius = CornerRadius(bar / 2))
+        drawRoundRect(cs.outline, topLeft = Offset(x(low.toDouble()), 0f), size = Size(x(high.toDouble()) - x(low.toDouble()), size.height), cornerRadius = CornerRadius(4.dp.toPx()))
+        if (sets > 0) drawRoundRect(cs.primary, topLeft = Offset(0f, line), size = Size(x(sets), bar), cornerRadius = CornerRadius(bar / 2))
     }
 }
 

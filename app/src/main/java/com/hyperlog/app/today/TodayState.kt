@@ -20,13 +20,25 @@ enum class DayKind { Running, Done, Planned, Missed, RestDay }
  * session finished; [workout] is a workout from Claude waiting today; while [sessionRunning], its
  * day is [runningDay] (null for one ad hoc or a workout).
  */
+/** What the next action can do now. */
+sealed interface NextOffer {
+    /** A session is running. */
+    data object Resume : NextOffer
+
+    /** The next day is today: a session can start. */
+    data object Start : NextOffer
+
+    /** The next day comes on [date], with nothing to do until then. */
+    data class On(val date: LocalDate) : NextOffer
+}
+
 class TodayState(
     private val program: ActiveProgram?,
     sessions: List<PastSessionItem>,
     weekdayPlan: WeekdayPlan,
     lastTrained: LocalDate?,
     workout: Boolean,
-    sessionRunning: Boolean,
+    private val sessionRunning: Boolean,
     runningDay: PlannedDay?,
     val selected: LocalDate,
     val today: LocalDate,
@@ -91,6 +103,14 @@ class TodayState(
 
     /** Start is offered on [day]: only on the next day, planned on today. */
     val offersStart: Boolean = isNext && date == today
+
+    /** What Program and Progress can offer: the same Start as here, so neither leads to a day without one. */
+    val nextOffer: NextOffer?
+        get() = when {
+            sessionRunning -> NextOffer.Resume
+            offersStart -> NextOffer.Start
+            else -> planned.keys.firstOrNull()?.let { NextOffer.On(it) }
+        }
 
     /** This week's missed day, on offer under the next day on today when today has no training day. */
     val trainMissed: Turn? = program?.trainToday?.takeIf { isNext && selected == today }

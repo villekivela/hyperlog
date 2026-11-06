@@ -129,6 +129,9 @@ import com.hyperlog.app.ui.theme.TextEdge
 fun TodayScreen(
     sessionRunning: Boolean,
     onResume: () -> Unit,
+    /** Program or Progress asked for Start: the gym sheet opens as Today does, then [onStartOpened]. */
+    startOnOpen: Boolean = false,
+    onStartOpened: () -> Unit = {},
     /**
      * Starts a session at the gym (null with no gyms): the program's next day, or ad hoc when
      * [adHoc]. The swaps (slot id -> exercise) are for equipment the gym doesn't have, this session only.
@@ -235,6 +238,12 @@ fun TodayScreen(
             sessionRunning -> onResume()
             gyms.isEmpty() -> launch(kind, null, emptyMap())
             else -> picking = kind
+        }
+    }
+    LaunchedEffect(startOnOpen) {
+        if (startOnOpen) {
+            start(Kind.Day)
+            onStartOpened()
         }
     }
     val kind = picking

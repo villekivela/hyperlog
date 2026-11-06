@@ -27,3 +27,20 @@ fun Modifier.fadingEdges(state: LazyListState): Modifier = this
             )
         }
     }
+
+/** As [fadingEdges], for a row: a chip cut by the edge fades out instead. */
+fun Modifier.fadingSides(state: LazyListState): Modifier = this
+    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+    .drawWithContent {
+        drawContent()
+        val fade = 32.dp.toPx()
+        if (state.canScrollBackward) {
+            drawRect(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, endX = fade), size = size.copy(width = fade), blendMode = BlendMode.DstIn)
+        }
+        if (state.canScrollForward) {
+            drawRect(
+                Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = size.width - fade, endX = size.width),
+                topLeft = Offset(size.width - fade, 0f), size = size.copy(width = fade), blendMode = BlendMode.DstIn,
+            )
+        }
+    }

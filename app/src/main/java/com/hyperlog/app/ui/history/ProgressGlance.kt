@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,10 +20,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.NumberRange
@@ -47,10 +52,21 @@ import java.time.temporal.TemporalAdjusters
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+internal const val MusclesFoldTag = "muscles-fold"
+
 /** The muscles a glance lists before its toggle: enough to read, and the rest of Progress still fits. */
 private const val MusclesShown = 4
 
-/** The week's muscles against their ranges, the ones furthest short first. */
+/** A section head's short note, ending on the rows' edge. */
+@Composable
+private fun HeadNote(text: String) = Text(
+    text,
+    Modifier.padding(start = 8.dp, end = TextEdge - 8.dp),
+    style = MaterialTheme.typography.bodyMedium,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+)
+
+/** The week's muscles against their ranges, the ones furthest short first, on one scale. */
 @Composable
 internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: LocalDate) {
     val week = glance.week
@@ -66,25 +82,31 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
             thisWeek.minusWeeks(1) -> stringResource(R.string.history_sets_last_week)
             else -> weekRange(week)
         },
-    ) {
-        Text(
-            stringResource(R.string.history_on_target, glance.onTarget, glance.muscles.size),
-            Modifier.padding(end = 8.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    ) { HeadNote(stringResource(R.string.history_on_target, glance.onTarget, glance.muscles.size)) }
     var all by rememberSaveable { mutableStateOf(false) }
     val rows = glance.shortFirst
-    val most = glance.muscles.maxOf { maxOf(it.sets, it.range.high.toDouble()) }
-    (if (all) rows else rows.take(MusclesShown)).forEach { MuscleRow(it, most) }
+    if (rows.isNotEmpty()) {
+        val most = glance.muscles.maxOf { maxOf(it.sets, it.range.high.toDouble()) }
+        // One width for the figures, so every row's track starts and ends in the same place.
+        val style = MaterialTheme.typography.labelLarge
+        val measurer = rememberTextMeasurer()
+        val figure = with(LocalDensity.current) { rows.maxOf { measurer.measure(formatSets(it.sets), style, maxLines = 1, softWrap = false).size.width }.toDp() }
+        MuscleScale(glance.muscles.map { it.range }.distinct().singleOrNull(), most, figure)
+        (if (all) rows else rows.take(MusclesShown)).forEach { MuscleRow(it, most, figure) }
+    }
     if (rows.size > MusclesShown) {
-        Text(
-            if (all) stringResource(R.string.history_muscles_fewer) else stringResource(R.string.history_muscles_all, rows.size),
-            Modifier.fillMaxWidth().clickable { all = !all }.heightIn(min = 48.dp).padding(horizontal = TextEdge, vertical = 12.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        Row(
+            Modifier.fillMaxWidth().clickable { all = !all }.heightIn(min = 48.dp).padding(horizontal = TextEdge),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                if (all) stringResource(R.string.history_muscles_fewer) else stringResource(R.string.history_muscles_all, rows.size),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.width(4.dp))
+            SymbolIcon(if (all) Symbol.ExpandLess else Symbol.ExpandMore, null, Modifier.size(20.dp).testTag(MusclesFoldTag), tint = MaterialTheme.colorScheme.primary)
+        }
     }
     if (glance.untrained.isNotEmpty()) {
         Box(Modifier.padding(horizontal = TextEdge, vertical = 4.dp)) {
@@ -93,9 +115,31 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
     }
 }
 
-/** One muscle: its name, its sets as a bar over the band of its range, and the figure. */
+/** The rows' scale, over the tracks: zero, the target's ends (or the top, when ranges differ) and the target in words. */
 @Composable
-private fun MuscleRow(week: MuscleWeek, most: Double) {
+private fun MuscleScale(range: NumberRange?, most: Double, figure: Dp) {
+    val style = MaterialTheme.typography.labelSmall
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(Modifier.fillMaxWidth().padding(horizontal = TextEdge), verticalAlignment = Alignment.CenterVertically) {
+        Text(range?.let { stringResource(R.string.history_target, it.low, it.high) }.orEmpty(), Modifier.weight(NameShare), style = style, color = color)
+        val ticks = if (range != null) listOf(0.0, range.low.toDouble(), range.high.toDouble()) else listOf(0.0, most)
+        Layout({ ticks.forEach { Text(formatSets(it), style = style, color = color) } }, Modifier.weight(1 - NameShare)) { items, constraints ->
+            val placed = items.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
+            layout(constraints.maxWidth, placed.maxOf { it.height }) {
+                placed.forEachIndexed { i, tick ->
+                    // Centred on its place on the track, and kept inside it at the ends.
+                    val x = (constraints.maxWidth * ticks[i] / most).toInt() - tick.width / 2
+                    tick.place(x.coerceIn(0, (constraints.maxWidth - tick.width).coerceAtLeast(0)), 0)
+                }
+            }
+        }
+        Spacer(Modifier.width(figure + 8.dp))
+    }
+}
+
+/** One muscle: its name, its sets along the track with its range's band on it, and the figure. */
+@Composable
+private fun MuscleRow(week: MuscleWeek, most: Double, figure: Dp) {
     val status = stringResource(
         when (week.status) {
             VolumeStatus.Under -> R.string.history_status_under
@@ -103,16 +147,17 @@ private fun MuscleRow(week: MuscleWeek, most: Double) {
             VolumeStatus.Over -> R.string.history_status_over
         },
     )
-    val spoken = stringResource(R.string.history_muscle_description, week.muscle, formatSets(week.sets), week.range.low, week.range.high, status)
+    val sets = pluralStringResource(R.plurals.history_sets, if (week.sets == 1.0) 1 else 2, formatSets(week.sets))
+    val spoken = stringResource(R.string.history_muscle_description, week.muscle, sets, week.range.low, week.range.high, status)
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 28.dp).padding(horizontal = TextEdge).clearAndSetSemantics { contentDescription = spoken },
+        Modifier.fillMaxWidth().heightIn(min = 26.dp).padding(horizontal = TextEdge).clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(week.muscle, Modifier.weight(0.55f), style = MaterialTheme.typography.bodyMedium)
-        TargetBar(week.sets, week.range.low, week.range.high, most, Modifier.weight(0.45f))
+        Text(week.muscle, Modifier.weight(NameShare), style = MaterialTheme.typography.bodyMedium)
+        TargetBar(week.sets, week.range.low, week.range.high, most, Modifier.weight(1 - NameShare))
         Text(
             formatSets(week.sets),
-            Modifier.padding(start = 8.dp).widthIn(min = 32.dp),
+            Modifier.padding(start = 8.dp).width(figure),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.End,
@@ -122,18 +167,15 @@ private fun MuscleRow(week: MuscleWeek, most: Double) {
     }
 }
 
+private const val NameShare = 0.55f
+
 /** The work sets of each week, read by touch; a week picked here is the one [MusclesCard] shows. */
 @Composable
 internal fun TrendCard(glance: TrainingGlance, onPick: (LocalDate) -> Unit) {
     val weeks = glance.weeks
     val selected = weeks.indexOfFirst { it.start == glance.week }.takeIf { it >= 0 } ?: weeks.lastIndex
     val shown = weeks[selected]
-    SectionHead(stringResource(R.string.history_weekly_sets)) {
-        Text(
-            stringResource(R.string.history_week_read, shown.workSets, short(shown.start)),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+    SectionHead(pluralStringResource(R.plurals.history_week_read, shown.workSets, shown.workSets, short(shown.start))) {
         // The chart reads by touch; these step the same weeks for a screen reader.
         IconButton(onClick = { onPick(weeks[selected - 1].start) }, enabled = selected > 0) {
             SymbolIcon(Symbol.ChevronLeft, stringResource(R.string.history_week_earlier))
@@ -148,13 +190,13 @@ internal fun TrendCard(glance: TrainingGlance, onPick: (LocalDate) -> Unit) {
         description = stringResource(R.string.history_weekly_chart, weeks.size, sets.min(), sets.max(), sets.last()),
         modifier = Modifier.padding(horizontal = TextEdge),
     )
-    Spacer(Modifier.size(8.dp))
+    Spacer(Modifier.size(4.dp))
 }
 
 /** The lifts moving most, or what will show here. */
 @Composable
 internal fun MovingCard(moving: List<MovingLift>, onOpen: (String) -> Unit) {
-    SectionHead(stringResource(R.string.history_moving))
+    SectionHead(stringResource(R.string.history_moving)) { HeadNote(stringResource(R.string.history_moving_period)) }
     if (moving.isEmpty()) Muted(stringResource(R.string.history_moving_none))
     moving.forEach { MovingRow(it, onOpen) }
 }

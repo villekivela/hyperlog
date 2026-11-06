@@ -5,14 +5,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.TrendLine
@@ -58,13 +62,16 @@ class ProgressGlanceTest {
     private val opened = mutableListOf<String>()
     private var nexts = 0
 
-    private fun show(weeks: List<WeekSets>, trends: List<ExerciseTrend>, next: NextAction? = NextAction("Start", "Day A") { nexts++ }) = compose.setContent {
+    private fun show(
+        weeks: List<WeekSets>, trends: List<ExerciseTrend>, next: NextAction? = NextAction("Day A", "Start") { nexts++ },
+        range: (String) -> NumberRange = { NumberRange(8, 14) },
+    ) = compose.setContent {
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, 1.15f)) {
             HyperlogTheme {
                 HistoryScreen(
                     emptyList(), weeks, trends, emptyList(), tab = 1, onTab = {}, onOpenSession = {}, onOpenExercise = { opened += it },
-                    onBodyweight = {}, onLogBodyweight = {}, onBack = {}, today = today, next = next,
+                    onBodyweight = {}, onLogBodyweight = {}, onBack = {}, today = today, next = next, range = range,
                 )
             }
         }
@@ -73,12 +80,51 @@ class ProgressGlanceTest {
     @Test
     fun aFullBlockSharesOneScreen() {
         show(block(), listOf(lift("Bench", 100.0, 105.0), lift("Squat", 140.0, 150.0), lift("Row", 90.0, 85.0)))
-        compose.onNodeWithText("Weekly sets").assertIsDisplayed()
+        compose.onNodeWithText("40 sets, week of 2 Nov").assertIsDisplayed()
         compose.onNodeWithText("Moving").assertIsDisplayed()
         // Third by how far it moved; the Exercises list further down has its own Bench.
         val last = compose.onNodeWithContentDescription("Bench, estimate 100 to 105 kg, +5%", useUnmergedTree = true).getBoundsInRoot()
         // On the phone the status bar takes 40 dp and the navigation bar the last 80.
         assertTrue("The last lift ends at ${last.bottom}", last.bottom <= 794.dp)
+    }
+
+    /** Round 2: one set reads as one, written and spoken. */
+    @Test
+    fun oneSetIsSingular() {
+        show(listOf(WeekSets(monday, mapOf("Lats" to 1.0), 1)), emptyList())
+        compose.onNodeWithText("1 set, week of 2 Nov").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Lats, 1 set, target 8 to 14, under target", useUnmergedTree = true).assertExists()
+    }
+
+    /** One scale for the rows: zero, the target's ends, and the target in words (round 2). */
+    @Test
+    fun theMusclesHaveALabelledScale() {
+        show(listOf(WeekSets(monday, mapOf("Lats" to 2.0), 2)), emptyList())
+        compose.onNodeWithText("Target 8–14 sets").assertIsDisplayed()
+        listOf("0", "8", "14").forEach { compose.onNodeWithText(it).assertIsDisplayed() }
+    }
+
+    /** A focus gives muscles different ranges, so no one target can head the scale. */
+    @Test
+    fun aScaleOverDifferentRangesStaysFromZeroToTheTop() {
+        show(listOf(WeekSets(monday, mapOf("Lats" to 2.0, "Chest" to 3.0), 5)), emptyList(), range = { if (it == "Lats") NumberRange(14, 21) else NumberRange(4, 7) })
+        compose.onNodeWithText("Target", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("0").assertIsDisplayed()
+        compose.onNodeWithText("21").assertIsDisplayed()
+    }
+
+    @Test
+    fun movingSaysWhatItMeasuresAndOverWhen() {
+        show(block(), listOf(lift("Bench", 100.0, 105.0)))
+        compose.onNodeWithText("Estimate, last 4 weeks").assertIsDisplayed()
+    }
+
+    @Test
+    fun theFoldLooksLikeItOpens() {
+        show(listOf(WeekSets(monday, mapOf("Chest" to 9.0, "Lats" to 2.0, "Quads" to 3.0, "Glutes" to 4.0, "Calves" to 5.0), 20)), emptyList())
+        compose.onNodeWithTag(MusclesFoldTag, useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("All 5 muscles").performClick()
+        compose.onNodeWithText("Fewer muscles").assertIsDisplayed()
     }
 
     /** The untrained are one line of names, not rows of zeros. */
@@ -106,20 +152,20 @@ class ProgressGlanceTest {
     fun aWeekReadOnTheChartShowsItsMuscles() {
         val weeks = listOf(WeekSets(monday, mapOf("Chest" to 9.0), 20), WeekSets(monday.minusWeeks(1), mapOf("Chest" to 3.0), 30))
         show(weeks, emptyList())
-        compose.onNodeWithText("20 · 2 Nov").assertIsDisplayed()
+        compose.onNodeWithText("20 sets, week of 2 Nov").assertIsDisplayed()
         compose.onNodeWithContentDescription("Work sets a week over the last 2 weeks, from 20 to 30, 20 in the latest")
             .performTouchInput { click(Offset(8f, centerY)) }
-        compose.onNodeWithText("30 · 26 Oct").assertIsDisplayed()
+        compose.onNodeWithText("30 sets, week of 26 Oct").assertIsDisplayed()
         compose.onNodeWithText("Sets last week").assertIsDisplayed()
         compose.onNodeWithContentDescription("Chest, 3 sets, target 8 to 14, under target", useUnmergedTree = true).assertExists()
         compose.onNodeWithContentDescription("Later week").performClick()
-        compose.onNodeWithText("20 · 2 Nov").assertIsDisplayed()
+        compose.onNodeWithText("20 sets, week of 2 Nov").assertIsDisplayed()
     }
 
     @Test
     fun oneSessionStillReads() {
         show(listOf(WeekSets(monday, mapOf("Chest" to 3.0), 3)) + (1 until 8).map { WeekSets(monday.minusWeeks(it.toLong()), emptyMap()) }, listOf(lift("Bench", 100.0, 100.0)))
-        compose.onNodeWithText("3 · 2 Nov").assertIsDisplayed()
+        compose.onNodeWithText("3 sets, week of 2 Nov").assertIsDisplayed()
         compose.onNodeWithText("Lifts that are moving show here after a few sessions.").assertIsDisplayed()
     }
 
@@ -128,7 +174,7 @@ class ProgressGlanceTest {
         show((0 until 8).map { WeekSets(monday.minusWeeks(it.toLong()), emptyMap()) }, emptyList(), next = null)
         compose.onNodeWithText("No sets in the last 8 weeks. Aim for 8–14 sets a muscle each week.").assertIsDisplayed()
         compose.onNodeWithText("Lifts that are moving show here after a few sessions.").assertIsDisplayed()
-        compose.onNodeWithText("Weekly sets").assertDoesNotExist()
+        compose.onNodeWithText("sets, week of", substring = true).assertDoesNotExist()
     }
 
     /** An empty week still leads with something: the last week trained, named as such. */
@@ -152,6 +198,15 @@ class ProgressGlanceTest {
         show(listOf(WeekSets(monday, mapOf("Triceps Lateral Head" to 2.0), 2)), emptyList())
         val row = compose.onNodeWithContentDescription("Triceps Lateral Head, 2 sets, target 8 to 14, under target", useUnmergedTree = true).getBoundsInRoot()
         assertTrue("The row is ${row.bottom - row.top} tall", row.bottom - row.top <= 32.dp)
+    }
+
+    /** Round 2: Go to Today led to a day with no Start. A day still to come names its date and offers nothing. */
+    @Test
+    fun aDayStillToComeHasItsDateAndNoButton() {
+        show(block(), emptyList(), next = NextAction("Week 8 · Day A", date = "Mon 9 Nov"))
+        compose.onNodeWithText("Next · Mon 9 Nov").assertIsDisplayed()
+        compose.onNode(hasClickAction() and hasText("Week 8 · Day A")).assertDoesNotExist()
+        compose.onNodeWithText("Start").assertDoesNotExist()
     }
 
     @Test

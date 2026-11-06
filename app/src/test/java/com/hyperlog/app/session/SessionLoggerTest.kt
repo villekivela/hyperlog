@@ -246,6 +246,34 @@ class SessionLoggerTest {
         assertEquals("60", logger.session.entry!!.weight)
     }
 
+    /** Finished days later it read 5192 min: a session left open ended at its last set (round 2). */
+    @Test
+    fun aSessionLeftOpenEndsAtItsLastSet() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        logger.type("60"); logger.done(); logger.type("12"); logger.selectRir(1); logger.done()
+        val lastSet = now
+        now += 3 * 24 * 3_600_000L
+
+        val summary = logger.finish()!!
+
+        assertEquals(lastSet, summary.finishedAt)
+    }
+
+    @Test
+    fun aSessionFinishedSoonAfterItsLastSetEndsWhenFinished() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        logger.type("60"); logger.done(); logger.type("12"); logger.selectRir(1); logger.done()
+        now += 10 * 60_000L
+
+        val summary = logger.finish()!!
+
+        assertEquals(now, summary.finishedAt)
+    }
+
     @Test
     fun finishingEndsTheSessionAndSummarisesIt() = runTest {
         val logger = logger()

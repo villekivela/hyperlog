@@ -136,6 +136,30 @@ class TodayStateTest {
         assertEquals("Day B", tomorrow.day?.day?.name)
     }
 
+    // The next action on Program and Progress
+
+    @Test
+    fun theNextOfferIsStartOnlyWhenASessionCanStart() {
+        assertEquals(NextOffer.Start, state(rotating(thu)).nextOffer)
+    }
+
+    /** Sat with Monday next: Today has no Start, so the card must not lead there (round 2). */
+    @Test
+    fun theNextOfferOnADayWithNoTrainingNamesTheDay() {
+        val tuesday = state(rotating(tue))
+        assertEquals(NextOffer.On(tuesday.planned.keys.first()), tuesday.nextOffer)
+    }
+
+    @Test
+    fun aRunningSessionIsResumed() {
+        assertEquals(NextOffer.Resume, state(rotating(thu), running = true).nextOffer)
+    }
+
+    @Test
+    fun aFinishedProgramOffersNothing() {
+        assertEquals(null, state(null).nextOffer)
+    }
+
     // Start, the missed day on offer and the last day
 
     @Test

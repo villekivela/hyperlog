@@ -7,6 +7,7 @@ import com.hyperlog.app.ui.session.RirText
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import com.hyperlog.app.ui.theme.connectedChoiceFits
+import com.hyperlog.app.ui.theme.fadingSides
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -154,7 +155,7 @@ internal fun BlockChoice(names: List<String>, picked: Int, onBlock: (Int) -> Uni
             val list = rememberLazyListState(picked)
             LaunchedEffect(picked) { list.animateScrollToItem(picked) }
             LazyRow(
-                Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth().fadingSides(list),
                 state = list,
                 contentPadding = PaddingValues(horizontal = CardMargin),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

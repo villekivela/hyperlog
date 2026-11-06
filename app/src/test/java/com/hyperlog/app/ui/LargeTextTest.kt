@@ -69,6 +69,7 @@ import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.theme.NextAction
 import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.theme.SegmentedRow
+import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.today.SlotRows
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -158,14 +159,17 @@ class LargeTextTest {
     @Test
     fun theNextCardKeepsItsDayWholeAndClearOfItsButton() {
         val day = "Week 8 · Day A — Heavy bench, squat, pulldown"
-        atEveryScale({ NextCard(NextAction("Go to Today", day) {}) }) { scale ->
+        atEveryScale({ NextCard(NextAction(day, "Start")) }) { scale ->
             val title = compose.onNodeWithText(day, useUnmergedTree = true)
             val label = compose.onNodeWithText("Next", useUnmergedTree = true).getBoundsInRoot()
-            val button = compose.onNodeWithText("Go to Today", useUnmergedTree = true)
+            val button = compose.onNodeWithText("Start", useUnmergedTree = true)
             assertFalse("The day is cut short at $scale", title.cutShort())
             assertFalse("The button is cut short at $scale", button.cutShort())
             assertTrue("Next sits beside the day at $scale", label.bottom <= title.getBoundsInRoot().top)
-            assertTrue("The day runs into the button at $scale", title.getBoundsInRoot().right + 8.dp <= button.getBoundsInRoot().left)
+            // Beside the day while it can be, under it at large text so the day isn't squeezed.
+            val beside = title.getBoundsInRoot().right + 8.dp <= button.getBoundsInRoot().left
+            val under = title.getBoundsInRoot().bottom <= button.getBoundsInRoot().top
+            assertTrue("The day runs into the button at $scale", if (scale >= 1.5f) under else beside)
         }
     }
 
@@ -330,6 +334,21 @@ class LargeTextTest {
         }
     }
 
+    /** Round 2: `0 of 14 on target` ended 12 dp past the rows. */
+    @Test
+    fun theOnTargetCountEndsWithTheRows() {
+        val week = WeekSets(LocalDate.of(2026, 11, 2), mapOf("Rear Delts" to 9.0), 9)
+        atEveryScale({
+            HistoryScreen(
+                emptyList(), listOf(week), emptyList(), emptyList(), tab = 1, onTab = {}, onOpenSession = {}, onOpenExercise = {},
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {}, today = LocalDate.of(2026, 11, 5),
+            )
+        }) { scale ->
+            val count = compose.onNodeWithText("1 of 1 on target", useUnmergedTree = true).getBoundsInRoot()
+            assertTrue("The count ends at ${count.right} at $scale", count.right <= 410.dp - TextEdge)
+        }
+    }
+
     @Test
     fun aMusclesFigureStaysOnOneLine() {
         val week = WeekSets(LocalDate.of(2026, 11, 2), mapOf("Rear Delts" to 1.5), 2)
@@ -402,6 +421,26 @@ class LargeTextTest {
             val long = compose.onNodeWithText(LongLast, useUnmergedTree = true)
             assertTrue("Last is ${long.layout().layoutInput.style.fontSize} at $scale", long.layout().layoutInput.style.fontSize.value >= 12f)
             assertFalse("Last is cut at $scale", long.cutShort())
+        }
+    }
+
+    /**
+     * Round 2: `RI` at 200 %. At the test's usual density hinting narrows the glyphs, so this runs at
+     * the phone's: every head's whole text is laid out, with room around it.
+     */
+    @Test
+    @Config(qualifiers = "w410dp-h914dp-xxhdpi")
+    fun theSetTablesHeadsAreWholeOnAPhonesScreen() {
+        atEveryScale({ Session() }) { scale ->
+            listOf("Last", "kg", "Reps", "RIR").forEach {
+                val head = compose.onAllNodes(hasText(it) and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)[0]
+                val layout = head.layout()
+                assertEquals("$it loses its end at $scale", it.length, layout.getLineEnd(0))
+                assertTrue("$it runs past its box at $scale", layout.getLineRight(0) <= layout.size.width + 0.5f)
+            }
+            val reps = compose.onAllNodes(hasText("Reps") and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)[0].getBoundsInRoot()
+            val rir = compose.onAllNodes(hasText("RIR") and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)[0].getBoundsInRoot()
+            assertTrue("RIR is ${rir.left - reps.right} from Reps at $scale", rir.left >= reps.right)
         }
     }
 

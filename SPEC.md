@@ -1248,9 +1248,11 @@ each planned day with the training day it lands on, and never changes the day:
      it, two lines at most, so a long day name (`Day C — Bench volume, leg press, pulldown`)
      isn't cut at large text sizes.
    - **Progress** opens on the training glance (#270), everything on one screen at 115 % text, under the
-     next action: the program's next day with **Go to Today**, or **Resume** while a session runs.
+     next action, the same card as Program's.
      - **Sets per muscle against targets**: `Sets this week`, `4 of 11 on target`, then the four muscles
-       furthest short of their range, each a bar over the band of its range, with the rest on a tap.
+       furthest short of their range, on one track from zero with the band of their range on it, under a labelled
+       scale (`Target 8–14 sets`, 0, 8, 14; zero and the top when a focus gives muscles different ranges),
+       with the rest on a tap.
        The muscles are the ones the program trains as a primary muscle, as Coach counts them (with no
        program, every muscle of the last 8 weeks), and the range is Coach's too: the training
        targets', the program's own if it has one, raised or maintenance with a focus. A muscle with
@@ -1259,12 +1261,13 @@ each planned day with the training day it lands on, and never changes the day:
        most muscles are. A week with no sets shows the latest that has them
        (`Sets last week`), and with none in 8 weeks it says what to aim for.
      - **Weekly sets**: the work sets of each of the last 8 weeks as bars from zero, each set counted
-       once, with zero and the top on one axis and the first and last weeks on the other. A tap or drag reads a week, the
-       muscles above follow it, and chevrons step the same weeks for a screen reader, which also
+       once, with zero and the top on one axis and the first and last weeks on the other. The head
+       reads the week picked (`12 sets, week of 2 Nov`), marked on the axis even with no bar. A tap
+       or drag reads a week, the muscles above follow it, and chevrons step the same weeks for a screen reader, which also
        gets the chart's summary (`Work sets a week over the last 8 weeks, from 20 to 30, 20 in the
        latest`).
-     - **Moving**: the three lifts whose estimate moved most by percent, up or down, in the trend
-       colours. A lift moves from its estimate about 4 weeks before its latest (its first, with less
+     - **Moving** (`Estimate, last 4 weeks`): the three lifts whose estimate moved most by percent, up
+       or down, in the trend colours. A lift moves from its estimate about 4 weeks before its latest (its first, with less
        history), if it moved 1 % or more and was done in the last 4 weeks. An exercise on two
        machines isn't compared (ADR 0002). Each reads its latest estimate and the percent, and a tap
        opens its trend.
@@ -1364,6 +1367,8 @@ gallery (Technique videos).
 - **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
   with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
   tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.
+- **A session left open ends at its last set** (#273): finished more than an hour after its last set,
+  its end is that set, so a session forgotten for days reads the time it took, not `5192 min`.
 - **Today's one action has a lane of its own** (#269): Start and Resume sit under the list, not over
   it, so they never cover an exercise at any text size, and the list fades out above them.
 - **The set table reads aloud** (#268): every value on a row says which row it belongs to and its
@@ -1373,8 +1378,10 @@ gallery (Technique videos).
   (`Set 1 reps, empty, target 4–6`), and a target RIR says it's a target. The figure in a set's circle is
   silent, because the circle's own description already names the set.
 - **The next action leads Program** (#273): the next day sits at the top of Program in an accent
-  card, the strongest thing on the screen, with **Go to Today** (the Start is there, with its gym
-  sheet) or **Resume**.
+  card, the strongest thing on the screen. Its button is only there when there is something to do:
+  **Start**, when Today has a Start, opens the gym sheet at once; **Resume** goes back to a running
+  session. On any other day the card names the date (`Next · Mon 9 Nov`) with no button, so it never
+  leads to a day with nothing on it. At large text the button sits under the day.
 - **Large text** (#268): every main screen holds at every system text size up to 200 %, with no
   clipped label and no word split in two. What can grow, grows: a primary name wraps and is never
   cut (an exercise on Progress, the Next row, the program's next day). What shares a fixed width
@@ -1382,8 +1389,9 @@ gallery (Technique videos).
   them fit, so the navigation bar's five match at every size, and so do the set table's heads
   (down to 11 sp) and its Last column (down to 12 sp, one size for the whole table, then wrapping
   before its `+`). A connected choice stacks its options when their labels no longer fit side by
-  side. The program's phases go to one row of chips instead, the picked one scrolled into view,
-  so the weeks under them stay on screen. The pad's RIR chips stop growing past about 115 %, because five of them share a strip
+  side. The program's phases go to one row of chips instead, the picked one scrolled into view
+  and a chip at the edge fading out, so the weeks under them stay on screen. Past its floor a set
+  table head runs over its column into the room around it, whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip
   with the F / P toggle. A row's title and supporting text wrap, a session's title in History, an
   exercise on Today and a Coach tile too, and a planned set's parts are joined by no-break spaces
   as a logged set's are, so a line never ends on `1 ×`. A session in History has one line of

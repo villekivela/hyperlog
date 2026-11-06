@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -939,8 +940,10 @@ private fun ColumnHeads(showLast: Boolean, split: Boolean = false) {
         // The columns stay put at large text, so the heads step down together rather than split.
         val size = sharedFontSize(listOf(stringResource(R.string.col_kg) to ColKg, reps to ColReps, stringResource(R.string.col_rir) to ColRir), st, floor = 11.sp)
         @Composable
-        fun Head(text: String, modifier: Modifier, align: TextAlign = TextAlign.Center) = Text(text, modifier, style = st, fontSize = size, color = c, textAlign = align, maxLines = 1)
-        Head(if (showLast) stringResource(R.string.col_last) else "", Modifier.weight(1f), TextAlign.Start)
+        fun Head(text: String, modifier: Modifier, align: Alignment.Horizontal = Alignment.CenterHorizontally) =
+            // Past the floor a head runs over its column into the room around it, whole, rather than clip.
+            Text(text, modifier.wrapContentWidth(align, unbounded = true), style = st, fontSize = size, color = c, maxLines = 1, softWrap = false)
+        Head(if (showLast) stringResource(R.string.col_last) else "", Modifier.weight(1f), Alignment.Start)
         Head(stringResource(R.string.col_kg), Modifier.width(ColKg))
         Head(reps, Modifier.width(ColReps))
         Head(stringResource(R.string.col_rir), Modifier.width(ColRir))

@@ -108,10 +108,8 @@ fun ProgramScreen(
     sessions: List<PastSessionItem> = emptyList(),
     /** Opens a finished session in History. */
     onOpenSession: (Long) -> Unit = {},
-    /** A session is running, so the next action resumes it. */
-    running: Boolean = false,
-    /** The next action: on to Today, or back to the session running. */
-    onNext: () -> Unit = {},
+    /** What to do next, at the top; null when there is nothing to offer. */
+    next: NextAction? = null,
     /**
      * What Program shows, kept by the host so it survives a session opened in History or a
      * review; null keeps it here.
@@ -231,7 +229,7 @@ fun ProgramScreen(
                 }
                 active == null -> NoProgram(onImport, openPrograms.takeIf { listedPrograms.isNotEmpty() })
                 else -> ProgramWeeks(
-                    active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, running, onNext, shown.week,
+                    active, onOpenChanges = { show(shown.copy(changesOpen = true)) }, exerciseNames, sessions, onOpenSession, next, shown.week,
                     onWeek = { show(shown.copy(week = it)) }, weekdayPlanLine = weekdayPlanLine(weekdayPlan),
                     weekdayPlanTurns = weekdayPlanTurns(weekdayPlan, active.program.blockAt(active.week)?.days?.size),
                     onOpenWeekdayPlan = { editingWeekdayPlan = true },
@@ -307,8 +305,7 @@ private fun ProgramWeeks(
     names: Map<String, String>,
     sessions: List<PastSessionItem>,
     onOpenSession: (Long) -> Unit,
-    running: Boolean,
-    onNext: () -> Unit,
+    nextAction: NextAction?,
     /** The week picked; null for the week you're in. */
     picked: Int?,
     onWeek: (Int) -> Unit,
@@ -339,7 +336,7 @@ private fun ProgramWeeks(
             val chevron = cs.onSurfaceVariant
             val nextDay = next?.let { stringResource(R.string.program_week_day, it.position.week, it.day.name) }
             // The next day comes first: nothing else here is as worth doing.
-            nextDay?.let { NextCard(NextAction(stringResource(if (running) R.string.next_resume else R.string.next_open_today), it, onNext), Modifier.padding(top = 8.dp)) }
+            nextAction?.let { NextCard(it, Modifier.padding(top = 8.dp)) }
             SegmentedList(Modifier.padding(top = 8.dp)) {
                 item { ProgramHeader(program.title, program.author, finished = nextDay == null) }
                 row(

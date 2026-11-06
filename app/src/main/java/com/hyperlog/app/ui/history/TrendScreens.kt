@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -251,7 +252,7 @@ private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
 
 @Composable
 private fun figure(v: Double, byReps: Boolean) =
-    if (byReps) stringResource(R.string.history_reps, v.roundToInt()) else stringResource(R.string.weight_kg, estimateText(v))
+    if (byReps) pluralStringResource(R.plurals.history_reps, v.roundToInt(), v.roundToInt()) else stringResource(R.string.weight_kg, estimateText(v))
 
 /** The bodyweight log: the figure and its line, then every day logged, newest first, each deletable. */
 @OptIn(ExperimentalMaterial3Api::class)

@@ -409,25 +409,45 @@ fun accentButtonColors(): ButtonColors = accentButton(MaterialTheme.colorScheme)
     ButtonDefaults.buttonColors(containerColor = it.fill, contentColor = it.words)
 }
 
-/** The one thing to do next: [title] is what it starts, [action] the button's word. */
-data class NextAction(val action: String, val title: String, val onClick: () -> Unit)
+/**
+ * The one thing to do next: [title] is the day. With [action] and [onClick] it can be done now;
+ * without, it comes on [date], and no button leads anywhere.
+ */
+data class NextAction(val title: String, val action: String? = null, val date: String? = null, val onClick: () -> Unit = {})
 
 /** [next] as the accent card, the strongest thing on a screen that isn't where training starts. */
 @Composable
 fun NextCard(next: NextAction, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
-    Row(
-        modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer).padding(CardPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.program_next), style = MaterialTheme.typography.labelLarge, color = cs.onPrimaryContainer)
+    val card = modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer).padding(CardPadding)
+    val words: @Composable (Modifier) -> Unit = { m ->
+        Column(m) {
+            Text(
+                next.date?.let { stringResource(R.string.next_on, it) } ?: stringResource(R.string.program_next),
+                style = MaterialTheme.typography.labelLarge,
+                color = cs.onPrimaryContainer,
+            )
             Text(next.title, style = MaterialTheme.typography.titleMedium, color = cs.onPrimaryContainer)
         }
-        Spacer(Modifier.width(16.dp))
-        Button(onClick = next.onClick, colors = accentButtonColors()) { Text(next.action) }
+    }
+    val action = next.action
+    when {
+        action == null -> Box(card) { words(Modifier) }
+        // At large text the button would squeeze the day into a column of short lines.
+        LocalDensity.current.fontScale >= StackedNextScale -> Column(card) {
+            words(Modifier)
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = next.onClick, Modifier.align(Alignment.End), colors = accentButtonColors()) { Text(action) }
+        }
+        else -> Row(card, verticalAlignment = Alignment.CenterVertically) {
+            words(Modifier.weight(1f))
+            Spacer(Modifier.width(16.dp))
+            Button(onClick = next.onClick, colors = accentButtonColors()) { Text(action) }
+        }
     }
 }
+
+private const val StackedNextScale = 1.4f
 
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */
 @OptIn(ExperimentalMaterial3Api::class)

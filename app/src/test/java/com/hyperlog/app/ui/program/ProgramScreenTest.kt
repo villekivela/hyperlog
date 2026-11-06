@@ -247,9 +247,9 @@ class ProgramScreenTest {
         compose.onNodeWithText("Every set: 1 RIR closer to failure · techniques back").assertIsDisplayed()
         compose.onNodeWithText("Otherwise written as in Ramp-in").assertIsDisplayed()
         scrollTo("Week 6 · Day A — Heavy bench, squat, pulldown")
-        compose.onAllNodesWithText("Week 6 · Day A — Heavy bench, squat, pulldown")[1].assertIsDisplayed()
+        compose.onAllNodesWithText("Week 6 · Day A — Heavy bench, squat, pulldown")[0].assertIsDisplayed()
         // Next heads the header's day and the day's own head.
-        compose.onAllNodesWithText("Next")[1].assertIsDisplayed()
+        compose.onAllNodesWithText("Next")[0].assertIsDisplayed()
 
         scrollTo("Intensify")
         compose.onNodeWithText("Intensify").performClick()

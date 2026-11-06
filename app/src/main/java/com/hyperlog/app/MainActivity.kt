@@ -348,6 +348,7 @@ private fun App(
     var programView by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     // The day picked on Today's calendar (epoch day; null: today), kept while a session opened from it is looked at.
     var todayDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    var startOnToday by rememberSaveable { mutableStateOf(false) }
     // Today's own saved state (each day's scroll), kept while another screen is up.
     val todayState = rememberSaveableStateHolder()
     // A session opened from Program or Today goes back there.
@@ -509,8 +510,6 @@ private fun App(
     val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview ||
         checkInStep is com.hyperlog.app.coach.CheckInStep.ProgramReview
     if (running != null) AskForNotifications()
-    // The next action on Program and Progress: Today has the Start, and the session its own screen.
-    val goNext = { screen = Screen.Today; left = false }
     val standingVolume = trainingStyle?.targets?.volume ?: com.hyperlog.app.coach.TrainingTargets().volume
     // Its notifications say when Claude's reply is ready while you're away; asked at the first check-in only.
     if (checkIn != null) AskForNotifications(once = "check_in")
@@ -569,6 +568,22 @@ private fun App(
     }
     // A workout's date is the program's today, or the phone's with no program.
     val todayWorkout = waitingWorkouts.firstOrNull { it.addedOn == (program?.today ?: java.time.LocalDate.now()) }
+    // The next action on Program and Progress, from the same state as Today, so it offers Start
+    // only where Today has one, and Start opens Today's gym sheet.
+    val offer = program?.let {
+        com.hyperlog.app.today.TodayState(
+            it, pastSessions.orEmpty(), weekdayPlan, lastTrained, todayWorkout != null, running != null, running?.day, it.today, it.today,
+        ).nextOffer
+    }
+    val nextAction = program?.next?.day?.let { day ->
+        val title = stringResource(R.string.program_week_day, day.position.week, day.day.name)
+        when (offer) {
+            com.hyperlog.app.today.NextOffer.Resume -> NextAction(title, stringResource(R.string.next_resume)) { screen = Screen.Today; left = false }
+            com.hyperlog.app.today.NextOffer.Start -> NextAction(title, stringResource(R.string.next_start)) { screen = Screen.Today; startOnToday = true }
+            is com.hyperlog.app.today.NextOffer.On -> NextAction(title, date = com.hyperlog.app.ui.history.long(offer.date))
+            null -> null
+        }
+    }
     // A check-in's workout starts at the gym answered in it (none: Elsewhere); a pasted one at the usual gym.
     val workoutGym = checkIn?.checkIn?.let { it.gym ?: if (it.elsewhere) null else usualGym?.id } ?: usualGym?.id
     // A workout from Claude, before it goes on Today.
@@ -802,8 +817,7 @@ private fun App(
             exerciseNames = exercises.associate { it.id to it.name },
             sessions = pastSessions.orEmpty(),
             onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Program; screen = Screen.History },
-            running = running != null,
-            onNext = goNext,
+            next = nextAction,
             view = programView,
             onView = { programView = it },
             weekdayPlan = weekdayPlan,
@@ -928,13 +942,7 @@ private fun App(
             standing = standingVolume,
             range = { ProgramVolume.range(program?.program, it, standingVolume) },
             muscles = program?.let { active -> ProgramVolume.of(active.program, exercises.associateBy { it.id }, standingVolume).map { it.muscle }.toSet() },
-            next = program?.next?.day?.let { day ->
-                NextAction(
-                    stringResource(if (running != null) R.string.next_resume else R.string.next_open_today),
-                    stringResource(R.string.program_week_day, day.position.week, day.day.name),
-                    goNext,
-                )
-            },
+            next = nextAction,
         )
         screen == Screen.Mannequins -> com.hyperlog.app.ui.mannequin.MannequinGallery(
             com.hyperlog.app.ui.mannequin.rememberMannequins(),
@@ -1039,6 +1047,8 @@ private fun App(
             onProgramDayShown = { showProgramDay = false },
             selectedDay = todayDay,
             onSelectDay = { todayDay = it },
+            startOnOpen = startOnToday,
+            onStartOpened = { startOnToday = false },
         ) }
     }
     }
