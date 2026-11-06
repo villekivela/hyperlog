@@ -1,0 +1,47 @@
+{
+  "ffe_smith_machine_lunge": {
+    "ok": true,
+    "clip": "f28e861e3f8b8c00",
+    "at": "2026-11-06T04:38:32.807Z"
+  },
+  "smith_machine_bench_press": {
+    "ok": true,
+    "clip": "2e798752dab8ad17",
+    "at": "2026-11-06T04:36:25.780Z"
+  },
+  "smith_machine_incline_press": {
+    "ok": true,
+    "clip": "2fc7985fe3d7d997",
+    "at": "2026-11-06T04:37:35.476Z"
+  },
+  "smith_machine_jm_press": {
+    "ok": true,
+    "clip": "e7374b9db5910791",
+    "at": "2026-11-06T04:36:48.919Z"
+  },
+  "smith_machine_lunge": {
+    "ok": true,
+    "clip": "9129d65a0bb5b198",
+    "at": "2026-11-06T04:38:15.442Z"
+  },
+  "smith_machine_rdl": {
+    "ok": true,
+    "clip": "9ebbd61ff7238913",
+    "at": "2026-11-06T04:36:02.719Z"
+  },
+  "smith_machine_seated_press": {
+    "ok": true,
+    "clip": "1ded3a697d9db41c",
+    "at": "2026-11-06T04:37:56.553Z"
+  },
+  "smith_machine_squat": {
+    "ok": true,
+    "clip": "c4f38a69a966ee71",
+    "at": "2026-11-06T04:35:43.262Z"
+  },
+  "split_squat_smith": {
+    "ok": true,
+    "clip": "3022de9730f81dfd",
+    "at": "2026-11-06T04:38:50.263Z"
+  }
+}
