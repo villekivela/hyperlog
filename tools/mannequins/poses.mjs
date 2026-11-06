@@ -111,7 +111,7 @@ export const POSES = {
   neutral_grip_lat_pulldown: {
     like: 'lat_pulldown',
     kit: { cable_tower: { attachment: 'handles', spread: 0.095, pulley: [2.25, 0.14] } },
-    grip: { width: 0.095, rotate: 0, pole: [0.1, -1, 0.3] },
+    grip: { width: 0.095, pole: [0.1, -1, 0.3] },
     top: { bar: [1.62, 0.14], shrug: 9 },
     bottom: { bar: [1.11, 0.04], shrug: 0 },
   },

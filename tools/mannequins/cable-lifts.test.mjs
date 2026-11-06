@@ -22,7 +22,7 @@ const failing = (id, stage) => {
   return CHECKS.filter((c) => !checks[c].ok).map((c) => `${c}: ${checks[c].found}`);
 };
 
-test('the wide-grip pulldown holds the bar well outside the plain pulldown, from long arms to the chest', async () => {
+test('the wide-grip pulldown holds the bar outside the plain pulldown, from long arms to the chest', async () => {
   const { stage, at } = await posed('lat_pulldown_wide_grip');
   assert.deepEqual(failing('lat_pulldown_wide_grip', stage), []);
   const plain = await posed('lat_pulldown');
@@ -97,7 +97,7 @@ test('the 1-arm pulldown kneels on one knee and drives the elbow from long overh
   assert.ok(bottom('hand_l').y < bottom('upperarm_l').y, 'the hand down below the shoulder');
 });
 
-test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elbows hardly bending', async () => {
+test('the cable lat pullover sweeps a rope down on long arms, kneeling, the elbows hardly bending', async () => {
   const { stage, at } = await posed('cable_lat_pullover');
   assert.deepEqual(failing('cable_lat_pullover', stage), []);
   const elbow = (g) => g('upperarm_l').sub(g('lowerarm_l')).angleTo(g('hand_l').sub(g('lowerarm_l'))) * 180 / Math.PI;
