@@ -194,7 +194,7 @@ A kit written as data: the parts it is made of, placed by dimensions, its fixed 
 _Avoid_: Blueprint, builder
 
 **Static machine**:
-A machine with nothing on it that moves (the glute-ham developer): its recipe has a linkage and no rep, so the machine-first solve sets its options for the mannequin once and gives the motion one place for the knees, the ankles and the hands.
+A machine whose rep no joint drives, as nothing on it moves (the glute-ham developer) or the lift carries its bar (the smith machine): its recipe has a linkage and no rep, so the machine-first solve sets its options for the mannequin once and gives the motion one place for the knees, the ankles and the hands.
 _Avoid_: Fixed kit, stationary
 
 **Rack add-on**:

@@ -55,6 +55,8 @@ export function likeChain(id, poses = POSES) {
 /** The entry for `id`, with its `like:` chain merged in. */
 export function resolve(id, poses = POSES) {
   const { like, ...entry } = likeChain(id, poses).reverse().map((at) => poses[at]).reduce(merge, {});
+  // A kit set to null drops the one the entry took: a smith lift leaves its barbell behind.
+  if (entry.kit) entry.kit = Object.fromEntries(Object.entries(entry.kit).filter(([, options]) => options !== null));
   return entry;
 }
 

@@ -10,7 +10,8 @@
 //   rest where it raises a stack, or a lever's angle up from level ahead.
 // - `contacts`: where a body, or the fixed `frame`, ties to the mannequin, the point and the
 //   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `knees` (a thigh's lower end and the shin's top), `shoulders`, `chest`, `back`, `upperArms`, `forearms` or
-//   `hips`), and `hand` (`l` or `r`) where one arm's grip holds one hand.
+//   `hips`), `hand` (`l` or `r`) where one arm's grip holds one hand, and `optional` where a pose
+//   may use it or not, so nothing is held to it.
 // - `stacks`: each weight stack and the joint whose travel raises it, by a ratio (metres a
 //   radian, or a metre).
 // - `fit`: its fit rules, the adjustments the machine's placard sets for the mannequin, each
@@ -22,7 +23,8 @@
 // - `linkage(options, L)` (a machine's): the machine with no pose, the body's place on it, `hip`
 //   [y, z], for a mannequin of measurements `L`, and `at(value)`, what stands where with its joint at
 //   `value`, which the motion hangs the limbs from (`fit.mjs`) and `drive` finds on the frame as
-//   `P.linkage`.
+//   `P.linkage`. With no `rep`, `at` is one place whatever the value: a static machine's, or a
+//   smith machine's rods, whose `line` gives z at a height for a free lift to solve against.
 // - `standsAlone` (optional): `{ camera }`, for a recipe that stands where it goes with no pose,
 //   its joints at rest; the studio shows it so, in that framing, while no pose uses it.
 //

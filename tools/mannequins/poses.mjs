@@ -1355,6 +1355,119 @@ export const POSES = {
     shadow: { size: [1.6, 1.3], at: [0, 0.25] },
   },
 
+  // The squat on the rods: the bar on the upper back, the body turning about the ankles to keep it on
+  // their line, the feet a little ahead of the bar.
+  smith_machine_squat: {
+    like: 'barbell_squat',
+    equipment: 'smith_machine',
+    kit: { barbell: null, smith_machine: { stops: 4 } },
+    camera: { target: [0, 1.1, 0], halfHeight: 1.3, azimuth: 62, elevation: 8 },
+  },
+
+  // The Romanian deadlift on the rods: the bar hangs in straight arms on their line, the hips going
+  // back as it runs down.
+  smith_machine_rdl: {
+    like: 'barbell_rdl',
+    equipment: 'smith_machine',
+    kit: { barbell: null, smith_machine: {} },
+    camera: { target: [0, 0.95, 0], halfHeight: 1.2, azimuth: 66, elevation: 8 },
+  },
+
+  // The bench press on the rods, the machine moved along so they pass over the lower chest: a little
+  // toward the head at the top of the press, as their lean takes the bar.
+  smith_machine_bench_press: {
+    like: 'barbell_bench_press',
+    equipment: 'smith_machine',
+    kit: { barbell: null, smith_machine: { z: -0.21, stops: 2 } },
+    camera: { target: [0, 0.8, -0.1], halfHeight: 1.2, azimuth: 58, elevation: 24 },
+  },
+
+  // The JM press: a narrow grip, the elbows forward, the bar down to the upper chest. The rods pass
+  // over it, further toward the head. The bar's place along the bench is theirs, so only its height is set.
+  smith_machine_jm_press: {
+    like: 'close_grip_bench_press',
+    equipment: 'smith_machine',
+    kit: { barbell: null, smith_machine: { z: -0.3, stops: 4 } },
+    top: { bar: [1.147, 0] },
+    bottom: { bar: [0.93, 0] },
+    camera: { target: [0, 0.8, -0.1], halfHeight: 1.2, azimuth: 58, elevation: 24 },
+  },
+
+  // The incline press on the rods, on the adjustable bench: the bar from the upper chest up until the
+  // arms are straight, the machine moved along with the bench's angle to bring the rods over it.
+  smith_machine_incline_press: {
+    equipment: 'smith_machine',
+    motion: 'rods_press',
+    kit: { smith_machine: { z: -0.243, stops: 4 }, bench: { hinge: -0.02 } },
+    bench: {
+      typical: 45,
+      perAngle: { 'bottom.chest.1': { 0: 0.168, 15: 0.086, 30: 0.018, 45: -0.038, 60: -0.084, 75: -0.134, 85: -0.176 }, 'bottom.chest.0': { 0: 0.25, 30: 0.21, 60: 0.17, 85: 0.15 }, 'kit.smith_machine.stops': { 0: 3, 15: 3, 30: 4, 45: 4, 60: 5, 75: 5, 85: 6 }, 'kit.smith_machine.z': { 0: -0.395, 15: -0.385, 30: -0.335, 45: -0.243, 60: -0.115, 75: 0.051, 85: 0.18 } },
+      cameras: {
+        0: { target: [0, 0.85, -0.1], halfHeight: 1.2, azimuth: 58, elevation: 22 },
+        75: { target: [0, 1.15, 0.0], halfHeight: 1.3, azimuth: 66, elevation: 10 },
+      },
+    },
+    body: { sit: 0.1253, seat: 0.0495, lean: 8.6694, head: -12.1074 },
+    feet: { stance: 0.3, z: 0.2266, toeOut: 20 },
+    top: { press: 0, over: [0, 0] },
+    bottom: { press: 1, chest: [0.2, 0.15] },
+    grip: { width: 0.34, lockout: 0.34, elbows: 0.7 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
+  // The seated press on the rods: the bar from the chin up until the arms are straight.
+  smith_machine_seated_press: {
+    equipment: 'smith_machine',
+    motion: 'rods_press',
+    kit: { smith_machine: { z: 0.065, stops: 5 }, bench: { hinge: -0.02 } },
+    bench: {
+      typical: 75,
+      perAngle: { 'bottom.chest.1': { 0: 0.188, 15: 0.106, 30: 0.038, 45: -0.018, 60: -0.064, 75: -0.112, 85: -0.15 }, 'bottom.chest.0': { 0: 0.25, 30: 0.21, 60: 0.17, 85: 0.15 }, 'kit.smith_machine.stops': { 0: 3, 15: 3, 30: 4, 45: 4, 60: 5, 75: 5, 85: 5 }, 'kit.smith_machine.z': { 0: -0.351, 15: -0.344, 30: -0.298, 45: -0.213, 60: -0.093, 75: 0.065, 85: 0.187 } },
+      cameras: {
+        0: { target: [0, 0.85, -0.1], halfHeight: 1.2, azimuth: 58, elevation: 22 },
+        75: { target: [0, 1.15, 0.0], halfHeight: 1.3, azimuth: 66, elevation: 10 },
+      },
+    },
+    body: { sit: 0.145, seat: 0.0741, lean: 8, head: -12.9053 },
+    feet: { stance: 0.2859, z: 0.4271, toeOut: 20 },
+    top: { press: 0, over: [0, 0] },
+    bottom: { press: 1, chest: [0.2, -0.05] },
+    grip: { width: 0.31, lockout: 0.31, elbows: 0.7 },
+    shadow: { size: [0.9, 1.8], at: [0, 0.1] },
+  },
+
+  // The lunge on the rods: the bar on the upper back, the hips where it meets their line, the machine
+  // moved along to bring the front foot near under the bar, the back foot well behind, the back knee
+  // dropping near the floor.
+  smith_machine_lunge: {
+    equipment: 'smith_machine',
+    motion: 'lunge',
+    kit: { smith_machine: { z: 0.1, stops: 5 } },
+    top: { hip: [0.79, 0], trunk: 6, heel: 30, wrist: [32.8668, 42.4311] },
+    bottom: { hip: [0.5, 0], trunk: 10, heel: 50, wrist: [32.8668, 42.4311] },
+    feet: { stance: 0.11, front: 0.36, back: -0.3, toeOut: 6 },
+    bar: { up: 0.0693, back: 0.1926 },
+    // Mid-palm, as a squat's: a dumbbell lunge's default is the base of the fingers.
+    grip: { width: 0.4, sits: 'mid', swing: 50, pole: [0.6897, -0.2026, -0.6952] },
+    camera: { target: [0, 1.1, 0], halfHeight: 1.3, azimuth: 74, elevation: 8 },
+  },
+
+  // The same with the front foot on a low step, the back knee dropping below its level.
+  ffe_smith_machine_lunge: {
+    like: 'smith_machine_lunge',
+    kit: { smith_machine: { stops: 4 }, platform: { height: 0.1, size: [0.34, 0.36], at: [0.11, 0.42] } },
+    bottom: { hip: [0.44, 0] },
+    feet: { step: 0.1 },
+  },
+
+  // The split squat: the feet set and staying there, a shorter stride, the trunk upright.
+  split_squat_smith: {
+    like: 'smith_machine_lunge',
+    top: { trunk: 8 },
+    bottom: { trunk: 12 },
+    feet: { front: 0.34, back: -0.31 },
+  },
+
   // Standing between the levers, the legs either side of the lowered seat, the arms long and the
   // hands on the grips: the shoulders shrug straight up and the levers rise with them.
   machine_shrug: {

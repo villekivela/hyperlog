@@ -68,6 +68,20 @@ Placard text not read. From the videos:
 - Lunge: the bar on the upper back, the front foot under the bar line, the back foot about 0.8 m behind (0:10). ffe_ variant: the front foot on a platform about 100 mm high (10:24).
 - Safety stops: set just below the bottom of the lift; the ffe video shows stops at about shin height (10:24).
 
+## Measured part list (#241)
+Where each main part sits, from the black render, the render in a room and the two used-unit photos, all three-quarter, scaled by the 2357 mm height. Against the lifter: the bar's line passes over the middle of the feet in a squat, the feet a little ahead of it; a lift on a bench stands under it with the machine moved along.
+
+| Part | Where it sits, estimated from the photos | Was in the kit | Now |
+|---|---|---|---|
+| Side profile | an A on each beam: front upright about a quarter of the way along, leaning back, the rear one at the beam's rear end, leaning forward | two parallel uprights, leaning back together, 40% and 73% along | as measured, 7 and 10 degrees, the beam 560 ahead and 680 behind the lifter |
+| Order, front to rear | upright, toothed plate on its rear face, rod, then the shroud | rod ahead of the upright, the plate behind both | as measured, the plate over its beam, teeth toward the bar |
+| Hood | each rear upright sweeps forward in a round corner over the top into the front upright, a little under its top | a straight tube across, the rear upright carrying on to the top | as measured, one capped curve from about 2030 up |
+| Gussets | a diagonal each side from under the rear crossbar down to the rear upright | none | as measured, from 400 out on the crossbar down to the upright at 1550 |
+| Rear pads | a pad wrapped round each rear upright, four horns a side | as measured, leaning with the rods | leaning with their uprights |
+| Floor beams | one a side, no cross beam on the floor | as measured | as measured |
+
+No photo shows a bench under the bar, so where the machine stands for a bench lift is chosen from the rods' line: `z` moves it along by what brings the line over the bar's lowest point, for the mannequin. The incline and seated presses' bar comes down, at each angle, to where the forearm stands straight under it with the elbow at the upper arm's length from the shoulder, solved for the mannequin: on the chest when the bench lies flat, at the chin when it stands up. The lunges take the machine 100 mm along, to bring the front foot near under the bar; the mannequin's stride is 0.69 m, short of the video's 0.8, as a longer one over-extends the back hip, and its front ankle stands 190 mm ahead of the bar. Each lift's stops lie on the notch just below its bottom. The bar's standing height for the squat is 1.53 m and its bottom 0.93 m, the barbell squat's trace, against the 1.47 and 1.00 first chosen.
+
 ## Open gaps
 - No side-on photo of the Hammer Strength model was found, so the 7 degree lean is from the page only, and which way it leans (bar top toward the front or the back) is not settled. Chosen: the bar top 7 degrees toward the back of the frame (the hook plate side), low confidence.
 - Hook heights, pitch, bar travel and rod gap are measured on three-quarter renders and photos with no person in them, scaled by the published overall height: good to about +-10 percent.
@@ -78,7 +92,7 @@ Placard text not read. From the videos:
 ## As built (#182)
 `recipes/smith-machine.mjs` follows this file, and departs where a number or a photo was missing:
 - The bar's travel starts at the lowest hook (290 mm) rather than 250 mm, as the safety stops sit on it by default. Notches are 152 mm apart from 290 mm up (13, the highest at 2.11 m); the bar hangs on the eighth, 1.35 m, for a standing squat's bar at 1.47 m.
-- The hooks are fixed on the bar, as its carriages are, at the notch it hangs on: the 45 degree turn is not a joint, as one about the bar would be left behind when the bar slides along the rods.
-- The rear uprights lean with the rods, as the black render shows, and carry four horns a side through a pad wrapped round them. The frame is 1.51 m wide over its uprights, 1.24 m deep and 2.357 m high; the bar is 2.1 m with sleeves outside the rods.
-- The crossbars are a top one between the front uprights and a middle one between the rear ones. The render's diagonal gussets and its maker's plate are left out: no brand, no decal.
-- Which way the notches open is as the black render shows: toward the bar, the teeth standing out of a spine behind the rod.
+- The hooks are on the bar, as its carriages are: not a joint, as one about the bar would be left behind when the bar slides along the rods. A hook rests on its notch with no pose and stands turned 90 degrees up off the teeth for a lift, chosen as the turn that clears them.
+- The rear uprights stand at the beams' rear ends and lean 10 degrees forward, an A with the front ones, as the black render shows (#241), and carry four horns a side through a pad wrapped round them. The frame is 1.51 m wide over its uprights, 1.24 m deep and 2.357 m high; the bar is 2.1 m with sleeves outside the rods.
+- The crossbars are a top one between the front uprights and a middle one between the rear ones. A diagonal gusset each side stands under the middle one (#241). The render's maker's plate is left out: no brand, no decal.
+- Which way the notches open is as the black render shows: toward the bar, the teeth standing back from a spine on the upright's rear face, the rod behind them (#241).

@@ -48,6 +48,8 @@ export const BATCHES = {
   'pec-deck': ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'],
   // The lateral raise machine's seated raise, posed to prove a body fits it (#241).
   'lateral-raise': ['machine_lateral_raise'],
+  // The smith machine's nine lifts, posed to prove a body fits it (#241).
+  'smith-machine': ['smith_machine_squat', 'smith_machine_rdl', 'smith_machine_bench_press', 'smith_machine_jm_press', 'smith_machine_incline_press', 'smith_machine_seated_press', 'smith_machine_lunge', 'ffe_smith_machine_lunge', 'split_squat_smith'],
   // The machine shrug, posed to prove a body fits the shrug machine (#241).
   'shrug-machine': ['machine_shrug'],
   // The 45 degree hyperextension on its bench, posed to prove a body fits it (#241).
