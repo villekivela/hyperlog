@@ -116,9 +116,10 @@ fun ExerciseTrendScreen(
                 }
             }
             trend.lines.forEachIndexed { n, line ->
-                item(key = "chart-$n") { Column(Modifier.cardBehind(Tones.card).padding(vertical = 12.dp)) {
+                // The gap sits outside the card, so a machine's card starts clear of the table above it.
+                if (n > 0) item(key = "machine-gap-$n") { Spacer(Modifier.height(24.dp)) }
+                item(key = "chart-$n") { Column(Modifier.testTag(TrendChartTag).cardBehind(Tones.card).padding(vertical = 12.dp)) {
                     if (perMachine) {
-                        if (n > 0) Spacer(Modifier.height(16.dp))
                         Text(
                             line.machine ?: stringResource(R.string.history_machine_unknown),
                             Modifier.padding(horizontal = TextEdge, vertical = 8.dp),
@@ -223,6 +224,7 @@ private fun Legend() {
 }
 
 internal const val TrendRowTag = "trend-row"
+internal const val TrendChartTag = "trend-chart"
 
 /** A session on the trend, as a table row: date, top set, estimate. */
 @Composable

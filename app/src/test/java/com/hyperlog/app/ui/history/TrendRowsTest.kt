@@ -52,4 +52,19 @@ class TrendRowsTest {
         assertTrue("chips are laid out: $rights", rights.all { it > 0.dp })
         rights.forEach { assertEquals("chip right edges $rights", rights.first().value, it.value, 0.5f) }
     }
+
+    @Test
+    fun eachMachineSectionSitsApartFromTheOneBeforeIt() {
+        val day = LocalDate.of(2026, 10, 1)
+        fun line(machine: String, id: Long) = TrendLine(machine, id, listOf(TrendPoint(id, day, LoggedSet(80.0, 5, 0, 0), 92.0), TrendPoint(id + 1, day.plusDays(3), LoggedSet(82.5, 8, 0, 1), 100.0)))
+        val cable = Exercise("cable_row", "Cable Row", Equipment.Cable, MovementPattern.HorizontalPull, GripDemand.Low, listOf("Back"))
+        compose.setContent {
+            HyperlogTheme { ExerciseTrendScreen(ExerciseTrend(cable, listOf(line("Left", 10), line("Right", 20))), hasBodyweight = false, onOpenSession = {}, onBack = {}) }
+        }
+        val charts = compose.onAllNodes(hasTestTag(TrendChartTag)).fetchSemanticsNodes()
+        val rows = compose.onAllNodes(hasTestTag(TrendRowTag), useUnmergedTree = true).fetchSemanticsNodes()
+        assertEquals(2, charts.size)
+        val gap = with(compose.density) { (charts[1].boundsInRoot.top - rows[1].boundsInRoot.bottom).toDp() }
+        assertEquals("gap above the second machine", 24f, gap.value, 0.5f)
+    }
 }
