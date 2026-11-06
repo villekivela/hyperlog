@@ -880,9 +880,12 @@ The first batch's traces:
 beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
 colours. A lying lift is seen from the head end, and equipment standing well in front of the body
 (a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
-Use it for a pull request's screenshots. `node render.mjs --clip <clip> [out-dir] [--at <commit>]`
-renders a baked clip instead, at the top, the middle and the bottom of its rep, as that commit baked
-it.
+`node render.mjs --clip <clip> [out-dir] [--at <commit>]` renders a baked clip instead, at the top,
+the middle and the bottom of its rep, as that commit baked it.
+
+Renders are for a reviewer and stay in the scratchpad, uncommitted. A pull request carries no
+per-exercise screenshots: the owner judges a clip in the studio, and the numbers go in the pull
+request's test table. A PNG stays only if it shows something a test and the studio can't.
 
 ## The studio
 
