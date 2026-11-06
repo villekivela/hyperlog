@@ -225,13 +225,18 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   and can't roll in it. Every dumbbell entry wants it. **`heavy: true`** gives it bigger heads, for a
   lift done with a big dumbbell, such as the Kroc row.
 - **`body.kneel`** (`arms`, `free_arms`, `row`) puts the body on its knees at `feet.z`, the shins
-  back along the floor and the toes tucked; `thigh` sets the hips over them.
+  back along the floor and the toes tucked; `thigh` sets the hips over them. A side (1 the left, -1
+  the right) puts that knee down alone, the other foot flat `feet.ahead` in front of it, its knee
+  opened by `feet.kneesOut`.
 - **`feet.lift`** (standing `arms`, `free_arms`, `row`) takes one foot off the floor (1 the left), and
   `top.leg`, `bottom.leg` set that leg: [back, out, bend] in degrees, the thigh from straight down,
   behind the hip and out to its side, and the knee's bend.
 - **`grip.restOn`** closes `grip.one`'s resting hand round a bar of that radius, a tower's post, where
   it would otherwise lie relaxed. **`grip.restPole`** points that arm's elbow, as `grip.pole` does the
   working arm's.
+- **`grip.restFlat`** `{ palm, fingers }` lays `grip.one`'s resting hand open on what it rests on, a
+  thigh, its palm and fingers pointing those ways through the whole rep, whatever `rotate` and `wrist`
+  do to the working hand. Without it the pose's `rotate` and `wrist` turn both hands.
 - **`grip.joined`** (`free_arms`) holds one thing in both hands, that far either side of the point
   `hand` gives, which isn't mirrored. **`grip.via`** [x, y, z] (`free_arms`) curves the hand through
   that point at the middle of the rep, for a hand riding something that swings on an arc.
@@ -1056,8 +1061,8 @@ the worker, a doubt goes to the owner, and a clean lift needs only a sample.
 | `place` | `{ "place": "hand_*.at", "from": "shoulder_*.at", "axis": "z", "at": "top", "range": [-0.06, 0.06] }` | a point stands out of its range from another, in metres along x, y or z, at the `top`, the `bottom` or `either` |
 | `look` | `{ "look": "forearms", "at": ["bottom"], "view": "front" }` | never here: it waits for the reviewer's eyes |
 
-`*` stands for each side, and the worse one counts. On a one-sided lift `"works": "ankle"` or
-`"hand"` finds the side that point travels further on, and `{work}` and `{other}` in a line stand
+`*` stands for each side, and the worse one counts. On a one-sided lift `"works"` names a point,
+`"ankle"`, `"hand"` or `"knuckles"`, and finds the side it travels further on, and `{work}` and `{other}` in a line stand
 for it and the other. The top is the clip's first frame and the bottom its last, as the pose calls
 them: a pulldown's top is the arm long, and a row's the arm bent. Whatever a spec can say exactly
 is a line of an exact kind and not a `look`, because `movement.test.mjs` holds every clip to those

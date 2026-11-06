@@ -460,6 +460,26 @@ function offsetLimb(rig, P, [upper, lower, end], lengths, endAt, soft) {
 }
 
 /**
+ * Lays the resting hand of side `k` flat, as `P.restFlat` gives it: its palm and fingers the ways
+ * they point in the world, whatever the working hand's roll, and the arm solved again to where that
+ * puts the wrist. `wristAt` as for `offsetLimb`.
+ */
+function layFlat(rig, P, k, lengths, wristAt) {
+  const { bones } = rig;
+  const s = sideOf(rig, k);
+  const fingers = V(...P.restFlat.fingers);
+  const knuckles = V(...P.restFlat.palm).cross(fingers).multiplyScalar(s);
+  aim(rig, 'hand_' + k, fingers, knuckles);
+  const turn = wquat(bones['hand_' + k]);
+  const root = wpos(bones['upperarm_' + k]);
+  const arm = ik(root, wristAt('hand_' + k), ...lengths, P.armPole(s), true);
+  const upper = arm.mid.clone().sub(root);
+  aim(rig, 'upperarm_' + k, upper, upper.clone().cross(arm.pole));
+  aim(rig, 'lowerarm_' + k, arm.end.clone().sub(arm.mid), knuckles);
+  setWorldQuat(bones['hand_' + k], turn);
+}
+
+/**
  * Poses the rig from a pose frame: the hip centre and trunk direction, the head's direction, the
  * ankles, the feet's way, knee and elbow poles, and where the hands hold. A pose can also bend
  * the spine (`spine`) or lift the shoulders (`shrug`). `near` is each side's straight arm and
@@ -619,18 +639,20 @@ export function poseRig(rig, P, near = {}, holding = null) {
     const armBones = ['upperarm_', 'lowerarm_', 'hand_'].map((b) => b + k);
     const wristAt = (hand) => grip.clone().sub(heldAt(rig, k).sub(wpos(bones[hand])));
     for (const n of offsetLimb(rig, P, armBones, [L.up, L.fore], wristAt, true)) turned.add(n);
+    const flat = P.restFlat && P.resting === s;
+    if (flat) layFlat(rig, P, k, [L.up, L.fore], wristAt);
     if (holding === false) continue;
     // The fingers and the thumb close round what the hand holds, joint by joint, as far as they
     // touch it: the part the stage placed under it (`holding(s)`, along its own line, in pieces), or
     // a bar of the radius the hand was seated for, along the line it lies in the hand. A hand that
-    // holds nothing lies open, or relaxed where it rests (`P.resting`), unless it rests on a bar of
-    // the radius `P.restOn` gives, a tower's post, which it closes round.
+    // holds nothing lies open, or relaxed where it rests (`P.resting`) unless laid flat, or on a bar
+    // of the radius `P.restOn` gives, a tower's post, which it closes round.
     const rests = P.restOn && P.resting === s;
     const bar = rests ? { at: grip, along: P.held[s].clone(), radius: P.restOn }
       : holdsNothing(P, s) ? null
         : holding ? holding(s) : { at: grip, along: P.held[s].clone(), radius };
     if (bar) (arms[k] ??= {}).fingers = closeHand(rig, k, bar, hold, near[k]?.at ? near[k].fingers : null);
-    else relaxHand(rig, k, hold.sits === 'open');
+    else relaxHand(rig, k, flat || hold.sits === 'open');
   }
   offset(rig, P, Object.keys(P.offsets ?? {}).filter((n) => !turned.has(n)));
   return arms;

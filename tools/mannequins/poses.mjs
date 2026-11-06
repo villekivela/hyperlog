@@ -739,7 +739,7 @@ export const POSES = {
 
   // Side-on to the left tower, the rope from a high pulley in both hands: the arms chop down across
   // the body toward the outside of the right knee, the knees bending and the trunk and head turning
-  // with them.
+  // with them. The hands swing out round the body, the arms long through the chop (owner, #127).
   cable_woodchopper: {
     equipment: 'cable',
     motion: 'free_arms',
@@ -753,33 +753,47 @@ export const POSES = {
       offsets: { spine_01: [0, 12, 0], spine_02: [0, 12, 0], spine_03: [0, 12, 0], Head: [0, 10, 0] },
     },
     feet: { stance: 0.24, toeOut: 14, kneesOut: 0.25 },
-    grip: { joined: 0.05, rotate: 90, pole: [1, -0.5, -0.4] },
+    grip: { joined: 0.05, rotate: 90, pole: [1, -0.5, -0.4], via: [0.09, 1.17, 0.64] },
     camera: { target: [0, 1.15, 0.1], halfHeight: 1.3, azimuth: 10, elevation: 8 },
   },
 
-  // Sat low on the heels facing the left tower, the forearms along the thighs, palms up on a straight
-  // bar from the lowest pulley: only the wrists move, the bar curling up from the fingers.
+  // On the right knee facing the left tower, the left forearm along the left thigh, palm up on a
+  // handle from the lowest pulley: only the wrist moves, its joint still, the handle curling up from
+  // the fingers (owner, #127). One hand, the other knee on the ground, that side's palm flat on its
+  // thigh. The tower stands out past the hand, on the line it rises along, so the stack rises with it.
   cable_wrist_curl: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 1, faces: true, attachment: 'bar', at: [-1.105, 0.78] } },
-    top: { shin: 34, thigh: 88, trunk: 34, hand: [0.19, 0.683, 0.423], wrist: [38, 0], rotate: 184.5 },
-    bottom: { shin: 34, thigh: 88, trunk: 34, hand: [0.19, 0.58, 0.475], wrist: [-38, 0], rotate: 181 },
-    feet: { stance: 0.2, toeOut: 16, kneesOut: 0.45 },
-    grip: { rotate: 180, thumb: 'thumbless', pole: [0.1, -1, -0.5] },
+    kit: { cable_crossover: { position: 1, faces: true, hands: [1], at: [-0.72, 1.12] } },
+    body: { kneel: -1 },
+    top: { thigh: 0, trunk: 38, hand: [0.2139, 0.6346, 0.5441], wrist: [38, 0], rotate: 185 },
+    bottom: { thigh: 0, trunk: 38, hand: [0.2753, 0.531, 0.565], wrist: [-38, 0], rotate: 170 },
+    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
+    grip: {
+      rotate: 180, thumb: 'thumbless', pole: [0.1, -1, -0.5], via: [0.2393, 0.5809, 0.5751],
+      one: 1, rest: [-0.11, 0.36, 0.096], restPole: [0.3, -1, -0.3], restFlat: { palm: [0.6, 0, -1], fingers: [0.3, -1, 0] },
+    },
+    camera: { target: [0, 0.5, 0.3], halfHeight: 0.9, azimuth: 65, elevation: 8 },
+  },
+
+  // In a deep squat facing the left tower, the elbows resting close to the knees to steady it, inside
+  // them, the knees open wide enough to clear the elbows, palms down on a straight bar from the
+  // lowest pulley: the backs of the hands rise toward the forearms, the wrists still (owner, #127).
+  // The forearms lie level and the tower stands close: the hands must rise away from the pulley for
+  // the stack to rise with them.
+  cable_wrist_extension: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 1, faces: true, attachment: 'bar', at: [-1.105, 0.85] } },
+    top: { shin: 38, thigh: 100, trunk: 34, hand: [0.1261, 0.551, 0.5504], wrist: [-38, 0], rotate: 0 },
+    bottom: { shin: 38, thigh: 100, trunk: 34, hand: [0.1886, 0.4538, 0.528], wrist: [32, 0], rotate: 0 },
+    feet: { stance: 0.2, toeOut: 16, kneesOut: 0.78 },
+    grip: { rotate: 0, thumb: 'wrapped', pole: [0.1, -1, -0.5], via: [0.1545, 0.4985, 0.5562] },
     camera: { target: [0, 0.5, 0.2], halfHeight: 0.9, azimuth: 65, elevation: 8 },
   },
 
-  // The curl turned over, the palms down: the backs of the hands rise toward the forearms.
-  cable_wrist_extension: {
-    like: 'cable_wrist_curl',
-    top: { hand: [0.19, 0.598, 0.458], wrist: [-38, 0], rotate: 0 },
-    bottom: { hand: [0.19, 0.521, 0.455], wrist: [32, 0], rotate: 0 },
-    grip: { rotate: 0, thumb: 'wrapped' },
-  },
-
   // Back on an upright bench between the towers, the pulleys at the seated shoulder: the handles
-  // sweep from wide behind the line of the chest to together in front of it.
+  // sweep from wide behind the line of the chest to about shoulder width in front of it (owner, #127).
   seated_cable_flye: {
     equipment: 'cable',
     motion: 'free_arms',

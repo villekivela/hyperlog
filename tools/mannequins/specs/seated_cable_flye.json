@@ -1,5 +1,6 @@
 {
   "sources": [
+    "The owner on #127: the flye is fine as it is, its hands closing to about shoulder width",
     "technique video fGm-ef-4PVk from 10:49",
     "exercises.json: back on the pad, sweep the handles together in front of the chest, let them pull the arms back for a deep stretch",
     "docs/research/grip.md: a stirrup handle"
@@ -25,16 +26,15 @@
       "within": 30
     },
     {
-      "says": "at the closed end the hands nearly meet",
+      "says": "at the closed end the hands come in to about shoulder width",
       "place": "hand_l.at",
       "from": "hand_r.at",
       "axis": "x",
       "at": "either",
       "range": [
         -0.02,
-        0.3
-      ],
-      "open": "the owner's OK'd pose (#261): the hands close to 34 cm apart, about shoulder width, and the owner hasn't said to change it"
+        0.4
+      ]
     },
     {
       "says": "the hands make a wide sweep",

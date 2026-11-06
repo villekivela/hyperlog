@@ -1,5 +1,7 @@
 {
   "sources": [
+    "The owner on #127: the elbows rest close to the knees to stabilise it, in a deeper squat",
+    "The owner on #127: the elbows stay close to the knees but must not pass through them",
     "technique video _KI-O0zMv60",
     "exercises.json: smooth, controlled reps",
     "docs/research/grip.md: the wrist through its own range"
@@ -27,14 +29,12 @@
     {
       "says": "the wrist joint stays in place: only the hand moves",
       "still": "hand_*.at",
-      "within": 0.02,
-      "open": "the owner's OK'd pose (#261): the wrists drift 6 cm inward over the rep, so the clip's last frame isn't its first, and the owner hasn't said to change it"
+      "within": 0.02
     },
     {
       "says": "the elbows stay in place",
       "still": "elbow_*.at",
-      "within": 0.02,
-      "open": "the owner's OK'd pose (#261): the elbows slide 4 cm forward over the rep, and the owner hasn't said to change it"
+      "within": 0.02
     },
     {
       "says": "the elbows hold their angle",
@@ -70,7 +70,7 @@
       "view": "side"
     },
     {
-      "says": "the forearms rest on the thighs, the hands past the knees",
+      "says": "in a deep squat, the elbows rest close to the knees without passing through them, the hands past them",
       "look": "forearms",
       "at": [
         "ends"

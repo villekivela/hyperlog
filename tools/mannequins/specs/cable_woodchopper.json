@@ -23,8 +23,7 @@
     {
       "says": "the arms mostly hold their angle: the trunk turns them",
       "still": "elbow_*",
-      "within": 30,
-      "open": "the owner's OK'd pose (#261): the elbows fold from 172° to 90° at mid-sweep and open again, a pull more than a swing of long arms, and the owner hasn't said to change it"
+      "within": 30
     },
     {
       "says": "the hands sweep a long way across the body",
