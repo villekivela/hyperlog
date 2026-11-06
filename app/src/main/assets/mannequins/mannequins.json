@@ -2226,6 +2226,30 @@
         "kit_chest_press.bin"
       ]
     },
+    "machine_crunch": {
+      "clip": "machine_crunch.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          -0.12,
+          0.7,
+          0.12
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 58,
+        "elevation": 11
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.5,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_crunch_machine.bin"
+      ]
+    },
     "machine_hip_thrust": {
       "clip": "machine_hip_thrust.glb",
       "equipment": "machine",
