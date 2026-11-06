@@ -30,6 +30,8 @@ const MACHINES = {
   '1_arm_reverse_pec_deck': 'right',
   machine_crunch: 'arm',
   machine_lateral_raise: 'arm_l',
+  machine_hip_abduction: 'arm_l',
+  machine_adduction: 'arm_l',
   seated_dip_machine: 'arms',
   machine_hip_thrust: 'carriage',
 };

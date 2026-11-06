@@ -393,6 +393,27 @@ export const POSES = {
     camera: { target: [0, 0.8, 0.1], halfHeight: 1.05, azimuth: 215, elevation: 12 },
   },
 
+  // Back on the leaning pad, the hands on the side handles, the feet on the plates and the pads on the
+  // outsides of the knees: from the knees together, the legs swinging apart with the arms.
+  machine_hip_abduction: {
+    equipment: 'machine',
+    motion: 'leg_arms',
+    kit: { hip_machine: {} },
+    body: { trunk: -15, look: 0 },
+    bottom: { arm_l: 45 },
+    feet: {},
+    grip: { pole: [0.7, -0.6, -0.5] },
+    camera: { target: [0, 0.75, 0.25], halfHeight: 1.05, azimuth: 40, elevation: 14 },
+  },
+
+  // The same with the pads between the knees: from the legs open, squeezing them together.
+  machine_adduction: {
+    like: 'machine_hip_abduction',
+    kit: { hip_machine: { pads: 'inner' } },
+    top: { arm_l: 50 },
+    bottom: { arm_l: 12 },
+  },
+
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
   machine_pulldown: {
     equipment: 'machine',

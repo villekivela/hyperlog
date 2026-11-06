@@ -947,6 +947,26 @@ export const MOTIONS = {
   },
 
   /**
+   * Seated, the back on the pad, each foot on a plate at the foot of an arm that swings about a
+   * vertical axis, so the legs ride the arms and the hips stay put: a hip abduction, an adduction.
+   */
+  leg_arms(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const { ankle, ahead, sole, hand, across } = s.linkage;
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(forwardOf(u), e.body?.look ?? 0.15).normalize(),
+      ankles: [-1, 1].map(ankle),
+      foot: (side) => ({ heading: ahead(side), top: V(0, 1, 0) }),
+      kneePole: (side) => ahead(side).add(V(0, 0.6, 0)).normalize(),
+      support: () => ({ point: sole.clone(), normal: V(0, 1, 0) }),
+      hand, across,
+      armPole: elbowsTo(e, [0.7, -0.6, -0.5]),
+    };
+  },
+
+  /**
    * Standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips
    * its lever carries: a chest-supported T-bar row, a Kelso shrug.
    */

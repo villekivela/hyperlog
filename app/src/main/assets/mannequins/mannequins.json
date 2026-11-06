@@ -2226,6 +2226,30 @@
         "kit_leg_curl.bin"
       ]
     },
+    "machine_adduction": {
+      "clip": "machine_adduction.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.25
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 40,
+        "elevation": 14
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_hip_machine.bin"
+      ]
+    },
     "machine_chest_press": {
       "clip": "machine_chest_press.glb",
       "equipment": "machine",
@@ -2272,6 +2296,30 @@
       "resources": [
         "mannequin.bin",
         "kit_crunch_machine.bin"
+      ]
+    },
+    "machine_hip_abduction": {
+      "clip": "machine_hip_abduction.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.25
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 40,
+        "elevation": 14
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_hip_machine.bin"
       ]
     },
     "machine_hip_thrust": {

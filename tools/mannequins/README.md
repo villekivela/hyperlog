@@ -291,6 +291,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
+| `leg_arms` | seated, the legs riding a machine's arms about a vertical axle: hip abduction and adduction | the recipe's `linkage`, by the arm's angle at `top` and `bottom`; `grip.pole` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
 | `reclined_crunch` | lying face up on a machine's inclined seat, the back on the pad its arm carries, the knees high and the ankles hooked between its rollers, the hands on the handles by the head: a machine crunch | `arm`, degrees of curl from rest; `feet.stance`, `feet.toeOut`, `feet.dorsi` (degrees the toes lift toward the knee, 20), `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
 | `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
@@ -339,7 +340,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | `lateral_raise_machine` (seated posed, #241; standing has no kit) |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | `dip_machine` |
-| `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
+| `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` (posed, #241) |
 | `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | `crunch_machine` |
@@ -473,21 +474,23 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   way. `position`
   takes one number for a two-arm lift, the same hole on both towers, and a pair only where the arms
   differ.
-- `hip_machine` (#214, built, none of its two exercises posed yet, so no clip changes) is the one
-  hip abduction and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, a
-  rear leg behind it, and a tall tower with the weight stack standing ahead of the posts, as the
-  maker's photos show, on a floor beam 1.55 m long. Two arms turn on one vertical axle on the centre
-  line under the seat, 140 mm behind its front edge. Each arm (`arm_l`, `arm_r`, revolute about the
-  vertical, 0 to 50° from closed, positive opening) is an L out from the axle and 400 mm forward to a
-  post with a 280 by 160 mm knee pad at 560 mm and a foot plate at 80 mm; the right arm rides 60 mm
+- `hip_machine` (#214, #241, both exercises posed on the `leg_arms` motion) is the one hip abduction
+  and adduction machine: a 360 mm seat 520 mm up with a backrest leaning back 15°, flush on a spine
+  that rakes up from a cross member between two splayed rear legs, a hoop from the spine's sides
+  carrying a grip each side of the seat, and a tall tower, its front upright swept over the top in one length,
+  with the weight stack standing ahead of the posts, as the maker's photos show, on a floor beam
+  1.55 m long. Two arms turn on one vertical axle on the centre line under the hips, 240 mm behind
+  the seat's front edge. Each arm (`arm_l`, `arm_r`, revolute about the
+  vertical, 0 to 50° from closed, positive opening) is an L out from the axle and 430 mm forward to a
+  post with a 280 by 160 mm knee pad at 560 mm and a foot plate at 100 mm, clear of the beam it swings over; the right arm rides 60 mm
   above the left on the shared axle. `pads` (`outer`, the default, on the outsides of the knees for
   abduction, or `inner`, between them for adduction) and `start` (degrees, snapped to the ratchet's
-  10° steps; 0 for `outer`, 50 for `inner`, at least 10 for `inner` so the pads clear) set it up; the
-  fit rule names `start`. It departs from its ref: the pads' faces are put 140 mm (`outer`) from the
-  centre line from the mannequin's knee, which puts the posts about 450 mm apart rather than the
+  10° steps; 0 for `outer`, 50 for `inner`, at least 20 for `inner`, though the arms close to 12°, as far as the posts clear) set it up; the
+  fit rule names `start`. It departs from its ref: the pads' faces are put 145 mm (`outer`) from the
+  centre line from the mannequin's knee, which puts the posts about 460 mm apart rather than the
   ref's 250 (the photos show each post outside its pad, so 250 can't hold with an 80 mm pad); the
-  joints stop at the ratchet's 50°, a 40 to 50° travel, the ref's 45° read from another make's video;
-  the stack's travel isn't drawn. The studio shows it alone.
+  joints stop at the ratchet's 50°, a 40 to 50° travel, the ref's 45° read from another make's video.
+  The stack hangs on `arm_l`, rising as the arms open, or as they close with the pads inside.
 - `smith_machine` (#182, smith machine equipment, not a machine kind) stands where its ref puts it,
   whatever the pose, and none of its nine exercises is posed yet: two guide rods 1.3 m apart leaning
   7° with their tops toward the back, a front upright either side carrying a rod and a plate of 13
@@ -717,7 +720,7 @@ Every kit is a recipe (ADR 0007): `recipes/<kit>.mjs`, over the part library in 
 (tubing with its caps and base plates, pads, seats, rollers, pulleys in housings, cables, stacks
 with guide rods and a pin, pop-pins, bars and handles, each a function of its dimensions and tone).
 A pivot is `pivotJoint(M, at, axis)`: a bearing housing on the moving arm round an axle the frame holds
-(#212, used by `lateral_raise_machine` first). Bent tubing is `mitered(points, w, material, { ends })`: one
+(#212, used by `lateral_raise_machine` first). Bent tubing is `mitered(points, w, material, { ends, tall })`: one
 square length swept along the points, each bend cut on its bisector, not two lapped lengths.
 `recipe.mjs` is the format. A recipe declares, as data:
 
@@ -880,7 +883,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the EZ bar, the hip machine, the safety bar, the hyperextension bench, the trap bar and the shrug machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the EZ bar, the safety bar, the hyperextension bench, the trap bar and the shrug machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`
