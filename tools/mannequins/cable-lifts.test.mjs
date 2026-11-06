@@ -84,7 +84,8 @@ test('the 1-arm pulldown kneels on one knee and drives the elbow from long overh
   const { stage, at } = await posed('1_arm_cable_pulldown');
   assert.deepEqual(failing('1_arm_cable_pulldown', stage), []);
   const top = at(0);
-  assert.ok(top('calf_r').y < 0.12, `the right knee ${top('calf_r').y.toFixed(3)} up`);
+  assert.ok(top('calf_l').y < 0.12, `the working side's knee ${top('calf_l').y.toFixed(3)} up`);
+  assert.ok(top('hand_r').distanceTo(top('calf_r')) < 0.3, `the free hand ${top('hand_r').distanceTo(top('calf_r')).toFixed(3)} from the front knee`);
   assert.ok(top('hand_l').y > top('Head').y, `the hand ${top('hand_l').y.toFixed(3)} at the top, over the head`);
   const reach = top('upperarm_l').sub(top('lowerarm_l')).angleTo(top('hand_l').sub(top('lowerarm_l'))) * 180 / Math.PI;
   assert.ok(reach > 145, `the elbow ${reach.toFixed(0)}° at the top: the arm long`);
@@ -139,7 +140,8 @@ test('the cable lat pull-around reaches across the body and drives the elbow dow
   const { stage, at } = await posed('1_arm_cable_lat_pull_around');
   assert.deepEqual(failing('1_arm_cable_lat_pull_around', stage), []);
   const top = at(0);
-  assert.ok(top('calf_r').y < 0.12, `the right knee ${top('calf_r').y.toFixed(3)} up`);
+  assert.ok(top('calf_l').y < 0.12, `the working side's knee ${top('calf_l').y.toFixed(3)} up`);
+  assert.ok(top('hand_r').distanceTo(top('calf_r')) < 0.3, `the free hand ${top('hand_r').distanceTo(top('calf_r')).toFixed(3)} from the front knee`);
   assert.ok(top('hand_l').x < top('upperarm_r').x - 0.05, `the left hand ${top('hand_l').x.toFixed(3)} at the top: past the far shoulder, ${top('upperarm_r').x.toFixed(3)}`);
   const across = top('upperarm_l').sub(top('upperarm_r'));
   const turned = Math.atan2(across.z, across.x) * 180 / Math.PI;

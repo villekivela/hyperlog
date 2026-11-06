@@ -822,19 +822,19 @@ export const POSES = {
     camera: { target: [0, 1.0, 0.2], halfHeight: 1.1, azimuth: 62, elevation: 8 },
   },
 
-  // On the right knee facing the left tower, a handle from a high pulley in the left hand: the elbow
-  // drives from the arm long overhead down to the ribs, the hand by the chest, the free hand resting
-  // on the kneeling thigh.
+  // On the left knee facing the left tower, a handle from a high pulley in the left hand: the elbow
+  // drives from the arm long overhead down to the ribs, the hand by the chest, the free hand braced
+  // on the front knee.
   '1_arm_cable_pulldown': {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 15, faces: true, hands: [1], at: [-0.965, 1.12] } },
-    body: { kneel: -1 },
+    body: { kneel: 1 },
     top: { thigh: 0, trunk: 6, hand: [0.24, 1.5, 0.4], rotate: 90 },
     bottom: { thigh: 0, trunk: 6, hand: [0.27, 0.93, 0.3], rotate: 90 },
     feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
-    grip: { rotate: 90, pole: [0.8, -1, -0.5], one: 1, rest: [-0.13, 0.42, 0.11], restPole: [0.3, -1, -0.3], restFlat: { palm: [0.6, 0, -1], fingers: [0.3, -1, 0] } },
+    grip: { rotate: 90, pole: [0.8, -1, -0.5], one: 1, rest: [-0.16, 0.66, 0.3], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
     camera: { target: [0, 0.8, 0.3], halfHeight: 1.15, azimuth: 65, elevation: 8 },
   },
 
@@ -868,19 +868,19 @@ export const POSES = {
     camera: { target: [0, 0.75, 0.1], halfHeight: 1.05, azimuth: 20, elevation: 8 },
   },
 
-  // On the right knee between the towers, the trunk turned toward the right tower's high pulley and
+  // On the left knee between the towers, the trunk turned toward the right tower's high pulley and
   // the left hand reaching past the far shoulder: the trunk comes square as the elbow drives down to
-  // the hip and the hand to the sternum, the free hand on the kneeling thigh.
+  // the hip and the hand to the sternum, the free hand braced on the front knee.
   '1_arm_cable_lat_pull_around': {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 13, hands: [1], crossed: true, at: [0, 0.05] } },
-    body: { kneel: -1 },
+    body: { kneel: 1 },
     top: { thigh: 0, trunk: 8, hand: [-0.34, 1.12, 0.5], rotate: 90, offsets: { spine_01: [0, -10, 0], spine_02: [0, -10, 0], spine_03: [0, -10, 0] } },
     bottom: { thigh: 0, trunk: 8, hand: [0.08, 0.92, 0.34], rotate: 90, offsets: { spine_01: [0, 0, 0], spine_02: [0, 0, 0], spine_03: [0, 0, 0] } },
     feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
-    grip: { rotate: 90, pole: [0.4, -1, 0.2], one: 1, rest: [-0.13, 0.42, 0.11], restPole: [0.3, -1, -0.3], restFlat: { palm: [0.6, 0, -1], fingers: [0.3, -1, 0] } },
+    grip: { rotate: 90, pole: [0.4, -1, 0.2], one: 1, rest: [-0.16, 0.66, 0.3], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
     camera: { target: [0, 0.8, 0.2], halfHeight: 1.1, azimuth: 25, elevation: 8 },
   },
 
