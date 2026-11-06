@@ -252,16 +252,16 @@ internal fun previewLine(parts: List<String>, more: (Int) -> String, fits: (Stri
     return (parts.size downTo 1).map(::line).firstOrNull(fits) ?: line(1)
 }
 
-/** Where a session was and what it held, on one line of whole names. */
+/** [parts] on one line of whole names, after [lead]: where a session was and what it held, or the muscles it missed. */
 @Composable
-private fun SessionPreview(parts: List<String>) {
+internal fun SessionPreview(parts: List<String>, lead: String = "") {
     val style = MaterialTheme.typography.bodyMedium
     val measurer = rememberTextMeasurer()
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val room = constraints.maxWidth
         val format = stringResource(R.string.past_preview_more)
         Text(
-            previewLine(parts, { format.format(it) }) { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width <= room },
+            lead + previewLine(parts, { format.format(it) }) { measurer.measure(lead + it, style, maxLines = 1, softWrap = false).size.width <= room },
             style = style,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -26,8 +26,11 @@ data class TrainingGlance(val week: LocalDate?, val muscles: List<MuscleWeek>, v
     /** How many muscles are within their range. */
     val onTarget: Int get() = muscles.count { it.status == VolumeStatus.Within }
 
-    /** The muscles, the one furthest short of its range first. */
-    val shortFirst: List<MuscleWeek> get() = muscles.sortedBy { it.sets / it.range.low.coerceAtLeast(1) }
+    /** The muscles trained in the week, the one furthest short of its range first. */
+    val shortFirst: List<MuscleWeek> get() = muscles.filter { it.sets > 0 }.sortedBy { it.sets / it.range.low.coerceAtLeast(1) }
+
+    /** The muscles with no sets in the week. */
+    val untrained: List<MuscleWeek> get() = muscles.filter { it.sets == 0.0 }
 }
 
 /**
@@ -39,11 +42,14 @@ fun trainingGlance(
     trends: List<ExerciseTrend>,
     today: LocalDate,
     picked: LocalDate? = null,
+    /** The muscles to measure: the program's own, without those it only touches as a secondary. Null for all. */
+    only: Set<String>? = null,
     range: (String) -> NumberRange,
 ): TrainingGlance {
     val shown = weeks.firstOrNull { it.start == picked } ?: weeks.firstOrNull { it.sets.isNotEmpty() }
     // In the order the shown week has them, then any it missed, newest week first.
-    val muscles = (listOfNotNull(shown) + weeks).flatMap { it.sets.keys }.distinct()
+    val trained = (listOfNotNull(shown) + weeks).flatMap { it.sets.keys }.distinct()
+    val muscles = if (only == null) trained else trained.filter { it in only } + (only - trained.toSet())
     return TrainingGlance(
         shown?.start,
         muscles.map { muscle ->

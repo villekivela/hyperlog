@@ -268,14 +268,15 @@ fun WeeklySetsChart(
     onSelect: (Int) -> Unit,
     description: String,
     modifier: Modifier = Modifier,
-    height: Dp = 72.dp,
+    height: Dp = 64.dp,
 ) {
     val cs = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer()
     val tick = MaterialTheme.typography.labelSmall.copy(color = cs.onSurfaceVariant)
     val unit = stringResource(R.string.history_sets_axis)
     val scale = remember(weeks) {
-        Scale.of(0.0, weeks.maxOf { it.workSets }.toDouble().coerceAtLeast(1.0)).let { s -> s.copy(min = 0.0, ticks = s.ticks.filter { it >= 0 }) }
+        // Zero and the top: a chart this short has no room for the ticks between.
+        Scale.of(0.0, weeks.maxOf { it.workSets }.toDouble().coerceAtLeast(1.0)).let { s -> s.copy(min = 0.0, ticks = listOf(0.0, s.max)) }
     }
     fun nearestWeek(px: Float, width: Float) = (px / (width / weeks.size)).toInt().coerceIn(0, weeks.lastIndex)
     Canvas(

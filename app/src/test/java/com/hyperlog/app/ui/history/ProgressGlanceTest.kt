@@ -44,7 +44,7 @@ class ProgressGlanceTest {
 
     private val today = LocalDate.of(2026, 11, 5)
     private val monday = LocalDate.of(2026, 11, 2)
-    private val muscles = listOf("Chest", "Lats", "Upper back", "Front delts", "Side delts", "Rear delts", "Biceps", "Triceps", "Quads", "Hamstrings", "Glutes", "Calves", "Abs")
+    private val muscles = listOf("Chest", "Lats", "Upper Back", "Front Delts", "Side Delts", "Rear Delts", "Biceps", "Triceps Long Head", "Triceps Lateral Head", "Quads", "Hamstrings", "Glutes", "Calves")
 
     private fun block() = (0 until 8).map { w ->
         WeekSets(monday.minusWeeks(w.toLong()), muscles.mapIndexed { i, m -> m to (4 + (i + w) % 11).toDouble() }.toMap(), 40 + w)
@@ -77,8 +77,18 @@ class ProgressGlanceTest {
         compose.onNodeWithText("Moving").assertIsDisplayed()
         // Third by how far it moved; the Exercises list further down has its own Bench.
         val last = compose.onNodeWithContentDescription("Bench, estimate 100 to 105 kg, +5%", useUnmergedTree = true).getBoundsInRoot()
-        // The navigation bar takes the last 80 dp on the phone.
-        assertTrue("The last lift ends at ${last.bottom}", last.bottom <= 834.dp)
+        // On the phone the status bar takes 40 dp and the navigation bar the last 80.
+        assertTrue("The last lift ends at ${last.bottom}", last.bottom <= 794.dp)
+    }
+
+    /** The untrained are one line of names, not rows of zeros. */
+    @Test
+    fun aMuscleWithNoSetsIsNamedNotDrawn() {
+        val week = WeekSets(monday, mapOf("Chest" to 9.0), 9)
+        val earlier = WeekSets(monday.minusWeeks(1), mapOf("Lats" to 9.0, "Quads" to 9.0), 18)
+        show(listOf(week, earlier), emptyList())
+        compose.onNodeWithText("No sets yet: Lats · Quads").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Lats, 0 sets, target 8 to 14, under target", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -134,6 +144,14 @@ class ProgressGlanceTest {
         show(block(), listOf(lift("Bench", 100.0, 105.0)))
         compose.onNodeWithContentDescription("Bench, estimate 100 to 105 kg, +5%", useUnmergedTree = true).assertExists().performClick()
         assertEquals(listOf("Bench"), opened)
+    }
+
+    /** Short names stay on one line, or a block of real muscles pushes Moving off the screen. */
+    @Test
+    fun aLongMuscleNameKeepsToOneLine() {
+        show(listOf(WeekSets(monday, mapOf("Triceps Lateral Head" to 2.0), 2)), emptyList())
+        val row = compose.onNodeWithContentDescription("Triceps Lateral Head, 2 sets, target 8 to 14, under target", useUnmergedTree = true).getBoundsInRoot()
+        assertTrue("The row is ${row.bottom - row.top} tall", row.bottom - row.top <= 32.dp)
     }
 
     @Test

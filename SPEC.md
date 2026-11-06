@@ -1249,22 +1249,25 @@ each planned day with the training day it lands on, and never changes the day:
      isn't cut at large text sizes.
    - **Progress** opens on the training glance (#270), everything on one screen at 115 % text, under the
      next action: the program's next day with **Go to Today**, or **Resume** while a session runs.
-     - **Sets per muscle against targets**: `Sets this week`, `4 of 11 on target`, then the five muscles
+     - **Sets per muscle against targets**: `Sets this week`, `4 of 11 on target`, then the four muscles
        furthest short of their range, each a bar over the band of its range, with the rest on a tap.
-       The range is the one Coach measures with: the training targets', the program's own if it
-       has one, raised or maintenance with a focus. Every muscle trained in the last 8 weeks is
-       listed, at 0 if it hasn't been yet. Being short shows in tone and never in error colour,
-       because midweek most muscles are. A week with no sets shows the latest that has them
+       The muscles are the ones the program trains as a primary muscle, as Coach counts them (with no
+       program, every muscle of the last 8 weeks), and the range is Coach's too: the training
+       targets', the program's own if it has one, raised or maintenance with a focus. A muscle with
+       no sets yet isn't a row of zeros: they share one line of whole names (`No sets yet: Chest ·
+       Front Delts · +5 more`). Being short shows in tone and never in error colour, because midweek
+       most muscles are. A week with no sets shows the latest that has them
        (`Sets last week`), and with none in 8 weeks it says what to aim for.
      - **Weekly sets**: the work sets of each of the last 8 weeks as bars from zero, each set counted
-       once, with the sets on one axis and the weeks on the other. A tap or drag reads a week, the
+       once, with zero and the top on one axis and the first and last weeks on the other. A tap or drag reads a week, the
        muscles above follow it, and chevrons step the same weeks for a screen reader, which also
        gets the chart's summary (`Work sets a week over the last 8 weeks, from 20 to 30, 20 in the
        latest`).
      - **Moving**: the three lifts whose estimate moved most by percent, up or down, in the trend
        colours. A lift moves from its estimate about 4 weeks before its latest (its first, with less
        history), if it moved 1 % or more and was done in the last 4 weeks. An exercise on two
-       machines isn't compared (ADR 0002). A tap opens its trend.
+       machines isn't compared (ADR 0002). Each reads its latest estimate and the percent, and a tap
+       opens its trend.
      - Under the glance come the bodyweight (latest value, its date, a small line of the last 90
        days; a tap opens the log, + logs today's) and every exercise trained, the one done last
        first, with a sparkline of its estimate and the latest value (a machine exercise says "2

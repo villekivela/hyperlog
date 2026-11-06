@@ -925,6 +925,7 @@ private fun App(
             onBack = { screen = Screen.Today },
             standing = standingVolume,
             range = { ProgramVolume.range(program?.program, it, standingVolume) },
+            muscles = program?.let { active -> ProgramVolume.of(active.program, exercises.associateBy { it.id }, standingVolume).map { it.muscle }.toSet() },
             next = program?.next?.day?.let { day ->
                 NextAction(
                     stringResource(if (running != null) R.string.next_resume else R.string.next_open_today),

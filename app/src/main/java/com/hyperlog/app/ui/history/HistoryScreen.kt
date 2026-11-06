@@ -28,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -115,6 +114,8 @@ fun HistoryScreen(
     standing: NumberRange = TrainingTargets().volume,
     /** The weekly sets a muscle is measured against. */
     range: (String) -> NumberRange = { standing },
+    /** The program's own muscles, the ones to measure; null for every muscle trained. */
+    muscles: Set<String>? = null,
     today: LocalDate = LocalDate.now(),
     /** What to do next, at the top of Progress; null when there is nothing to offer. */
     next: NextAction? = null,
@@ -154,7 +155,7 @@ fun HistoryScreen(
         if (tab == 0) {
             SessionList(sessions, onOpenSession, Modifier.padding(padding))
         } else {
-            Progress(weeks, exercises, bodyweights, onOpenExercise, onBodyweight, onLogBodyweight, standing, range, today, next, Modifier.padding(padding))
+            Progress(weeks, exercises, bodyweights, onOpenExercise, onBodyweight, onLogBodyweight, standing, range, muscles, today, next, Modifier.padding(padding))
         }
     }
 }
@@ -169,6 +170,7 @@ private fun Progress(
     onLogBodyweight: (Double) -> Unit,
     standing: NumberRange,
     range: (String) -> NumberRange,
+    muscles: Set<String>?,
     today: LocalDate,
     next: NextAction?,
     modifier: Modifier = Modifier,
@@ -176,7 +178,7 @@ private fun Progress(
     val cs = MaterialTheme.colorScheme
     var logging by rememberSaveable { mutableStateOf(false) }
     var picked by rememberSaveable { mutableStateOf<LocalDate?>(null) }
-    val glance = weeks?.let { trainingGlance(it, exercises.orEmpty(), today, picked, range) }
+    val glance = weeks?.let { trainingGlance(it, exercises.orEmpty(), today, picked, muscles, range) }
     LazyColumn(modifier.fillMaxSize()) {
         next?.let { item { NextCard(it); Spacer(Modifier.height(8.dp)) } }
         glance?.let {

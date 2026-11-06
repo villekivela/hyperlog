@@ -36,6 +36,7 @@ import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.TrendLine
+import com.hyperlog.app.history.WeekSets
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.GripDemand
@@ -69,6 +70,7 @@ import com.hyperlog.app.ui.theme.NextAction
 import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.today.SlotRows
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -329,6 +331,17 @@ class LargeTextTest {
     }
 
     @Test
+    fun aMusclesFigureStaysOnOneLine() {
+        val week = WeekSets(LocalDate.of(2026, 11, 2), mapOf("Rear Delts" to 1.5), 2)
+        atEveryScale({
+            HistoryScreen(
+                emptyList(), listOf(week), emptyList(), emptyList(), tab = 1, onTab = {}, onOpenSession = {}, onOpenExercise = {},
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {}, today = LocalDate.of(2026, 11, 5),
+            )
+        }) { scale -> assertEquals("1.5 splits at $scale", 1, compose.onNodeWithText("1.5", useUnmergedTree = true).layout().lineCount) }
+    }
+
+    @Test
     fun aCoachTilesLabelStaysWhole() {
         val label = "Different gym or none"
         atEveryScale({ TileCard(label, Symbol.History, RoundedCornerShape(8.dp), Modifier.width(180.dp)) {} }) { scale ->
@@ -353,7 +366,7 @@ class LargeTextTest {
             val text = layout.layoutInput.text.text
             (0 until layout.lineCount).forEach {
                 val line = text.substring(layout.getLineStart(it), layout.getLineEnd(it)).trimEnd()
-                assertFalse("`$line` ends mid-set at $scale", line.endsWith("×"))
+                assertFalse("`$line` ends mid-set at $scale", line.endsWith("×") || line.endsWith("back-off"))
             }
         }
     }

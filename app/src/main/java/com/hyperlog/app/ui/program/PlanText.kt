@@ -95,7 +95,7 @@ fun SetSummary(
             if (c.backoff) {
                 symbols["backoff"] = Symbol.SouthEast
                 appendInlineContent("backoff", "back-off")
-                append(" ")
+                append("\u00A0")
             }
             appendRir(parts[i], target = true, chips)
             c.techniques.distinct().forEach { t ->

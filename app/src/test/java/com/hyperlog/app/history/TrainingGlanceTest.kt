@@ -46,6 +46,21 @@ class TrainingGlanceTest {
         assertEquals(listOf("Lats", "Glutes", "Chest", "Quads"), glance.shortFirst.map { it.muscle })
     }
 
+    /** Real weeks count secondaries at a half: listing them all read `0 of 22 on target`. */
+    @Test
+    fun aProgramsOwnMusclesAreTheOnesMeasured() {
+        val weeks = weeks(mapOf("Chest" to 9.0, "Triceps Long Head" to 4.5))
+        val glance = trainingGlance(weeks, emptyList(), today, only = setOf("Chest", "Lats")) { range }
+        assertEquals(listOf("Chest", "Lats"), glance.muscles.map { it.muscle })
+    }
+
+    @Test
+    fun aMuscleWithNoSetsIsApartFromTheRows() {
+        val glance = glance(mapOf("Chest" to 9.0), mapOf("Lats" to 10.0))
+        assertEquals(listOf("Chest"), glance.shortFirst.map { it.muscle })
+        assertEquals(listOf("Lats"), glance.untrained.map { it.muscle })
+    }
+
     @Test
     fun onlyAMuscleWithinItsRangeIsOnTarget() {
         assertEquals(1, glance(mapOf("Chest" to 9.0, "Lats" to 2.0, "Quads" to 15.0)).onTarget)

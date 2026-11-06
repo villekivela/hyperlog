@@ -1,6 +1,7 @@
 package com.hyperlog.app.ui.history
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +33,7 @@ import com.hyperlog.app.history.MovingLift
 import com.hyperlog.app.history.MuscleWeek
 import com.hyperlog.app.history.TrainingGlance
 import com.hyperlog.app.ui.session.Direction
+import com.hyperlog.app.ui.session.SessionPreview
 import com.hyperlog.app.ui.session.color
 import com.hyperlog.app.ui.session.onTargetColor
 import com.hyperlog.app.ui.session.symbol
@@ -44,7 +47,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** The muscles a glance lists before its toggle: enough to read, and the rest of Progress still fits. */
-private const val MusclesShown = 5
+private const val MusclesShown = 4
 
 /** The week's muscles against their ranges, the ones furthest short first. */
 @Composable
@@ -72,15 +75,20 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
     }
     var all by rememberSaveable { mutableStateOf(false) }
     val rows = glance.shortFirst
-    val most = rows.maxOf { maxOf(it.sets, it.range.high.toDouble()) }
+    val most = glance.muscles.maxOf { maxOf(it.sets, it.range.high.toDouble()) }
     (if (all) rows else rows.take(MusclesShown)).forEach { MuscleRow(it, most) }
     if (rows.size > MusclesShown) {
         Text(
             if (all) stringResource(R.string.history_muscles_fewer) else stringResource(R.string.history_muscles_all, rows.size),
-            Modifier.fillMaxWidth().clickable { all = !all }.heightIn(min = 48.dp).padding(horizontal = TextEdge, vertical = 14.dp),
+            Modifier.fillMaxWidth().clickable { all = !all }.heightIn(min = 48.dp).padding(horizontal = TextEdge, vertical = 12.dp),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
         )
+    }
+    if (glance.untrained.isNotEmpty()) {
+        Box(Modifier.padding(horizontal = TextEdge, vertical = 4.dp)) {
+            SessionPreview(glance.untrained.map { it.muscle }, stringResource(R.string.history_no_sets_yet))
+        }
     }
 }
 
@@ -99,14 +107,16 @@ private fun MuscleRow(week: MuscleWeek, most: Double) {
         Modifier.fillMaxWidth().heightIn(min = 28.dp).padding(horizontal = TextEdge).clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(week.muscle, Modifier.weight(0.42f), style = MaterialTheme.typography.bodyMedium)
-        TargetBar(week.sets, week.range.low, week.range.high, most, Modifier.weight(0.58f))
+        Text(week.muscle, Modifier.weight(0.55f), style = MaterialTheme.typography.bodyMedium)
+        TargetBar(week.sets, week.range.low, week.range.high, most, Modifier.weight(0.45f))
         Text(
             formatSets(week.sets),
-            Modifier.padding(start = 8.dp).width(32.dp),
+            Modifier.padding(start = 8.dp).widthIn(min = 32.dp),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.End,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }
@@ -166,7 +176,7 @@ private fun MovingRow(lift: MovingLift, onOpen: (String) -> Unit) {
         Text(lift.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(8.dp))
         Text(
-            stringResource(R.string.history_moving_value, from, to),
+            stringResource(R.string.history_moving_value, to),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -839,8 +839,8 @@
     <string name="history_bodyweight_today">Bodyweight today</string>
     <string name="history_delete_bodyweight">Delete %1$s</string>
     <string name="history_sets_week">Sets this week</string>
-    <string name="history_sets_none">No sets this week</string>
     <string name="history_sets_last_week">Sets last week</string>
+    <string name="history_no_sets_yet">No sets yet:\u0020</string>
     <string name="history_sets_nothing">No sets in the last 8 weeks. Aim for %1$d–%2$d sets a muscle each week.</string>
     <string name="history_on_target">%1$d of %2$d on target</string>
     <string name="history_muscles_all">All %1$d muscles</string>
@@ -855,7 +855,7 @@
     <string name="history_weekly_chart">Work sets a week over the last %1$d weeks, from %2$d to %3$d, %4$d in the latest</string>
     <string name="history_moving">Moving</string>
     <string name="history_moving_none">Lifts that are moving show here after a few sessions.</string>
-    <string name="history_moving_value">%1$s → %2$s kg</string>
+    <string name="history_moving_value">%1$s kg</string>
     <string name="history_moving_description">%1$s, estimate %2$s to %3$s kg, %4$s</string>
     <string name="history_week_earlier">Earlier week</string>
     <string name="history_week_later">Later week</string>
