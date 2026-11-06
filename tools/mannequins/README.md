@@ -236,7 +236,7 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   working arm's.
 - **`grip.restFlat`** `{ palm, fingers }` lays `grip.one`'s resting hand open on what it rests on, a
   thigh, its palm and fingers pointing those ways through the whole rep, whatever `rotate` and `wrist`
-  do to the working hand. Without it the pose's `rotate` and `wrist` turn both hands.
+  do to the working hand. Without it the pose's `rotate` and `wrist` turn both hands. A hand laid flat counts as set in the wrist check.
 - **`grip.joined`** (`free_arms`) holds one thing in both hands, that far either side of the point
   `hand` gives, which isn't mirrored. **`grip.via`** [x, y, z] (`free_arms`) curves the hand through
   that point at the middle of the rep, for a hand riding something that swings on an arc.
@@ -287,11 +287,11 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `row` | hinged over, pulling a bar straight up and down at `bar.z`: a bent-over row, a Pendlay row | `shin`, `thigh`, `trunk`; `bar`, its height at the top and the bottom; `grip.pole` for the elbows. A drag of the hands sets the end's `bar` and `bar.z` |
 | `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared, a light hint the hand on the bar outweighs; `grip.pole` [out, up, forward] points the elbows firmly instead, the bar slanting across the palm to let them; `body.head`, the head's tilt from the spine to rest it on the pad |
 | `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`, `body.head`; `top.over` [out, up] and `bottom.chest` [out, down] from the shoulders in the trunk's frame; `rotate`, `tilt`; `grip.lockout`, `grip.width`, `grip.elbows` |
-| `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
+| `pulldown` | seated under a thigh pad, pulling a bar down, or two `handles` running front to back, palms facing | `trunk`, `bar: [y, z]` |
 | `seated_row` | on a low bench, the feet on two angled plates, pulling a bar or two handles from a low cable | `trunk`; `slide` and `rise`, metres the hips move along the pad and up; `bar: [y, z]`, or `arm`, degrees below level ahead of the shoulders, and `reach`, metres from them, for long arms through a big swing; `feet.stance`, `feet.down`, `feet.kneesOut`; `grip.width` |
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
-| `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
-| `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
+| `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit; `feet.one` (1 the left) puts only that foot on the plate, the other flat on the floor at `feet.rest` [x, z], with `kit.leg_press.foot` ('l' or 'r') the same foot and `kit.leg_press.sits` [y, z] the hips up and forward off the seat's edge; `feet.ball` stands the balls of the feet there, heels off the plate, the ankles turned `heels` degrees from flat, heels up positive, the toes flat |
+| `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width`; `kit.chest_press.pivot` [y, z], `rest` (radians from hanging straight) and `travel` (degrees) move the levers for an incline, the handles rising as they go |
 | `shoulder_press` | seated against a back pad, pressing overhand grips on a yoke that pivots behind it | `yoke`, degrees up from level ahead; `feet.stance`, `feet.z`, `feet.toeOut`; `body.trunk` |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `armOut`, degrees the arm leans out to the side about the shoulder, away from the body whether it is raised or hanging (a Y overhead, a lateral raise), easing from none at an end without one; `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
@@ -400,7 +400,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   lever on a post, its pads over the knees and its handle in the hands;
   `squat_machine` the platform, the rails and a carriage riding them with the hips on it, its
   back pad's face `pad` metres behind the hips and its handles along the grip;
-  `row_machine` a chest pad, `chest` [up, front] from the trunk at the top of the rep;
+  `row_machine` a chest pad, `chest` [up, front] from the trunk at the top of the rep, with `arm`, how far up the levers the handles are, `reach`, the levers' forward stop in degrees, and `horn`, the plate arm's turn from them, for a row from low handles;
   `pulldown_machine` a back pad `pad` metres behind the spine and thigh pads at `thighPad` [y, z],
   hung under their bar; `preacher_curl_machine` an arm pad `pad` metres deep under the upper arms,
   its front edge short of the elbows. The three are plate-loaded: `row_machine` and
@@ -884,9 +884,12 @@ The first batch's traces:
 beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
 colours. A lying lift is seen from the head end, and equipment standing well in front of the body
 (a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.
-Use it for a pull request's screenshots. `node render.mjs --clip <clip> [out-dir] [--at <commit>]`
-renders a baked clip instead, at the top, the middle and the bottom of its rep, as that commit baked
-it.
+`node render.mjs --clip <clip> [out-dir] [--at <commit>]` renders a baked clip instead, at the top,
+the middle and the bottom of its rep, as that commit baked it.
+
+Renders are for a reviewer and stay in the scratchpad, uncommitted. A pull request carries no
+per-exercise screenshots: the owner judges a clip in the studio, and the numbers go in the pull
+request's test table. A PNG stays only if it shows something a test and the studio can't.
 
 ## The studio
 

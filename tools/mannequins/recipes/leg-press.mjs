@@ -26,14 +26,16 @@ export default recipe({
   name: 'leg_press',
   bodies: { sled: prismatic({ axis: SLED, limits: [0, 0.45] }) },
   rep: { joint: 'sled', from: 'max' },
-  contacts: [
-    { body: 'sled', point: 'plate', landmark: 'feet' },
+  // With `foot` ('l' or 'r') only that foot is on the plate.
+  contacts: ({ foot }) => [
+    { body: 'sled', point: 'plate', landmark: 'feet', hand: foot },
     { body: 'frame', point: 'handles', landmark: 'hands' },
     { body: 'frame', point: 'backPad', landmark: 'back' },
   ],
   fit: [{ sets: 'pad', rule: 'the back pad at the spine, the hips deep in the seat', solve: ({ L }) => L.back }],
-  linkage: ({ seat = [0.5, 0.04] }) => ({
-    hip: [seat[0] + 0.12, seat[1] - 0.04],
+  // `sits` [y, z]: the hips from the seat's middle, up and forward with a leg down over its front edge.
+  linkage: ({ seat = [0.5, 0.04], sits = [0.12, -0.04] }) => ({
+    hip: [seat[0] + sits[0], seat[1] + sits[1]],
     at: (value) => ({
       plate: V(0, ...PLATE).addScaledVector(SLED, value), sled: SLED, plateUp: PLATE_UP,
       hand: (s) => V(s * HANDLES_OUT, ...HANDLES),
@@ -65,13 +67,12 @@ export default recipe({
     const braces = [0, 1].map(() => stretchedTube(0.05, M.frame));
     const ties = [0, 1].map(() => stretchedTube(0.06, M.frame));
     // The carriage: a side plate over each rail, riding on two rollers a side, tied across under the
-    // foot plate, which has a lip at its heel.
+    // foot plate, plain to its lower edge so a heel can drop past it.
     const sides = [0, 1].map(() => pad(0.012, 0.14, 0.5, M.frame, V(0, 0, 0), { soft: 0.003 }));
     const rollers = [0, 1, 2, 3].map(() => turnedPart(wheelGeometry(0.035, 0.03), M.pulley, V(0, 0, 0), { solid: false }));
-    const axles = [0, 1].map(() => part(rodGeometry(0.008, 10), M.metal));
+    const axles = [0, 1, 2].map(() => part(rodGeometry(0.008, 10), M.metal));
     const cross = stretchedTube(0.06, M.frame);
     const plate = pad(0.62, 0.04, 0.52, M.frame, V(0, 0, 0), { soft: 0.008 });
-    const lip = pad(0.62, 0.06, 0.03, M.frame, V(0, 0, 0), { soft: 0.006, solid: false });
     const horns = [0, 1].map(() => part(rodGeometry(0.025), M.metal));
     const weights = [0, 1].map(() => part(plateGeometry(0.17, 0.04), M.plate, { solid: true }));
     const collars = [0, 1].map(() => part(rodGeometry(0.034), M.metal));
@@ -81,10 +82,10 @@ export default recipe({
     const support = stretchedTube(0.05, M.frame);
     return {
       parts: [
-        ...parts, ...rails, ...posts, ...uprights, ...braces, ...ties, ...sides, ...rollers, ...axles, cross, plate, lip,
+        ...parts, ...rails, ...posts, ...uprights, ...braces, ...ties, ...sides, ...rollers, ...axles, cross, plate,
         ...horns, ...weights, ...collars, ...handles, ...grips, ...handlePosts, support,
       ],
-      bodies: { sled: [...sides, ...rollers, ...axles, cross, plate, lip, ...horns, ...weights, ...collars] },
+      bodies: { sled: [...sides, ...rollers, ...axles, cross, plate, ...horns, ...weights, ...collars] },
       drive(P, P0) {
         const board = backRest.fit(P0);
         // The back pad's support down from its board to the base's back tie.
@@ -99,8 +100,9 @@ export default recipe({
           span(posts[i], lo.clone().setX(s * 0.24), V(s * 0.3, 0.07, lo.z));
           span(uprights[i], hi.clone().setX(s * 0.24).addScaledVector(along, 0.03), V(s * 0.3, 0.07, hi.z));
           span(braces[i], lo.clone().lerp(hi, 0.45).setX(s * 0.24), V(s * 0.3, 0.07, hi.z - 0.35));
-          const end = i ? hi : lo;
-          span(ties[i], end.clone().setX(-0.27), end.clone().setX(0.27));
+          // Tied across at the head and, clear of a leg coming down by the seat, low on the posts.
+          if (i) span(ties[i], hi.clone().setX(-0.27), hi.clone().setX(0.27));
+          else span(ties[i], V(-0.29, 0.14, lo.z), V(0.29, 0.14, lo.z));
           // The carriage rides the rail: its rollers on the rail's top, its side plate above them.
           const on = P.plate.clone().addScaledVector(up, -0.3 + 0.03 + 0.035).setX(s * 0.24);
           rollers[2 * i].position.copy(on).addScaledVector(along, -0.05);
@@ -116,21 +118,20 @@ export default recipe({
           span(grips[i], h.clone().setZ(h.z - 0.06), h.clone().setZ(h.z + 0.06));
           span(handlePosts[i], h.clone().setZ(h.z - 0.08), V(s * 0.3, 0.07, h.z - 0.08));
         });
-        [-0.05, 0.32].forEach((t, i) => {
-          const c = P.plate.clone().addScaledVector(up, -0.235).addScaledVector(along, t);
-          span(axles[i], c.clone().setX(-0.3), c.clone().setX(0.3));
-        });
+        // The back rollers share an axle behind the plate; the front ones, ahead of its face where a
+        // heel can drop past its lower edge, each have a stub out from the rail.
+        const roller = (t) => P.plate.clone().addScaledVector(up, -0.235).addScaledVector(along, t);
+        span(axles[0], roller(0.32).setX(-0.3), roller(0.32).setX(0.3));
+        [-1, 1].forEach((s, i) => span(axles[i + 1], roller(-0.05).setX(s * 0.21), roller(-0.05).setX(s * 0.3)));
         const mid = P.plate.clone().addScaledVector(along, 0.16).addScaledVector(up, -0.17);
         span(cross, mid.clone().setX(-0.28), mid.clone().setX(0.28));
         // The plate's face is square to the sled: its thickness runs along the sled.
         const q = new THREE.Quaternion().setFromUnitVectors(UP, along.clone().negate());
         plate.position.copy(P.plate).addScaledVector(along, 0.02);
         plate.quaternion.copy(q);
-        lip.position.copy(P.plate).addScaledVector(along, -0.02).addScaledVector(up, -0.245);
-        lip.quaternion.copy(q);
         return {
           joints: { sled: { value: P.linkage.value, origin: P.plate.clone(), axis: along.clone() } },
-          points: { plate: [P.plate.clone()], handles: [-1, 1].map((s) => P.hand(s).clone()), backPad: [backRest.mesh.position.clone()] },
+          points: { plate: [(P.footing ?? P.plate).clone()], handles: [-1, 1].map((s) => P.hand(s).clone()), backPad: [backRest.mesh.position.clone()] },
         };
       },
     };

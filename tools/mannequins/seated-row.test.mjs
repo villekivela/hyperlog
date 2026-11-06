@@ -138,7 +138,7 @@ test('the seated Kelso shrug rocks back from upright on long arms, the blades dr
   // Side-on frames settle this: front-on ones foreshorten the arm and look bent.
   assert.ok(travel > 0.15 && travel < 0.3, `the hands travel ${travel.toFixed(3)}: the rock and the blades, not the arms`);
   const elbows = [0, 0.5, 1].map((d) => { const g = at(d); return bend(g('upperarm_l'), g('lowerarm_l'), g('hand_l')); });
-  assert.ok(Math.min(...elbows) > 148, `the elbows ${elbows.map((e) => e.toFixed(0)).join('/')}: the arms long, a shrug and not a row`);
+  assert.ok(Math.min(...elbows) > 158, `the elbows ${elbows.map((e) => e.toFixed(0)).join('/')}: the arms long, a shrug and not a row`);
 });
 
 test('the seated cable deadlift swings the trunk from over the legs to well back, on long arms', async () => {

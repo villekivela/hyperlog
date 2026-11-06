@@ -519,6 +519,9 @@ export const MOTIONS = {
       ...seatedFeet(e, L),
       bar: V(0, ...s.bar),
       grip: e.grip.width,
+      // Two handles run front to back, where a bar runs across. The hands are up, so with the palms
+      // facing the thumbs point back at the lifter.
+      ...(e.kit.cable_tower?.attachment === 'handles' ? { across: () => V(0, 0, -1) } : {}),
       // The shoulders let up into the stretch at the top, down as the elbows drive down.
       shrug: s.shrug,
       // `elbows` turns the elbows out from the sides: 1 out wide, 0 straight down by the sides.
@@ -587,24 +590,41 @@ export const MOTIONS = {
   /**
    * Seated in a 45° leg press, the back on its pad and the feet on the sled's plate: the sled rides
    * its rails with the joint, and the ankles sit `feet.down` below the plate's centre, on its face.
+   * With `feet.one` (1 the left) only that foot is on the plate, and the other stands flat on the
+   * floor at `feet.rest` [x, z]. With `feet.ball` the balls of the feet stand on the plate there, the
+   * heels off it: the ankles turn `heels` degrees from flat about the balls, heels up positive.
    */
   leg_press(e, s, L) {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
     const { plate, sled, plateUp, hand } = s.linkage;
-    const ankle = plate.clone().addScaledVector(plateUp, -e.feet.down).addScaledVector(sled, -L.ankleY);
+    const turn = rad(e.feet.ball ? s.heels : 0);
+    const toes = plateUp.clone().multiplyScalar(Math.cos(turn)).addScaledVector(sled, Math.sin(turn));
+    const top = sled.clone().multiplyScalar(-Math.cos(turn)).addScaledVector(plateUp, Math.sin(turn));
+    const footing = plate.clone().addScaledVector(plateUp, -e.feet.down);
+    const ball = footing.clone().addScaledVector(sled, -L.ballY);
+    const ankle = e.feet.ball ? ball.clone().addScaledVector(toes, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY)
+      : footing.clone().addScaledVector(sled, -L.ankleY);
     const toeOut = rad(e.feet.toeOut);
+    const rests = (side) => e.feet.one && side !== e.feet.one;
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.55).normalize(),
-      ankles: [-1, 1].map((side) => ankle.clone().addScaledVector(X, side * e.feet.stance)),
-      foot: (side) => ({
-        heading: plateUp.clone().multiplyScalar(Math.cos(toeOut)).addScaledVector(X, side * Math.sin(toeOut)),
-        top: sled.clone().negate(),
+      ankles: [-1, 1].map((side) => (rests(side) ? V(e.feet.rest[0], L.ankleY, e.feet.rest[1]) : ankle.clone().addScaledVector(X, side * e.feet.stance))),
+      foot: (side) => (rests(side) ? { heading: V(side * Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) } : {
+        heading: toes.clone().multiplyScalar(Math.cos(toeOut)).addScaledVector(X, side * Math.sin(toeOut)),
+        top: top.clone(),
       }),
-      kneePole: (side) => plateUp.clone().addScaledVector(X, side * (e.feet.kneesOut ?? 0.35)).normalize(),
-      support: () => ({ point: plate, normal: sled.clone().negate() }),
+      kneePole: (side) => (rests(side) ? V(side * 0.2, 0.3, 1) : plateUp.clone().addScaledVector(X, side * (e.feet.kneesOut ?? 0.35))).normalize(),
+      support: (side) => (rests(side) ? floor : e.feet.ball
+        ? { point: ball.clone().addScaledVector(X, side * e.feet.stance).addScaledVector(top, -L.ballY), normal: top.clone() }
+        : { point: plate, normal: sled.clone().negate() }),
+      // The toes stay flat on the plate as the foot hinges at the ball, and the plate meets the feet there.
+      ...(e.feet.ball ? {
+        offsets: { ball_l: [-s.heels, 0, 0], ball_r: [-s.heels, 0, 0] },
+        footing,
+      } : {}),
       hand,
       across: () => V(0, 0, 1),
       armPole: (side) => V(side, -0.2, -0.5).normalize(),

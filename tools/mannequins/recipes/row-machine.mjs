@@ -19,8 +19,9 @@ const PAD_UP = 0.715;
 
 export default recipe({
   name: 'row_machine',
-  // From the arms straight ahead to the handles back at the ribs.
-  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [rad(73), rad(135)] }) },
+  // From the arms straight ahead to the handles back at the ribs; `reach` is the forward stop, in
+  // degrees, further forward for handles low on the levers.
+  bodies: ({ reach = 73 } = {}) => ({ levers: revolute({ axis: V(-1, 0, 0), limits: [rad(reach), rad(135)] }) }),
   rep: { joint: 'levers', from: 'min' },
   contacts: [
     { body: 'levers', point: 'handles', landmark: 'hands' },
@@ -31,11 +32,12 @@ export default recipe({
     rule: 'the chest on the pad, the arms long to the handles',
     solve: ({ L }) => [PAD_UP * L.trunkUp, L.chest],
   }],
-  linkage: ({ seat = [0.5, 0] }) => ({ hip: [seat[0] + 0.09, seat[1]], at: swungHandles(PIVOT, ARM, HANDLES_OUT) }),
-  build({ seat = [0.5, 0], chest: [padUp, padFront] = [0.4, 0.1] } = {}, M) {
+  // `arm`: how far up the levers the handles are, lower for a row from the arms reaching down.
+  linkage: ({ seat = [0.5, 0], arm = ARM }) => ({ hip: [seat[0] + 0.09, seat[1]], at: swungHandles(PIVOT, arm, HANDLES_OUT) }),
+  build({ seat = [0.5, 0], chest: [padUp, padFront] = [0.4, 0.1], horn = -100 } = {}, M) {
     const out = 0.33;
     const pad_ = chestPad(M, { up: padUp, front: padFront });
-    const arms = levers(M, { out, horn: { length: 0.45, turn: -100 } });
+    const arms = levers(M, { out, horn: { length: 0.45, turn: horn } });
     const column = stretchedTube(0.08, M.frame);
     const housing = stretchedTube(0.06, M.frame);
     const axle = part(rodGeometry(0.02), M.metal);
