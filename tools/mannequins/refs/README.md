@@ -106,8 +106,9 @@ gaps says why):
 - `glute_ham_raise` (built, #230): the pad width and the mannequin's pad-to-plate distance are chosen; pad sizes
   are good to about 10%. The base's rails, crossmembers, uprights and the pad plate are read from the
   photos (no dimension is published but the footprint and two heights).
-- `crunch_machine`: the axis's place along the body is by eye and the handle spacing is chosen. The
-  recipe is Hammer Strength's reclined crunch; the technique video shows an upright one.
+- `crunch_machine` (built and posed, #233): the axis's place along the body is by eye and the handle spacing is chosen. The
+  recipe is Hammer Strength's reclined crunch; the technique video shows an upright one. The recipe's
+  front frame is a kinked post where the photo's is curved, and the stack stands beside the seat on the cam's side, turned 90° (the owner's layout).
 - `trap_bar`: the lockout height is chosen from the mannequin's arm; the frame's plan comes from one
   corner photo, mirrored. The kit is closed at the rear, as the TB-1's page shows, and has no brackets or
   jack: the handles are braced straight to the corners.
