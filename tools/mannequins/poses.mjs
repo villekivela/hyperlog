@@ -148,6 +148,19 @@ export const POSES = {
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 
+  // Seated against the pad, 10° back, the neutral grips pressed from shoulder level to the arms near straight overhead.
+  machine_shoulder_press: {
+    equipment: 'machine',
+    motion: 'shoulder_press',
+    kit: { shoulder_press: {} },
+    body: { trunk: -18 },
+    feet: { stance: 0.17, z: 0.42, toeOut: 12 },
+    // The bar sits at the base of the fingers and at the bottom, where the hands are close to the shoulders, the wrist flexes 12° toward the bar so the fingers close round its front; at the top the wrist is straight.
+    grip: { sits: 'base' },
+    bottom: { wrist: [-12, 0] },
+    camera: { target: [-0.1, 0.98, 0.1], halfHeight: 1.2, azimuth: 56, elevation: 12 },
+  },
+
   // Seated against the carriage's back pad, the feet on its plates, the hands on the grips: the
   // arms from straight down at the hips (the top) to the handles at the lower chest (the bottom),
   // the carriage rocking back with them.
@@ -298,6 +311,20 @@ export const POSES = {
     bottom: { lever: 4.8, offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
     grip: { pole: [0.7, 0.1, -1] },
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
+  },
+
+  // Lying back on the crunch machine's seat, the ankles hooked between its rollers and the hands on
+  // the handles by the head: from the back on the pad, the arm at rest, the shoulders curl up toward
+  // the knees through the arm's 40°.
+  machine_crunch: {
+    equipment: 'machine',
+    motion: 'reclined_crunch',
+    kit: { crunch_machine: {} },
+    feet: { stance: 0.1, toeOut: 0 },
+    // The fists close on the grips with the palms turned 180° about the forearm from an overhand hold, the thumb wrapped.
+    grip: { rotate: 180, swing: 48 },
+    camera: { target: [-0.12, 0.7, 0.12], halfHeight: 1.1, azimuth: 58, elevation: 11 },
+    shadow: { size: [1.2, 2.0], at: [0, 0.2] },
   },
 
   // Seated, the upper back on the carriage's pads and the belt over the hips, the feet flat on the

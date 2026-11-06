@@ -37,7 +37,13 @@ configuration, iOS, web, any server.
   Sessions | Progress and Program's blocks (the owner on #138, replacing #58's white card in light). Tertiary follows primary;
   secondary and tertiaryContainer (advice cards, technique pills) are greys of their own step. The
   RIR, progression, plate and error colours stay fixed; a coloured accent would have to keep 30° of
-  hue from each of them, and a neutral one never competes. Light and dark follow the system
+  hue from each of them, and a neutral one never competes. **Technique colours** are the exception
+  (owner, #248): the technique's circle holds an icon and the RIR chip a number, so they don't keep
+  the 30° rule and red and teal may share hues with the chip. Red for a drop set, teal for
+  lengthened partials, violet for myo-reps, orange for to failure, blue for an iso hold; darker in
+  light, lighter in dark, each at 3:1 on every neutral surface (`TechniqueColourTest`). The colour
+  shows wherever the technique's icon does: its set's index circle, the tall pill joining its drops
+  or mini-sets, the Program plan text, the set sheet's list and the pad's strip. Light and dark follow the system
   setting; there is no in-app theme picker. **On the accent** (a primaryContainer card or strip:
   the hero, the gym's setup card, Claude's reply, Day done), a filled button or a picked choice is
   onPrimaryContainer with the card's accent for its words, as the hero's Start, and the choices not
@@ -301,7 +307,7 @@ logging, and computed loads where it needs them.
   mini-set row shows the first one's target; the pad reads "Mini-set N". There is no `+` on a myo
   pill. Programs and stored sets that still carry `maxMiniSets` load, and it is ignored.
 - **Iso hold**: the hold follows the set's full reps as its own sub-row. **Start** on the pad's
-  strip runs a hold timer in the header pill, filling toward the target and buzzing when it is
+  strip runs a hold timer on the Next row, filling toward the target and buzzing when it is
   reached; ✓ (or Stop) records the whole seconds held. Seconds can be typed instead.
 - **Lengthened partials**: the first ✓ moves to partials entry, prefilled with the target count if
   the program gives one; the second ✓ logs.
@@ -839,20 +845,29 @@ each planned day with the training day it lands on, and never changes the day:
      logged, so takebacks stay in order, nor as a double tap within a second of logging it);
      earlier rows are fixed by tapping the row. The check of a drop, mini-set or hold being done logs it as shown.
    - **The index column** shows `W` for a warm-up and the set number for a work set, on a circle.
-     A set with a technique (drop set, myo-reps, lengthened partials, to failure, rest-pause) has
-     a tinted circle with the technique's Material Symbol as a small badge on its corner, so it
-     reads without colour. A back-off set has no mark: its lowered weight shows it. A set's drops
-     or mini-sets join it in one tall pill down the index column, with `+` at a drop
+     A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to failure) has
+     no number: its circle is the technique's colour (Palette → Technique colours) with the
+     technique's Material Symbol filling it, so it reads without colour too. Nothing else is added
+     to the row: no words, no badge. A back-off set has no mark: its lowered weight shows it. A set's drops
+     or mini-sets join it in one tall pill of its colour down the index column, with `+` at a drop
      set's foot to add another drop, before the set or while it is under way. Before a myo-reps set,
      one muted planned mini-set row shows in its pill; myo-reps have no `+` and no maximum. A tap on a circle explains
      the technique and opens the set's sheet.
    - **The active row has no highlight.** The row being done (a set, a drop, a mini-set, a hold,
      a warm-up on the pad or a row being corrected) sits flat like the others; its kg and reps
-     are outlined cells, the focused one outlined in primary. A set's index circle is filled with
-     primary while it is being done, and stays so through its drops or mini-sets, so a
-     technique's tall pill is never cut by a row shape.
+     are outlined cells, the focused one outlined in primary. A plain set's index circle is filled with
+     primary while it is being done; a technique set's keeps its colour, through its drops or
+     mini-sets too, so a technique's tall pill is never cut by a row shape.
    - **Rest timer** that keeps running with the screen off: ongoing notification, and vibration
      when rest ends (no sound unless it's turned on in the system's settings).
+     - **The Next row is the session's clock** (owner, 2026-11-05): the header has no timer. During
+       rest the whole row drains from full to empty with the time left in large digits, and the set
+       table stays visible, with the pad shown or hidden. A tap on the digits opens the rest sheet
+       (−15, +15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
+       is muted and counts up in large digits (`+0:12`) until the next set is logged, and the phone
+       still vibrates when rest ends. The myo breathing countdown and the iso hold use the same
+       row; the hold fills toward its target instead of draining. The lock screen notification and
+       the rest rules don't change.
    - **Plate calculator** for barbell and plate-loaded exercises.
      - Barbell exercises use the gym's plates; machines whose ladder is plates use the gym's too,
        or their own pairs if they have them. While
@@ -884,7 +899,7 @@ each planned day with the training day it lands on, and never changes the day:
    - **Layout and interaction** follow `docs/design/logging-screen.md`: one exercise at a time as
      set rows (index, last time, kg, reps, RIR, check) flat on the screen with no card behind them,
      techniques and their planned drops/mini-sets visible before the set, and a compact in-app pad
-     drawn like the system number keyboard. The top is the exercise name with the rest pill and ⋮,
+     drawn like the system number keyboard. The top is the exercise name with ⋮,
      the swap or superset chip, and the why-line. **Next** is the pad's top row, on the pad's
      surface, and stays at the bottom as the same row when the pad is hidden.
    - **Rest rules**: no rest before drops, between myo mini-sets (a short breathing countdown
@@ -1236,7 +1251,8 @@ each planned day with the training day it lands on, and never changes the day:
      (a line) with each session's top set weight (dots), and the sessions as a table (date, top
      set, estimate), newest first; a row opens that session. A tap or drag on the chart reads the
      nearest session above it. Machines and cables get one chart per machine, headed
-     `Cable left · Harbour`, the machine used last first, each on its own scale (ADR 0002).
+     `Cable left · Harbour`, the machine used last first, each on its own scale (ADR 0002), and
+     each section set apart from the one above by a 24 dp gap (the owner's call, 2026-11-06).
      - The top set is the session's heaviest work set that counts (a kept weight nothing confirmed
        doesn't), with the most reps at that weight.
      - The estimate after a session is the estimate as suggestions read it then: the last 12
@@ -1677,6 +1693,18 @@ gallery (Technique videos).
       tops toward the back (the ref's choice, the page not saying), its value the metres moved up
       them from 250 mm above the floor (the lowest stop is at 290 mm). Its carriages are fixed on the bar, since a joint turning them would be left behind by a scrub along the rods; its hooks rest on a notch with no pose and stand turned 90° up off the teeth for a lift, as far as clears them, the wrists' turn with no joint of its own. A fit rule picks the notch it hangs on and the one its safety stops
       lie on, and the bar can go no lower than the stops. Its nine lifts are posed (#241): the bar can only ride the rods, so each lift solves its body against their line, the feet a little ahead of the bar in a squat, the hips going back in an RDL. A lift on a bench moves the whole machine along to bring the rods over the chest; the incline and seated presses, baked at each of the bench's angles, move it with the angle. Each lift's stops lie on the notch just below its bottom, and the hooks stand turned up off the teeth. The frame was rebuilt from the photos: side-on an A, the front upright leaning back with its toothed plate and then the rod behind it, the rear one leaning forward at the beam's end and sweeping over the top into the front one, with a gusset under the rear crossbar.
+    - **The shoulder press** (#225) is a machine-first exercise (`machine_shoulder_press`, the `shoulder-press`
+      batch): the lifter sits on the seat, the back on the pad, the feet on the floor, both hands closed on
+      the overhand grips (palms forward, wrists straight), a level bar a side across the machine, which the yoke carries from level with the shoulders to the arms near straight
+      overhead. The yoke is one body on a revolute joint about the bearings behind the back pad, 980 mm up,
+      its value the angle up from level ahead: 0° at the bottom of the rep (the grips 700 apart on a 900 mm
+      arm) to 40° at the top (580 mm higher, about 200 mm further back). It lifts its stack, which stands
+      beside the lifter, on their right, its front level with the grips (the demo's front view). The seat is
+      the one adjustment (`seat`, its top in metres), solved from the mannequin so the shoulders are level
+      with the grips at the bottom, held to the ref's range of 330 to 500 mm; the pad follows the spine. The
+      kit stands 1.52 m deep, 1.63 m tall and 1.42 m across, a closed tower with a rounded header, a Y yoke of
+      flat arms ending in curved hook grips. It was built from where the ref's photos put each part, and
+      reviewed against them by a reviewer who had not seen how it was built, until it found nothing that matters.
     - **The shrug machine's levers** (#223) are one body on a revolute joint about the axle at the top
       of the rear uprights, 600 mm up and 760 mm behind the grips, its value the angle up from level
       ahead: 7.5° on the stop (the grips 700 mm up) to 26.3° at the top of a shrug (940 mm up).
@@ -1722,7 +1750,7 @@ gallery (Technique videos).
     library, posed or not, grouped by equipment, and every kit; a kit is shown alone, as the
     exercise that gives it the most joints sets it up (the first by id of those, #159), each joint
     scrubbed through its limits. A machine no pose uses yet is shown alone as its recipe stands
-    with no body, its levers at rest (#176): the shrug machine (#223, two levers on one joint, the seat its one option), the hip machine (#214, one machine for abduction and adduction: two arms on one vertical axle, a start angle in 10° steps), the hyperextension bench (#220, the rigid 45° bench of the 45° hyperextension), the EZ bar (#209, a zigzag curl bar the hands carry, for the 3 EZ bar exercises, lying on the floor) and the safety squat bar (#219, the bar of the safety bar squat and the safety bar good morning, unloaded, hung as in a rack unless a roll is set, nothing on it moving), the pec deck (#208, the machine of the pec deck and the two reverse pec decks, each arm on its own joint about a vertical axis) and the trap bar (#234, the bar of the trap bar deadlift: a closed hexagonal frame of 38 mm tube with two parallel handles, low or high, on 450 mm plates, nothing on it moving; serve it with `npm run studio` and open `trap bar` under Kits), until they are posed. The power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving) was too, until its poses came (#196). The cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) is posed (#197), body-first, in two batches: first the lifts stood with the back to the towers or beside one, a handle in the hand, then those facing a tower, kneeling, seated or with a leg off the floor, on a rope, a bar or a cuff. Its carriages stand at the holes its ref gives, and a raise's cable passes the side of the body that lift names: in front for the high lateral and Y raises, behind for the behind-the-back raise. The high lateral raise and the low-to-high press are one-armed. The captain's chair is posed (#237): the roman chair crunch, a knee raise with the forearms on the arm pads, the hands closed on the grips, the back to the back pad and the legs swinging free from hanging to the knees above the hips, in a review batch of its own. The hip thrust machine is built and posed (#229): the machine hip thrust on a low seat, the back on fixed pads, a belt over the hips on a carriage that turns 23° about a pivot behind the lifter, the feet flat on a tilted platform and the hands on handles by the hips, the glutes on the seat at the bottom and the thighs level at the top. The lateral raise machine's seated raise is posed (#212, #241), its kit rebuilt from its reference first: the tower moved out of the right arm's path to the far end of the base, and one post between the legs carrying the seat, the chest pad and the pivots. Its grips are fixed to the arms and turn with them, the hand and wrist following (owner, 2026-11-05). The standing machine lateral raise stays unposed: its video shows another, standing machine, which has no kit. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. The seated dip machine is posed (#226), machine-first: the user sits against its tall back pad with the feet on its plates and the wrists straight on the grips, the arms going from the handles at the lower chest (the bottom) to straight down at the hips (the top) in 1 s, back up in 2, while the carriage rocks the seat, pad and plates back 12° with them. A change to a recipe, a part or `poses.mjs` on disk reloads the The glute-ham developer (#230, the machine of the glute-ham raise: hip pads, a sliding ankle assembly with four rollers and a foot plate, all of 2 by 3 in steel) is a static machine, with nothing on it moving: its linkage is one place for the knees on the pads' crest, the ankles in the roller gap and the soles on the plate, and its fit rule picks the hole the ankle assembly pins at from the mannequin's shin. The glute-ham raise is posed on it (static machines are solved the same way as the rest, once): the body lowers about the knees from upright to about 12° above level, the hips straight, the thighs lying on the crest at the bottom, the hands hanging and then resting on the handles' ends.
+    with no body, its levers at rest (#176): the shrug machine (#223, two levers on one joint, the seat its one option), the hip machine (#214, one machine for abduction and adduction: two arms on one vertical axle, a start angle in 10° steps), the hyperextension bench (#220, the rigid 45° bench of the 45° hyperextension), the EZ bar (#209, a zigzag curl bar the hands carry, for the 3 EZ bar exercises, lying on the floor) and the safety squat bar (#219, the bar of the safety bar squat and the safety bar good morning, unloaded, hung as in a rack unless a roll is set, nothing on it moving), the pec deck (#208, the machine of the pec deck and the two reverse pec decks, each arm on its own joint about a vertical axis) and the trap bar (#234, the bar of the trap bar deadlift: a closed hexagonal frame of 38 mm tube with two parallel handles, low or high, on 450 mm plates, nothing on it moving; serve it with `npm run studio` and open `trap bar` under Kits), until they are posed. The power rack (#189, the rack the 16 pull-up, chin-up, hang and dip exercises bolt a bar and dip handles to as add-ons, nothing on it moving) was too, until its poses came (#196). The cable crossover (#181, the machine of the free-handle cable exercises not yet posed on a column or a tower) is posed (#197), body-first, in two batches: first the lifts stood with the back to the towers or beside one, a handle in the hand, then those facing a tower, kneeling, seated or with a leg off the floor, on a rope, a bar or a cuff. Its carriages stand at the holes its ref gives, and a raise's cable passes the side of the body that lift names: in front for the high lateral and Y raises, behind for the behind-the-back raise. The high lateral raise and the low-to-high press are one-armed. The captain's chair is posed (#237): the roman chair crunch, a knee raise with the forearms on the arm pads, the hands closed on the grips, the back to the back pad and the legs swinging free from hanging to the knees above the hips, in a review batch of its own. The hip thrust machine is built and posed (#229): the machine hip thrust on a low seat, the back on fixed pads, a belt over the hips on a carriage that turns 23° about a pivot behind the lifter, the feet flat on a tilted platform and the hands on handles by the hips, the glutes on the seat at the bottom and the thighs level at the top. The lateral raise machine's seated raise is posed (#212, #241), its kit rebuilt from its reference first: the tower moved out of the right arm's path to the far end of the base, and one post between the legs carrying the seat, the chest pad and the pivots. Its grips are fixed to the arms and turn with them, the hand and wrist following (owner, 2026-11-05). The standing machine lateral raise stays unposed: its video shows another, standing machine, which has no kit. The T-bar row machine is posed (#188): the chest-supported T-bar row on its neutral grips, the T-bar row and the Kelso shrug on its wide ones, overhand. The Kelso's lever turns 7.8° against the row's 23°, the arms long and the shoulder blades doing the work, with a second's hold at the squeeze. The crunch machine is posed (#233): Machine Crunch, lying face up with the hips on a seat inclined 15°, the ankles hooked between two pairs of rollers and the hands on two vertical handles, the shoulders curling 40° with the back pad's arm toward the knees. The machine has nothing to adjust, so no fit rule, and its arm and cam stand on one side, outside the hips, so nothing crosses the body. Its weight stack stands beside the seat on the cam's side, turned 90° (owner, 2026-11-05). The seated dip machine is posed (#226), machine-first: the user sits against its tall back pad with the feet on its plates and the wrists straight on the grips, the arms going from the handles at the lower chest (the bottom) to straight down at the hips (the top) in 1 s, back up in 2, while the carriage rocks the seat, pad and plates back 12° with them. A change to a recipe, a part or `poses.mjs` on disk reloads the The glute-ham developer (#230, the machine of the glute-ham raise: hip pads, a sliding ankle assembly with four rollers and a foot plate, all of 2 by 3 in steel) is a static machine, with nothing on it moving: its linkage is one place for the knees on the pads' crest, the ankles in the roller gap and the soles on the plate, and its fit rule picks the hole the ankle assembly pins at from the mannequin's shin. The glute-ham raise is posed on it (static machines are solved the same way as the rest, once): the body lowers about the knees from upright to about 12° above level, the hips straight, the thighs lying on the crest at the bottom, the hands hanging and then resting on the handles' ends.
     stage on the item it was showing.
     - **It loads what's active first** (owner, 2026-11-04, #187): the list and the item on stage
       show within a few seconds. The item on stage is checked first, then every other pose one at a

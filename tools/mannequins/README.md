@@ -285,6 +285,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
+| `shoulder_press` | seated against a back pad, pressing overhand grips on a yoke that pivots behind it | `yoke`, degrees up from level ahead; `feet.stance`, `feet.z`, `feet.toeOut`; `body.trunk` |
 | `arms` | the arms swinging side-on, standing or seated (`body.hip`): a curl, a preacher curl, an extension overhead | `upperArm`, `forearm` (on a machine, its `lever` in place of `forearm`: the bar is the machine's) (an angle past 180 swings the forearm on over the top, behind the head); `armOut`, degrees the arm leans out to the side about the shoulder, away from the body whether it is raised or hanging (a Y overhead, a lateral raise), easing from none at an end without one; `grip.width`; `grip.one` (1 the left hand) with `grip.rest` [x, y, z] for the other; `grip.pole` [out, up, forward], where the elbows point; `feet.stagger` stands the left foot that far ahead of the right (behind, if negative); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
@@ -293,6 +294,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `rods_press` | a bar pressed on a smith machine's rods from an adjustable bench: the body as `dumbbell_press` lays it, the bar along their line | `press`, 0 at the top and 1 at the bottom; `bottom.chest`, where the bar comes down to; `grip.width`, `grip.lockout`, `grip.elbows`; the entry's `perAngle` places the machine and its stops (`kit.smith_machine.z`, `.stops`) |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
+| `reclined_crunch` | lying face up on a machine's inclined seat, the back on the pad its arm carries, the knees high and the ankles hooked between its rollers, the hands on the handles by the head: a machine crunch | `arm`, degrees of curl from rest; `feet.stance`, `feet.toeOut`, `feet.dorsi` (degrees the toes lift toward the knee, 20), `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
 | `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
 | `support` | resting on the rack's dip handles by the hands, the feet off the floor: a dip | `kit.power_rack.handles`; `sink`, metres the shoulders drop from locked arms over the grips; `over`, metres ahead of them; `trunk`, `shrug`; `thigh` swings the knee forward of the hip and `shin` the knee forward of the ankle, as standing; `feet.stance`; `feet.point`, degrees the feet turn down from square to the shin; `feet.kneesOut`; `body.look`, how far the head tips from the trunk toward the chest; `grip.pole` |
@@ -335,14 +337,14 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `row_machine` | Machine Row, Chest-Supported Machine Row | `row_machine` |
 | `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
 | `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
-| `shoulder_press` | Machine Shoulder Press | missing |
+| `shoulder_press` | Machine Shoulder Press | `shoulder_press` |
 | `lateral_raise_machine` | Seated and Standing Machine Lateral Raise | `lateral_raise_machine` (seated posed, #241; standing has no kit) |
 | `preacher_curl_machine` | Machine Preacher Curl | `preacher_curl_machine` |
 | `dip_machine` | Seated Machine Dip | `dip_machine` |
 | `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` |
 | `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
-| `crunch_machine` | Machine Crunch | missing |
+| `crunch_machine` | Machine Crunch | `crunch_machine` |
 | `shrug_machine` | Machine Shrug | `shrug_machine` |
 
 - `bench` stands at `at` [x, z], where a pose needs it elsewhere: its node moves, so its parts stay
@@ -534,6 +536,43 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   height. Options: `shaft`, the shaft's height (1.50 m), and `roll`, the degrees it is rolled forward
   about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
   (the shoulders).
+- `crunch_machine` (#233, a machine kind; `machine_crunch` is posed on it) stands where its ref puts it,
+  whatever the pose, with nothing to fit: the ref's machine has no adjustment, so it declares no fit
+  rule. The mannequin lies face up with its head toward -z, so the machine's head end is -z and its
+  feet end, with the rollers and the stack, +z. A seat pad 600 mm long inclined 15°, rising toward the
+  head to 530 mm up, on two posts and a diagonal; a back pad level at rest 660 mm up on an arm that
+  turns about a cam axis 780 mm up, its hub 270 mm out to the left of the middle, outside the hips, so
+  the arm reaches in under the pad from one side and nothing crosses the body; a head pad 50 mm above
+  the pad's far end, two vertical handles 400 mm apart, a cam disc outside the upright and its cable
+  to a 12-plate stack at the feet end; and two pairs of foot rollers, at 360 and 600 mm, on a kinked
+  post at the front. The arm is one body on a revolute joint, its value the degrees of curl from
+  rest (0 to 40°); the stack rises 190 mm a radian of it. Its contacts tie the hands to the handles,
+  the upper back (`back`) to the back pad, the hips (`hips`, the pelvis: a landmark added for it)
+  to the seat's high end and the feet between the rollers. The pad puts the trunk: the hips lie on the
+  seat, and the shoulders on the pad, sliding along it as it turns. It departs from the ref: the
+  front frame is a kinked post, not the photo's curve, the stack and its frame are the library's
+  generic ones (twelve 26 cm plates, 76 mm tubes), the stack stands beside the seat on the cam's side
+  (owner's layout), its column 560 mm toward the feet from the axis and turned 90° so the plates' broad face looks out, and the
+  cam's cable runs in the cam's plane, outside the guide rods, from its top wheel to the cam's rim. The
+  pose is `machine_crunch`, motion `reclined_crunch`: `npm run studio`, `Machine Crunch`; the kit
+  alone is `crunch machine` under kits.
+- `shoulder_press` (#225, the machine kind of `machine_shoulder_press`, posed with the `shoulder_press`
+- `shoulder_press` (#225, the machine kind of `machine_shoulder_press`, posed with the `shoulder_press`
+  motion in the `shoulder-press` batch) has a seat solved for the mannequin (about 0.4 m: the shoulders
+  level with the grips at the bottom of the rep) and held to its range of 330 to 500 mm, against a back pad
+  that follows the spine, on a short post from the seat's rear. Two bearing posts behind the pad carry the
+  yoke 980 mm up, each braced by a rake leg down and forward to the seat's front; side rails run on to a
+  front foot, the whole 1.52 m deep. The yoke is a Y: a flat beam behind the pad angled forward at each end,
+  then a flat arm (70 by 120 mm) a side straight ahead, one body on a revolute joint about the bearings,
+  its value the angle up from level ahead of the line to the grips: 0° at the bottom of the rep, the grips
+  980 mm up and 700 apart, 900 mm ahead of the pivot, to 40° at the top, 580 mm higher and about 200 mm
+  further back. Each arm ends in one level bar across the machine (overhand, palms forward, wrists straight) butting the arm's inner face, the grip set at the pose (the bar at the base of the fingers, the wrist
+  12° flexed at the bottom); the contact ties the hands to the grips, and the back to the pad. A crank behind the pivot draws a
+  cable under the floor to the stack, in a closed tower 1.63 m tall (panels each side and behind, a rounded
+  header over a placard) beside the lifter, on their right, its front level with the grips; the stack
+  rises with the yoke. Options: `seat`, the seat's top, and `pad`, how far behind the spine the pad's face
+  stands, each solved for the mannequin. In the studio, `npm run studio`, open `Machine Shoulder Press`
+  to see the pose, or `shoulder press` under Kits for the machine alone, and scrub the yoke.
 - `shrug_machine` (#223, the machine kind of `machine_shrug`, not yet posed, so no clip changes) stands
   where its ref puts it, whatever the pose: a rear cross beam and two side beams 1.02 m deep on the
   floor, a post at each end carrying the levers' axle 600 mm up, a back pad topping out at 1.24 m
@@ -817,7 +856,7 @@ The first batch's traces:
 
 ## Rendering a pose
 
-`node render.mjs <id> [out-dir]` writes `<id>-side.png` and `<id>-front.png`, the top of the rep
+`node render.mjs <id> [out-dir]` writes `<id>-side.png` and `<id>-front.png` (`--view threeQuarter` the whole machine from the front left, as a product photo), the top of the rep
 beside its bottom, without a GPU: a flat-shaded software rasteriser, orthographic, in the clay
 colours. A lying lift is seen from the head end, and equipment standing well in front of the body
 (a cable tower's column) is cut away. It shows the pose and its equipment, not the phone's lighting.

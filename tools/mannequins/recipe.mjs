@@ -9,8 +9,8 @@
 //   limits, and a revolute joint's `settings` where holes set it. A joint's value is in radians or metres from where its recipe measures it: from its
 //   rest where it raises a stack, or a lever's angle up from level ahead.
 // - `contacts`: where a body, or the fixed `frame`, ties to the mannequin, the point and the
-//   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `knees` (a thigh's lower end and the shin's top), `shoulders`, `chest`, `back`, `upperArms` or
-//   `forearms`), `hand` (`l` or `r`) where one arm's grip holds one hand, and `optional` where a pose
+//   landmark it meets (`hands`, `feet`, `shins`, `thighs`, `knees` (a thigh's lower end and the shin's top), `shoulders`, `chest`, `back`, `upperArms`, `forearms` or
+//   `hips`), `hand` (`l` or `r`) where one arm's grip holds one hand, and `optional` where a pose
 //   may use it or not, so nothing is held to it.
 // - `stacks`: each weight stack and the joint whose travel raises it, by a ratio (metres a
 //   radian, or a metre).
@@ -56,7 +56,7 @@ export const free = () => ({ type: 'free' });
 export const HELD = 0.06;
 
 /** The mannequin's landmarks a contact can tie a body to. */
-export const LANDMARKS = ['hands', 'feet', 'shins', 'thighs', 'knees', 'shoulders', 'chest', 'back', 'upperArms', 'forearms'];
+export const LANDMARKS = ['hands', 'feet', 'shins', 'thighs', 'knees', 'shoulders', 'chest', 'back', 'upperArms', 'forearms', 'hips'];
 
 /** A declaration that may be a function of the kit's options, for `options`. */
 export const forOptions = (v, options) => (typeof v === 'function' ? v(options) : v);

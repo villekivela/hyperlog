@@ -29,6 +29,8 @@ internal val SubCellHeight = 40.dp
 /** The index column: `W` or the set number on a [IndexSize] circle. */
 internal val ColIndex = 40.dp
 internal val IndexSize = 32.dp
+/** A technique's symbol on its index circle: it fills the circle. */
+internal val IndexIcon = 24.dp
 /** Kept for the prescription sheet's set numbers. */
 internal val ColSet = 32.dp
 // kg and Reps cells sit [CellInset] inside their columns, so a focused cell keeps 8 dp from its
