@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, checkStage } from './checks.mjs';
-import { skinInto } from './skin-into.mjs';
+import { skinInto } from './skin.fixture.mjs';
 import { BATCHES } from './review.mjs';
 import { V, heldAt, wpos } from './rig.mjs';
 

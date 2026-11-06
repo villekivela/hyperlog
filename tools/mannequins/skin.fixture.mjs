@@ -9,8 +9,8 @@ import { bodyVertices } from './checks.mjs';
  * How far the skin of bones `part` goes into the skin of the leg on side `k`, at the worst frame:
  * negative is the gap left between them. A vertex is inside where it lies behind the nearest triangle's face.
  */
-export const skinInto = async (id, k, part, poses) => {
-  const stage = await buildStage(prepare(id, poses));
+export const skinInto = async (id, k, part) => {
+  const stage = await buildStage(prepare(id));
   const vertices = bodyVertices(stage.rig);
   const starts = new Map();
   vertices.forEach((v, i) => { if (!starts.has(v.mesh)) starts.set(v.mesh, i); });

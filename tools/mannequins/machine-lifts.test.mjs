@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage, FRAMES } from './stage.mjs';
 import { CHECKS, bodyVertices, checkStage } from './checks.mjs';
-import { skinInto } from './skin-into.mjs';
+import { skinInto } from './skin.fixture.mjs';
 import { wpos } from './rig.mjs';
 
 const posed = async (id) => {
@@ -49,6 +49,11 @@ test('the 1-leg leg press drives one foot on the plate, the other flat on the fl
   const [top, bottom] = [at(0)('foot_l').clone(), at(1)('foot_l').clone()];
   assert.ok(top.distanceTo(bottom) > 0.2, `the plate foot travels ${top.distanceTo(bottom).toFixed(3)}`);
   assert.ok(top.y > 0.8, `the plate foot ${top.y.toFixed(3)} up`);
+  // High and wide, as its note says: above where the two-legged press stands, as far as the toes
+  // stay on the plate, and further out.
+  const [one, two] = [prepare('single_leg_leg_press').feet, prepare('leg_press').feet];
+  assert.ok(one.down < two.down - 0.03, `the foot ${one.down} below the plate's centre, the leg press's ${two.down}`);
+  assert.ok(one.stance > two.stance + 0.04, `the foot ${one.stance} out, the leg press's ${two.stance}`);
   const g = at(0);
   const knee = bend(g('thigh_l'), g('calf_l'), g('foot_l'));
   assert.ok(knee < 165, `the working knee ${knee.toFixed(0)}° at the top, short of lockout`);
@@ -107,8 +112,8 @@ test('the leg press calf press rolls the ankles on the balls of the feet, the kn
     const P = stage.pose(d);
     stage.scene.updateMatrixWorld(true);
     const under = skin.filter((p) => {
-      const at_ = p.clone().sub(P.plate);
-      return at_.dot(P.sled) > 0.005 && at_.dot(P.plateUp) > -0.26;
+      const off = p.clone().sub(P.plate);
+      return off.dot(P.sled) > 0.005 && off.dot(P.plateUp) > -0.26;
     });
     assert.equal(under.length, 0, `${under.length} of the sole's vertices in the plate at ${d}`);
   }
@@ -140,10 +145,10 @@ test('the incline machine press drives the hands up and forward, square to a tru
   assert.ok(elbow > 145, `the elbow ${elbow.toFixed(0)}° at the top: the press finishes with the arms long`);
   assert.equal(entry.motion, 'chest_press');
   // The brace under the boom reaches the boom, however short the boom is here.
-  const named = [];
-  stage.kit.group.traverse((m) => { if (m.isMesh) named.push(m); });
+  const meshes = [];
+  stage.kit.group.traverse((m) => { if (m.isMesh) meshes.push(m); });
   const box = new THREE.Box3();
-  const beams = named.map((m) => box.setFromObject(m).clone());
+  const beams = meshes.map((m) => box.setFromObject(m).clone());
   const boom = beams.find((b) => b.max.y > 1.8 && b.max.z - b.min.z > 0.08 && b.max.x - b.min.x < 0.12);
   assert.ok(boom, 'a boom');
   const braces = beams.filter((b) => b.max.y > 1.5 && b.max.y < boom.min.y + 0.06 && b.max.x - b.min.x < 0.1 && b !== boom);

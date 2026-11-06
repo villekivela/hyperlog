@@ -565,9 +565,10 @@ export const MOTIONS = {
     const turn = rad(e.feet.ball ? s.heels : 0);
     const toes = plateUp.clone().multiplyScalar(Math.cos(turn)).addScaledVector(sled, Math.sin(turn));
     const top = sled.clone().multiplyScalar(-Math.cos(turn)).addScaledVector(plateUp, Math.sin(turn));
-    const ball = plate.clone().addScaledVector(plateUp, -e.feet.down).addScaledVector(sled, -L.ballY);
+    const footing = plate.clone().addScaledVector(plateUp, -e.feet.down);
+    const ball = footing.clone().addScaledVector(sled, -L.ballY);
     const ankle = e.feet.ball ? ball.clone().addScaledVector(toes, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY)
-      : plate.clone().addScaledVector(plateUp, -e.feet.down).addScaledVector(sled, -L.ankleY);
+      : footing.clone().addScaledVector(sled, -L.ankleY);
     const toeOut = rad(e.feet.toeOut);
     const rests = (side) => e.feet.one && side !== e.feet.one;
     return {
@@ -585,7 +586,7 @@ export const MOTIONS = {
       // The toes stay flat on the plate as the foot hinges at the ball, and the plate meets the feet there.
       ...(e.feet.ball ? {
         offsets: { ball_l: [-s.heels, 0, 0], ball_r: [-s.heels, 0, 0] },
-        footing: plate.clone().addScaledVector(plateUp, -e.feet.down),
+        footing,
       } : {}),
       hand,
       across: () => V(0, 0, 1),

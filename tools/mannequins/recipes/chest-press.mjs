@@ -49,11 +49,11 @@ export default recipe({
   ],
   // `pivot` [y, z] and `rest`, how far the levers hang from straight down at the chest, set an incline
   // press: a pivot behind the head and levers resting forward of it drive the handles up and forward.
-  linkage: ({ seat = SEAT, pivot: at = PIVOT, rest = REST }) => ({
+  linkage: ({ seat = SEAT, pivot: axle = PIVOT, rest = REST }) => ({
     hip: hipOn(seat),
     at: (value) => {
       const swing = rest + value;
-      const pivot = V(0, ...at);
+      const pivot = V(0, ...axle);
       const middle = V(0, pivot.y - ARM * Math.cos(swing), pivot.z + ARM * Math.sin(swing));
       return { pivot, swing, handle: (s) => middle.clone().setX(s * HANDLES_OUT) };
     },
