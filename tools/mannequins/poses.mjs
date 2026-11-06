@@ -142,11 +142,10 @@ export const POSES = {
   single_leg_leg_press: {
     like: 'leg_press',
     kit: { leg_press: { foot: 'l', sits: [0.17, 0.06], pad: 0.185 } },
-    top: { sled: 0.335 },
-    bottom: { sled: 0.13 },
-    feet: { one: 1, rest: [-0.155, 0.44], stance: 0.2, down: 0.01, kneesOut: 0.38 },
-    // The elbows out and up, clear of the working knee coming up beside the arm.
-    grip: { pole: [1, 0.7, 0.9] },
+    top: { sled: 0.36 },
+    bottom: { sled: 0.16 },
+    // The knee held in over the foot, clear of the arm beside it.
+    feet: { one: 1, rest: [-0.155, 0.44], stance: 0.2, down: 0.01, kneesOut: 0.05 },
   },
 
   // The legs near straight, the balls of the feet low on the plate and the heels off its edge: the

@@ -590,7 +590,7 @@ export const MOTIONS = {
       } : {}),
       hand,
       across: () => V(0, 0, 1),
-      armPole: elbowsTo(e, [1, -0.2, -0.5]),
+      armPole: (side) => V(side, -0.2, -0.5).normalize(),
       plate, sled, plateUp,
     };
   },
