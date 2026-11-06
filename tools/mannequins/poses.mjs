@@ -142,6 +142,7 @@ export const POSES = {
   single_leg_leg_press: {
     like: 'leg_press',
     kit: { leg_press: { foot: 'l', sits: [0.17, 0.06] } },
+    top: { sled: 0.38 },
     bottom: { sled: 0.16 },
     feet: { one: 1, rest: [-0.17, 0.44], stance: 0.12, down: -0.05 },
   },
