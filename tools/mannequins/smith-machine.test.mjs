@@ -519,7 +519,19 @@ for (const [id, angle] of LIFTS) {
     assert.ok(value >= lowest, 'above the stops');
     assert.ok((value - lowest) * Math.cos(LEAN) < PITCH, `${((value - lowest) * 100).toFixed(0)} cm above the stops, more than a notch`);
     stage.kit.group.updateMatrixWorld(true);
-    for (const lug of parts(k, 'lug')) for (const tooth of parts(k, 'tooth')) assert.ok(!reaches(lug, tooth) && !reaches(tooth, lug), 'a hook through a tooth');
+    // At any height: the bar runs past every tooth, so a hook's place across the tooth is what counts.
+    for (const lug of parts(k, 'lug')) {
+      const [tooth] = parts(k, 'tooth').filter(sideOf(Math.sign(within(lug).getCenter(new THREE.Vector3()).x)));
+      tooth.geometry.computeBoundingBox();
+      const { min, max } = tooth.geometry.boundingBox;
+      const local = tooth.matrixWorld.clone().invert().multiply(lug.matrixWorld);
+      const p = lug.geometry.attributes.position;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i).applyMatrix4(local);
+        assert.ok(!(v.x > min.x && v.x < max.x && v.z > min.z && v.z < max.z), 'a hook in the teeth\'s way');
+      }
+    }
   });
 }
 
