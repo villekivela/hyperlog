@@ -14,7 +14,7 @@ mannequin.
   and how the body sits. The pivot, the path and where the seat puts the hips are the recipe's, so a
   machine's second exercise can't put them anywhere else. A pad an adjustment brings to the body (a
   back pad, a chest pad) still follows the trunk. Cables stay body-first: their attachment is
-  a free body the hands carry, on no joint.
+  a free body the body carries, on no joint: a handle rides the hands, an ankle cuff the ankle.
 - **Deterministic.** Recipes are code in the repo, so the same recipe bakes the same bytes and CI's
   re-bake check stays.
 

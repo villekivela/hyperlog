@@ -56,16 +56,18 @@
     "at": "2026-11-06T04:46:02.574Z"
   },
   "deadlift": {
-    "ok": false,
+    "ok": true,
     "note": "there is slight jump when the animation is at the knees",
-    "clip": "67638db52a024fa5",
-    "tuned": "{\"bottom.wrist\":[0,16.6123],\"top.wrist\":[0,13.0912],\"feet.kneesOut\":0.117}"
+    "clip": "842d8541186e0db8",
+    "tuned": "{\"bottom.wrist\":[0,16.6123],\"top.wrist\":[0,13.0912],\"feet.kneesOut\":0.117}",
+    "at": "2026-11-06T07:25:48.326Z"
   },
   "deficit_deadlift": {
-    "ok": false,
+    "ok": true,
     "note": "there is slight jump when the animation is at the knees",
-    "clip": "15cd8dcdc5cf8fbf",
-    "tuned": "{\"top.wrist\":[0,20.6606]}"
+    "clip": "06c5486ef7e8ab0b",
+    "tuned": "{\"top.wrist\":[0,20.6606]}",
+    "at": "2026-11-06T07:25:58.188Z"
   },
   "deficit_pendlay_row": {
     "ok": true,
