@@ -31,8 +31,8 @@ const hipOn = ([y, z]) => [y + SITS, z - 0.02];
 
 export default recipe({
   name: 'chest_press',
-  // From the handles at the chest to the arms straight.
-  bodies: { levers: revolute({ axis: V(-1, 0, 0), limits: [0, rad(26)] }) },
+  // From the handles at the chest to the arms straight, `travel` degrees.
+  bodies: ({ travel = 26 } = {}) => ({ levers: revolute({ axis: V(-1, 0, 0), limits: [0, rad(travel)] }) }),
   rep: { joint: 'levers', from: 'max' },
   contacts: [
     { body: 'levers', point: 'handles', landmark: 'hands' },
@@ -47,11 +47,13 @@ export default recipe({
     },
     { sets: 'pad', rule: 'the back pad against the spine', solve: ({ L }) => L.back },
   ],
-  linkage: ({ seat = SEAT }) => ({
+  // `pivot` [y, z] and `rest`, how far the levers hang from straight down at the chest, set an incline
+  // press: a pivot behind the head and levers resting forward of it drive the handles up and forward.
+  linkage: ({ seat = SEAT, pivot: at = PIVOT, rest = REST }) => ({
     hip: hipOn(seat),
     at: (value) => {
-      const swing = REST + value;
-      const pivot = V(0, ...PIVOT);
+      const swing = rest + value;
+      const pivot = V(0, ...at);
       const middle = V(0, pivot.y - ARM * Math.cos(swing), pivot.z + ARM * Math.sin(swing));
       return { pivot, swing, handle: (s) => middle.clone().setX(s * HANDLES_OUT) };
     },
@@ -123,7 +125,7 @@ export default recipe({
         cap.position.y = top + 0.046;
         span(boom, V(0, top, rear - 0.05), V(0, top, P.pivot.z + 0.04));
         // A brace from the column up under the boom.
-        span(brace, V(0, top - 0.3, rear + 0.05), V(0, top - 0.04, rear + 0.3));
+        span(brace, V(0, top - 0.3, rear + 0.05), V(0, top - 0.04, Math.min(rear + 0.3, P.pivot.z)));
         span(axle, P.pivot.clone().setX(-0.52), P.pivot.clone().setX(0.52));
         housings.forEach((m, i) => m.position.copy(P.pivot).setX((i ? 1 : -1) * 0.045).add(V(0, 0.03, 0)));
         caps.forEach((m, i) => m.position.copy(P.pivot).setX((i ? 1 : -1) * 0.535));

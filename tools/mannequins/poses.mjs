@@ -137,14 +137,26 @@ export const POSES = {
     shadow: { size: [1.0, 1.6], at: [0, 0.4] },
   },
 
-  // One foot high on the plate, the other flat on the floor under the rail, by the seat: the sled
-  // runs on the one leg.
+  // One foot high and wide on the plate, the other flat on the floor under the rail, by the seat:
+  // the sled runs on the one leg, the knee coming up beside the trunk.
   single_leg_leg_press: {
     like: 'leg_press',
-    kit: { leg_press: { foot: 'l', sits: [0.17, 0.06] } },
-    top: { sled: 0.38 },
-    bottom: { sled: 0.16 },
-    feet: { one: 1, rest: [-0.17, 0.44], stance: 0.12, down: -0.05 },
+    kit: { leg_press: { foot: 'l', sits: [0.17, 0.06], pad: 0.185 } },
+    top: { sled: 0.335 },
+    bottom: { sled: 0.13 },
+    feet: { one: 1, rest: [-0.155, 0.44], stance: 0.2, down: 0.01, kneesOut: 0.38 },
+    // The elbows out and up, clear of the working knee coming up beside the arm.
+    grip: { pole: [1, 0.7, 0.9] },
+  },
+
+  // The legs near straight, the balls of the feet low on the plate and the heels off its edge: the
+  // ankles roll the sled a few centimetres.
+  leg_press_calf_press: {
+    like: 'leg_press',
+    top: { sled: 0.31, heels: 25 },
+    bottom: { sled: 0.195, heels: -14 },
+    feet: { ball: true, stance: 0.12, toeOut: 0, down: 0.22 },
+    tempo: { lowering: 2, bottom: 1, lifting: 1, top: 0.6 },
   },
 
   machine_chest_press: {
@@ -156,6 +168,14 @@ export const POSES = {
     // The levers run limit to limit: out in front at the top, back to the shoulders' line at the bottom.
     grip: {},
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
+  },
+
+  // Lying well back on the pad, the handles low by the chest, driven up and forward.
+  incline_machine_press: {
+    like: 'machine_chest_press',
+    kit: { chest_press: { seat: [0.44, 0.2], pivot: [1.78, -0.48], rest: 0.42, travel: 31 } },
+    body: { trunk: -47 },
+    feet: { stance: 0.16, z: 0.62, toeOut: 12 },
   },
 
   // Seated against the pad, 10° back, the neutral grips pressed from shoulder level to the arms near straight overhead.
@@ -290,6 +310,17 @@ export const POSES = {
     feet: { stance: 0.16, z: 0.45, toeOut: 10 },
     grip: { rotate: 90, pole: [1.5, -0.2397, -0.287] },
     camera: { target: [0, 0.8, 0.3], halfHeight: 0.92, azimuth: 66, elevation: 10 },
+  },
+
+  // Seated nearer the levers, the handles low on them: from the arms reaching down, the elbows drive
+  // out and back at 45°, the hands turned over to let them.
+  machine_row: {
+    like: 'chest_supported_machine_row',
+    kit: { row_machine: { seat: [0.5, 0.2], arm: 0.36, reach: 50, horn: -70 } },
+    top: { levers: 52 },
+    bottom: { levers: 134 },
+    feet: { z: 0.56 },
+    grip: { rotate: 45, pole: [1, -0.3, -1] },
   },
 
   // Standing on the foot plate, the chest on the pad, palms facing each other: from the arms long

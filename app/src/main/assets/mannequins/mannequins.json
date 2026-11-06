@@ -2131,6 +2131,30 @@
         "kit_cable_crossover.bin"
       ]
     },
+    "incline_machine_press": {
+      "clip": "incline_machine_press.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.98,
+          0.1
+        ],
+        "halfHeight": 1.04,
+        "azimuth": 56,
+        "elevation": 12
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_chest_press.bin"
+      ]
+    },
     "kelso_shrug": {
       "clip": "kelso_shrug.glb",
       "equipment": "machine",
@@ -2219,6 +2243,30 @@
       "tempo": {
         "lowering": 2,
         "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_leg_press.bin"
+      ]
+    },
+    "leg_press_calf_press": {
+      "clip": "leg_press_calf_press.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.74,
+          0.4
+        ],
+        "halfHeight": 0.98,
+        "azimuth": 118,
+        "elevation": 16
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 1,
         "lifting": 1,
         "top": 0.6
       },
@@ -2465,6 +2513,30 @@
       "resources": [
         "mannequin.bin",
         "kit_pulldown_machine.bin"
+      ]
+    },
+    "machine_row": {
+      "clip": "machine_row.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.3
+        ],
+        "halfHeight": 0.92,
+        "azimuth": 66,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_row_machine.bin"
       ]
     },
     "machine_shoulder_press": {
@@ -2952,6 +3024,30 @@
         "mannequin.bin",
         "kit_bench.bin",
         "kit_dumbbells.bin"
+      ]
+    },
+    "single_leg_leg_press": {
+      "clip": "single_leg_leg_press.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.74,
+          0.4
+        ],
+        "halfHeight": 0.98,
+        "azimuth": 118,
+        "elevation": 16
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_leg_press.bin"
       ]
     },
     "smith_machine_bench_press": {
