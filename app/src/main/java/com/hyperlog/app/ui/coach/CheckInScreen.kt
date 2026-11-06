@@ -30,7 +30,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.SegmentGap
@@ -282,7 +281,7 @@ private val TileInner = 8.dp
 private val TileHeight = 136.dp
 
 @Composable
-private fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modifier, onClick: () -> Unit) {
+internal fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modifier, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(
         // One height for every tile, two lines of label included, so the grid stays even.
@@ -297,7 +296,7 @@ private fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modi
         Box(Modifier.size(40.dp).clip(CircleShape).background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
             SymbolIcon(symbol, null, Modifier.size(24.dp), tint = cs.onSecondaryContainer)
         }
-        Text(label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleMedium)
     }
 }
 

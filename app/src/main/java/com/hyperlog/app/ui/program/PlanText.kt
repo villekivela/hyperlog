@@ -83,9 +83,11 @@ fun SetSummary(
     val symbols = mutableMapOf<String, Symbol>()
     val kinds = mutableMapOf<String, TechniqueKind>()
     val chips = mutableSetOf<RirChipKey>()
+    // Joined by no-break spaces, so a line wraps between sets, never inside one.
     val parts = chunks.map { c ->
-        if (c.rir != null) stringResource(R.string.plan_sets_rir, c.count, c.reps.toString(), c.rir)
+        val part = if (c.rir != null) stringResource(R.string.plan_sets_rir, c.count, c.reps.toString(), c.rir)
         else stringResource(R.string.plan_sets, c.count, c.reps.toString())
+        part.replace(' ', '\u00A0')
     }
     val text = buildAnnotatedString {
         chunks.forEachIndexed { i, c ->

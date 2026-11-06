@@ -1342,7 +1342,9 @@ gallery (Technique videos).
   bar's labels, the set table's heads and its Last column. A connected choice stacks its options
   when their labels no longer fit side by side, so the phase tabs keep `Ramp-in` and `Deload + test`
   whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip
-  with the F / P toggle.
+  with the F / P toggle. A row's title and supporting text wrap, a session's title in History, an
+  exercise on Today and a Coach tile too, and a planned set's parts are joined by no-break spaces
+  as a logged set's are, so a line never ends on `1 ×`.
 - **Scheduling**: with training days (below), the program's days take turns on them, and a missed
   day is skipped (Domain → Training days and the rotation, ADR 0006). Without them the program runs
   as a sequence (next day is whatever comes next, whenever you train). Training days also set the

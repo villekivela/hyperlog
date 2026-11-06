@@ -254,7 +254,7 @@ class ProgramScreenTest {
         scrollTo("Intensify")
         compose.onNodeWithText("Intensify").performClick()
         compose.onNodeWithText("From Build").assertIsDisplayed()
-        compose.onAllNodesWithText("1 × 3–5\u00A01 RIR", substring = true)[0].assertExists()
+        compose.onAllNodesWithText("1\u00A0×\u00A03–5\u00A01 RIR", substring = true)[0].assertExists()
         scrollTo("Week 7 · Day C — Bench volume, leg press, pulldown")
         compose.onNodeWithText("Week 7 · Day C — Bench volume, leg press, pulldown").assertIsDisplayed()
 

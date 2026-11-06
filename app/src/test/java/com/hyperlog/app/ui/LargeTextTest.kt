@@ -2,6 +2,8 @@ package com.hyperlog.app.ui
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -38,15 +40,20 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.MovementPattern
+import com.hyperlog.app.program.Backoff
+import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.PastSession
+import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.navItem
+import com.hyperlog.app.ui.coach.TileCard
 import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.history.HistoryScreen
 import com.hyperlog.app.ui.program.ProgramHeader
+import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.session.PastSessionScreen
 import com.hyperlog.app.ui.session.Recording
 import com.hyperlog.app.ui.session.SessionScreen
@@ -55,7 +62,10 @@ import com.hyperlog.app.ui.session.RirChipLoggedTag
 import com.hyperlog.app.ui.session.RirChipTargetTag
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.ConnectedChoice
+import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.ui.theme.SegmentedRow
+import com.hyperlog.app.ui.today.SlotRows
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -223,6 +233,74 @@ class LargeTextTest {
             }
         }
     }
+
+    /** The sweep of #268 found these on a real build, each from a size the issue hadn't listed. */
+    @Test
+    fun aSegmentedRowKeepsAllItsWords() {
+        val title = "Starting weights from the old app"
+        val supporting = "2 gyms · dumbbells and plates · tap to import again"
+        atEveryScale({ SegmentedRow(title, supporting, Symbol.History) }) { scale ->
+            assertFalse("The title is cut short at $scale", compose.onNodeWithText(title, useUnmergedTree = true).cutShort())
+            assertFalse("The supporting line is cut short at $scale", compose.onNodeWithText(supporting, useUnmergedTree = true).cutShort())
+        }
+    }
+
+    @Test
+    fun aSessionsTitleInHistoryWraps() {
+        val title = "Day B — Hinge, close-grip bench, leg curl"
+        val session = PastSessionItem(1, 0, 3_600_000, title, "Kalliokoski", emptyList())
+        atEveryScale({
+            HistoryScreen(
+                listOf(session), emptyList(), emptyList(), emptyList(), tab = 0, onTab = {}, onOpenSession = {}, onOpenExercise = {},
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {},
+            )
+        }) { scale -> assertFalse("The title is cut short at $scale", compose.onNodeWithText(title, useUnmergedTree = true).cutShort()) }
+    }
+
+    @Test
+    fun aCoachTilesLabelStaysWhole() {
+        val label = "Different gym or none"
+        atEveryScale({ TileCard(label, Symbol.History, RoundedCornerShape(8.dp), Modifier.width(180.dp)) {} }) { scale ->
+            assertFalse("The tile is cut short at $scale", compose.onNodeWithText(label, useUnmergedTree = true).cutShort())
+        }
+    }
+
+    @Test
+    fun aLongExerciseNameOnTodayWraps() {
+        val name = "Overhead Cable Triceps Extension"
+        val slot = PlannedSlot("s", "5b", 0, "triceps", emptyList(), null, listOf(SetPrescription(RepRange(10, 12), 1, 90)))
+        atEveryScale({ SlotRows(listOf(slot), mapOf("triceps" to name)) }) { scale ->
+            assertFalse("The name is cut short at $scale", compose.onNodeWithText(name, useUnmergedTree = true).cutShort())
+        }
+    }
+
+    @Test
+    fun aPlannedSetNeverBreaksAcrossLines() {
+        val sets = listOf(SetPrescription(RepRange(3, 5), 2, 180), SetPrescription(RepRange(6, 8), 2, 180, backoff = Backoff(0, 10)))
+        atEveryScale({ SetSummary(sets, Modifier.width(240.dp)) }) { scale ->
+            val layout = compose.onNode(hasText("×", substring = true), useUnmergedTree = true).layout()
+            val text = layout.layoutInput.text.text
+            (0 until layout.lineCount).forEach {
+                val line = text.substring(layout.getLineStart(it), layout.getLineEnd(it)).trimEnd()
+                assertFalse("`$line` ends mid-set at $scale", line.endsWith("×"))
+            }
+        }
+    }
+
+    @Test
+    fun theNavigationLabelsKeepClearOfEachOther() {
+        val labels = listOf("Today", "Program", "Coach", "History", "Settings")
+        atEveryScale({ AppNavigationBar(Screen.Today) {} }) { scale ->
+            labels.zipWithNext { a, b ->
+                val gap = inkLeft(b) - inkRight(a)
+                assertTrue("$a and $b are $gap apart at $scale", gap >= 4.dp)
+            }
+        }
+    }
+
+    private fun inkLeft(label: String) = compose.onNode(navItem(label), useUnmergedTree = true).let { it.getBoundsInRoot().left + with(compose.density) { it.layout().getLineLeft(0).toDp() } }
+
+    private fun inkRight(label: String) = compose.onNode(navItem(label), useUnmergedTree = true).let { it.getBoundsInRoot().left + with(compose.density) { it.layout().getLineRight(0).toDp() } }
 
     @Test
     fun aGymsPlatesRowShowsEveryPlate() {

@@ -98,8 +98,6 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
                         s.title ?: stringResource(R.string.past_ad_hoc),
                         Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.width(16.dp))
                     Text(day(s.startedAt), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)

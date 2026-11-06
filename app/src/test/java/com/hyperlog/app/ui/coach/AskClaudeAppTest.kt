@@ -441,7 +441,7 @@ class AskClaudeAppTest {
         compose.waitFor("Workout for today")
         compose.onNodeWithText("Chest-Supported DB Row").assertIsDisplayed()
         // The sets show RIR as a chip; Claude's own words stay as Claude wrote them.
-        compose.onNodeWithText("3 × 8–12\u00A01 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("3\u00A0×\u00A08–12\u00A01 RIR", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Dumbbells only, rows @ 1.").assertIsDisplayed()
         compose.onNodeWithText("Add to Today").performClick()
         compose.waitFor("Hotel dumbbells, 45 min")

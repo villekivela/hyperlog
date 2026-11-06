@@ -1024,8 +1024,6 @@ internal fun SlotRows(
                 Text(
                     names[slot.exercise] ?: slot.exercise,
                     style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
                 if (rest && slot.sets.isNotEmpty()) {
                     Row {

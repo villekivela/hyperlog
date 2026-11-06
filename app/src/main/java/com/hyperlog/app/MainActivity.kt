@@ -79,6 +79,7 @@ import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.update.UpdateViewModel
@@ -233,7 +234,7 @@ internal fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
                 onClick = { onSelect(tab) },
                 icon = { SymbolIcon(if (tab == selected) filled else symbol, null) },
                 // Five items share the width: at large text a label steps down rather than split a word.
-                label = { Text(label, maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = MaterialTheme.typography.labelMedium.fontSize)) },
+                label = { Text(label, Modifier.padding(horizontal = 2.dp), maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = MaterialTheme.typography.labelMedium.fontSize)) },
                 colors = ShortNavigationBarItemDefaults.colors(
                     selectedIndicatorColor = cs.primaryContainer,
                     selectedIconColor = cs.onPrimaryContainer,
