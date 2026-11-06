@@ -1679,10 +1679,11 @@ gallery (Technique videos).
       joint turning them would be left behind by a scrub along the rods; the hooks' turn, about
       45°, stays the wrists'. A fit rule picks the notch it hangs on and the one its safety stops
       lie on, and the bar can go no lower than the stops.
-    - **The shrug machine's levers** (#223) are one body on a revolute joint about the axle at the top
-      of the rear uprights, 600 mm up and 760 mm behind the grips, its value the angle up from level
-      ahead: 7.5° on the stop (the grips 700 mm up) to 26.3° at the top of a shrug (940 mm up).
-      The seat is the one adjustment (`seat`, its top in metres), 650 mm by default, the ref's one measured height; the handles are fixed. The machine shrug is posed standing (#241), the legs either side of the seat, lowered to 450 mm as the ref's front photo has it, the arms long and the shoulders shrugging straight up, the levers rising with them.
+    - **The shrug machine's levers** (#223, rebuilt from its photos, #241) are one body on a revolute
+      joint about the cross tube on its A-frames, 600 mm up and 760 mm behind the grips, its value the
+      angle up from level ahead: 7.5° on the stop (the grips 700 mm up) to 26.3° at the top of its
+      travel (940 mm up).
+      The seat is the one adjustment (`seat`, its top in metres), 650 mm by default, the ref's one measured height; the handles are fixed. The machine shrug is posed standing (#241), the legs either side of the seat, lowered to 450 mm to clear them, the arms long and the shoulders shrugging straight up, the levers rising from 15.5° to 20.3° with them, the 60 mm the mannequin's shoulders rise.
     - **Generic, never branded** (owner, 2026-11-03, #157): a machine is an archetype of a movement,
       with a variant only where the movement differs. It may be modelled on one brand's design, but
       its name and look in the app carry no brand. Its references (links, the owner's own photos, its

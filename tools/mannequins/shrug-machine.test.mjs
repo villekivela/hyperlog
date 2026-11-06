@@ -76,7 +76,7 @@ test('it stands 1.02 m deep, 1.24 m tall and about 1.52 m across, a plate horn o
   const size = box(machine()).getSize(new THREE.Vector3());
   close(size.z, 1.02, 0.08, 'front to back');
   close(size.y, 1.24, 0.1, 'tall');
-  close(size.x, 1.52, 0.1, 'across');
+  close(size.x, 1.52, 0.02, 'across');
   const horns = [];
   machine().group.traverse((o) => { if (o.isMesh && o.userData.role === 'horn') horns.push(o); });
   assert.equal(horns.length, 2);
@@ -98,8 +98,6 @@ test('a fit rule sets the seat, at its measured 650 mm by default', () => {
   close(top(machine({ seat: 0.7 })), 0.7, 0.01, 'the seat set to 700 mm');
 });
 
-const roled = (kit, name) => { const found = []; kit.group.traverse((o) => { if (o.isMesh && o.userData.role === name) found.push(o); }); return found; };
-
 const roles = (kit, name) => {
   const out = [];
   kit.group.traverse((o) => { if (o.isMesh && o.userData.role === name) out.push(o); });
@@ -112,6 +110,25 @@ const one = (kit, name) => {
   return found[0];
 };
 const along = (from, way, mesh) => new THREE.Raycaster(from, way.clone().normalize()).intersectObject(mesh, false)[0];
+/** Whether any vertex of `moving` lies in the box of `fixed`, in `fixed`'s own frame. */
+const reaches = (moving, fixed) => {
+  fixed.geometry.computeBoundingBox();
+  const local = fixed.matrixWorld.clone().invert().multiply(moving.matrixWorld);
+  const p = moving.geometry.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) if (fixed.geometry.boundingBox.containsPoint(v.fromBufferAttribute(p, i).applyMatrix4(local))) return true;
+  return false;
+};
+/** The vertex of `mesh` that scores highest by `score`, in the world. */
+const extreme = (mesh, score) => {
+  const p = mesh.geometry.attributes.position;
+  let best;
+  for (let i = 0; i < p.count; i++) {
+    const v = new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(mesh.matrixWorld);
+    if (!best || score(v) > score(best)) best = v;
+  }
+  return best;
+};
 const RAKE = (8.8 * Math.PI) / 180;
 const REARWARD = V(0, Math.sin(RAKE), -Math.cos(RAKE));
 
@@ -136,20 +153,68 @@ test('a column rakes back 8.8 degrees from a cross beam, the back pad flush on i
   const hit = along(pad.getWorldPosition(new THREE.Vector3()), REARWARD, column);
   assert.ok(hit && Math.abs(hit.distance - 0.04) < 0.01, `the pad ${hit ? (hit.distance * 100).toFixed(1) : 'nowhere'} cm from the middle of it to the column`);
   close(bounds(pad).max.y, 1.24, 0.02, 'the pad\'s top');
-  const brace = bounds(one(kit, 'brace'));
-  const cross = bounds(one(kit, 'crossTube'));
-  assert.ok(brace.intersectsBox(cross), 'the brace reaches the cross tube');
-  assert.ok(brace.max.y > 0.9 && brace.intersectsBox(b), 'and the column');
+  const brace = one(kit, 'brace');
+  const crossTube = one(kit, 'crossTube');
+  const cross = bounds(crossTube);
+  assert.ok(reaches(brace, crossTube), 'the brace ends in the cross tube');
+  const top = extreme(brace, (v) => v.y);
+  assert.ok(top.y > 0.9, 'high on the column');
+  const columnZ = (y) => bounds(roles(kit, 'crossBeam').map((m) => m).sort((p, q) => bounds(q).max.z - bounds(p).max.z)[0]).getCenter(new THREE.Vector3()).z - (y - 0.113) * Math.tan(RAKE);
+  close(top.z, columnZ(top.y), 0.04, 'the brace ends in the column');
   close(cross.max.x - cross.min.x, 0.9, 0.02, 'the cross tube from upright to upright');
 });
 
 test('an A-frame each side carries the pivot, both legs cut flat on the rail, with a storage horn', () => {
   const kit = machine();
-  const legs = roles(kit, 'aFrame').map(bounds);
-  assert.equal(legs.length, 4, 'two legs a side');
+  const frames = roles(kit, 'aFrame');
+  assert.equal(frames.length, 2, 'one mitred length a side');
   const pivot = kit.joints.levers.origin;
-  for (const b of legs) { close(b.min.y, 0.113, 0.002, 'cut flat on the rail'); assert.ok(b.max.y >= pivot.y - 0.01, 'up to the pivot'); assert.ok(b.max.z - b.min.z > 0.05, 'leaning in'); }
+  for (const m of frames) {
+    assert.notEqual(m.geometry.type, 'ExtrudeGeometry', 'mitred at the top, not two lapped tubes');
+    const b = bounds(m);
+    close(b.min.y, 0.113, 0.002, 'cut flat on the rail');
+    assert.ok(b.max.y >= pivot.y - 0.05, 'up into the pivot\'s block');
+    assert.ok(b.max.y <= pivot.y + 0.05, 'the mitre\'s tip ending inside it');
+    assert.ok(pivot.z > b.min.z + 0.05 && pivot.z < b.max.z - 0.05, 'the pivot between its feet');
+    assert.ok(b.max.z - b.min.z > 0.3, 'its feet apart');
+  }
   assert.equal(roles(kit, 'storageHorn').length, 2);
+  // The rear cross beam stops flush with the rails' ends.
+  const rear = Math.min(...roles(kit, 'rail').map((m) => bounds(m).min.z));
+  for (const m of roles(kit, 'crossBeam')) assert.ok(bounds(m).min.z >= rear - 1e-6, 'no beam proud of the rails');
+});
+
+test('each lever rests on a stop on its A-frame', () => {
+  const kit = machine();
+  const stops = roles(kit, 'stop');
+  assert.equal(stops.length, 2);
+  const beams = roles(kit, 'beam');
+  for (const stop of stops) {
+    const b = bounds(stop);
+    const beam = beams.find((m) => Math.sign(bounds(m).min.x) === Math.sign(b.min.x));
+    const hit = along(b.getCenter(new THREE.Vector3()), V(0, 1, 0), beam);
+    assert.ok(hit, 'under the beam');
+    close(hit.point.y, b.max.y, 0.006, 'the beam down on it');
+    assert.ok(Math.max(Math.abs(b.min.x), Math.abs(b.max.x)) >= 0.415, 'out to the A-frame');
+  }
+});
+
+test('the levers clear the frame through their whole travel', () => {
+  const kit = machine();
+  const [low, high] = kit.joints.levers.limits;
+  const moving = new Set();
+  kit.bodies.levers[0].traverse((o) => { if (o.isMesh) moving.add(o); });
+  const solid = (o) => o.userData.solid;
+  const fixed = [];
+  kit.group.traverse((o) => { if (o.isMesh && solid(o) && !moving.has(o) && !['crossTube', 'stop'].includes(o.userData.role)) fixed.push(o); });
+  assert.ok(fixed.length > 8, 'solid frame parts to meet');
+  const arms = [...moving].filter(solid);
+  assert.ok(arms.length > 8, 'solid lever parts');
+  for (const v of [low + 0.002, (low + high) / 2, high]) {
+    kit.scrub('levers', v);
+    kit.group.updateMatrixWorld(true);
+    for (const m of arms) for (const f of fixed) assert.ok(!reaches(m, f) && !reaches(f, m), `${m.name} ${m.userData.role ?? ''} meets ${f.name} ${f.userData.role ?? ''} at ${(v * 57.3).toFixed(0)}°`);
+  }
 });
 
 test('each lever is a heavy beam sloping down toward the front, a hoop up from it to the grip, the horn near its front end', () => {
@@ -169,7 +234,7 @@ test('each lever is a heavy beam sloping down toward the front, a hoop up from i
   for (const h of hoops) {
     assert.notEqual(h.geometry.type, 'TubeGeometry', 'capped');
     const b = bounds(h);
-    assert.ok(b.intersectsBox(bounds(beams.find((m) => Math.sign(bounds(m).min.x) === Math.sign(b.min.x)))), 'from the beam');
+    assert.ok(reaches(h, beams.find((m) => Math.sign(bounds(m).min.x) === Math.sign(b.min.x))), 'its foot in the beam');
     assert.ok(b.max.y >= left.y - 0.02, 'up to the grip');
   }
   for (const m of roles(kit, 'horn')) { const b = bounds(m); close(b.getCenter(new THREE.Vector3()).z - pivot.z, 0.57, 0.04, 'near the front end'); }
@@ -179,7 +244,9 @@ test('the seat rides a sleeve on the column, and stands where `seat` sets it', (
   const low = machine({ seat: 0.45 });
   close(bounds(one(low, 'seat')).max.y, 0.45, 0.01, 'the seat lowered');
   const sleeve = bounds(one(low, 'seatSleeve'));
-  assert.ok(sleeve.intersectsBox(bounds(one(low, 'column'))), 'the sleeve on the column');
+  const middle = sleeve.getCenter(new THREE.Vector3());
+  const beam = roles(low, 'crossBeam').map(bounds).sort((a, b) => b.max.z - a.max.z)[0];
+  close(middle.z, beam.getCenter(new THREE.Vector3()).z - (middle.y - 0.113) * Math.tan(RAKE), 0.005, 'the sleeve round the column');
   assert.ok(sleeve.max.y > 0.4 && sleeve.min.y < 0.45, 'at the seat');
 });
 
@@ -233,7 +300,8 @@ test('machine_shrug: the shoulders rise and the hands rise with them, the elbows
 test('machine_shrug: the legs stand either side of the lowered seat, the feet flat on the floor ahead of the cross beam', async () => {
   const { pose, rig, kit } = await buildStage(prepare(ID));
   const k = kit.kits.shrug_machine;
-  const seat = bounds(one(k, 'seat'));
+  const seatMesh = one(k, 'seat');
+  const seat = bounds(seatMesh);
   const beam = roles(k, 'crossBeam').map(bounds).sort((a, b) => b.max.z - a.max.z)[0];
   assert.ok(seat.max.y < 0.56, `the seat lowered, at ${seat.max.y.toFixed(2)}`);
   for (const d of [0, 0.5, 1]) {
@@ -248,6 +316,13 @@ test('machine_shrug: the legs stand either side of the lowered seat, the feet fl
       const [skin] = rig.meshes.flatMap((m) => { m.computeBoundingSphere?.(); m.computeBoundingBox?.(); return ray.intersectObject(m, false); }).map((h) => h.point.y).sort((a, b) => a - b);
       assert.ok(skin !== undefined, `a sole over the floor, ${d} of the way`);
       close(skin, 0, 0.008, `the ${side} sole on the floor, ${d} of the way`);
+      // Out from the middle at the seat's height, level with the leg: the leg's skin clear of its edge.
+      const sign = side === 'l' ? 1 : -1;
+      for (const y of [seat.max.y, seat.min.y]) {
+        const out = new THREE.Raycaster(V(0, y, wpos(rig.bones[`calf_${side}`]).z), V(sign, 0, 0));
+        const [leg] = rig.meshes.flatMap((m) => { m.computeBoundingSphere?.(); m.computeBoundingBox?.(); return out.intersectObject(m, false); }).map((h) => Math.abs(h.point.x)).sort((a, b) => a - b);
+        assert.ok(leg > seat.max.x + 0.005, `the ${side} leg ${(leg - seat.max.x).toFixed(3)} m clear of the seat, ${d} of the way`);
+      }
     }
   }
 });

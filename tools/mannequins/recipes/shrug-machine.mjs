@@ -9,7 +9,7 @@
 // The two levers are one body on a revolute joint about the pivot, its value the angle up from level
 // ahead of the line from the pivot to the grips: 7.5° on the stop, where the grips are 700 mm up,
 // and 26.3° at the top of its travel, 940 mm up. The frame stands where the ref puts it, whatever the
-// pose. The lifter stands at the origin, so everything lies 100 mm behind the photos' grip line.
+// pose. The lifter stands at the origin, 100 mm behind the grips' place on the stop, as the photos have it.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
 import { curvedTube, knob, mitered, pad, padGeometry, part, pivotJoint, plateGeometry, rod, tube } from '../parts.mjs';
@@ -25,23 +25,27 @@ const GRIPS_OUT = 0.37;
 const GRIP = { behind: 0.095, ahead: 0.1, rise: 0.016 };
 // The lever's beam: how far it falls toward the front on the stop, its length, height and width.
 const BEAM = { slope: THREE.MathUtils.degToRad(13.3), length: 0.63, tall: 0.1, wide: 0.05 };
-// The second grip's length off the beam's end, and where along the beam the horn stands.
+// The second grip's length off the beam's end. The horn stands `at` that far along the beam, reaches
+// `out` from the middle, and carries a plate at `plateAt`.
 const LOWER_GRIP = 0.19;
-const HORN = { at: 0.585, out: 0.76, plateAt: 0.45 };
+const HORN = { at: 0.585, out: 0.73, plateAt: 0.45 };
 // The base: rails this far out, their ends, the tube, and the height of its underside.
-const BASE = { out: 0.45, front: 0.09, rear: -0.81, tube: 0.075, off: 0.038 };
-const RAIL_TOP = BASE.off + BASE.tube;
+const BASE = { out: 0.45, front: 0.09, rear: -0.81, tube: 0.075, clear: 0.038 };
+const RAIL_TOP = BASE.clear + BASE.tube;
 // The cross beams: one under the column, one at the rear.
-const BEAMS_Z = { column: -0.21, rear: -0.78 };
-// The A-frame's feet along the rail, and the storage horn on it.
-const A_FRAME = { front: -0.44, rear: -0.78, tube: 0.07 };
+const BEAMS_Z = { column: -0.21, rear: BASE.rear + BASE.tube / 2 };
+// The A-frame's feet along the rail, the height its legs meet at, the tip of their mitre ending in
+// the pivot's block, and the storage horn on it.
+const A_FRAME = { front: -0.44, rear: BEAMS_Z.rear, tube: 0.07, meet: 0.5 };
 const STORE = { y: 0.41, z: -0.71, out: 0.25 };
+// The stop each lever rests on, off the A-frame's front leg: how far out and along it stands.
+const STOP_BLOCK = { x: 0.38, z: -0.63, wide: 0.14, tall: 0.06, deep: 0.1 };
 // The column's rake back from upright and its top, the brace's height on it, and the back pad.
 const RAKE = THREE.MathUtils.degToRad(8.8);
 const COLUMN = { top: 1.09, tube: 0.075, brace: 0.98 };
 const PAD = { top: 1.24, long: 0.56, w: 0.36, deep: 0.08 };
-// The seat's top at 650 mm unless set, its depth and width, and its sleeve on the column.
-const SEAT = { top: 0.65, deep: 0.26, w: 0.26 };
+// The seat's top at 650 mm unless set, and its depth and width.
+const SEAT = { top: 0.65, deep: 0.26, w: 0.24 };
 
 const beamWay = V(0, -Math.sin(BEAM.slope), Math.cos(BEAM.slope));
 /** Up the column, and square off it toward the lifter. */
@@ -70,22 +74,21 @@ export default recipe({
       across: () => V(0, Math.sin(value - STOP), Math.cos(value - STOP)),
     }),
   }),
-  // Only the seat adjusts (the ref's page FAQ); the handles are fixed. Seated, the shoulders sit
-  // about 0.63 m above the grips, which puts the seat near its top; standing, it goes down out of
-  // the legs' way, as the ref's front photo has it.
+  // Only the seat adjusts (the ref's page FAQ); the handles are fixed. Standing, it goes down out of
+  // the legs' way.
   fit: [{
     sets: 'seat',
-    rule: "the seat top at 650 mm, the ref's measured seat, the one height no photo shows the travel of; a seated lifter's shoulders 0.63 m above the grips; lowered for a standing lifter, the legs either side of it",
+    rule: "the seat top at 650 mm, the ref's measured seat, the one height no photo shows the travel of; lowered for a standing lifter, the legs either side of it",
   }],
   build({ seat: seatTop = SEAT.top } = {}, M) {
     const sides = [-1, 1];
     const frame = [];
     // The base: a rail each side, two cross beams between them, and a foot under each corner.
-    const railY = BASE.off + BASE.tube / 2;
+    const railY = BASE.clear + BASE.tube / 2;
     for (const s of sides) {
       frame.push(role(tube(BASE.tube, V(s * BASE.out, railY, BASE.rear), V(s * BASE.out, railY, BASE.front), M.frame), 'rail'));
       for (const z of [BASE.front - 0.05, BASE.rear + 0.05]) {
-        frame.push(role(pad(0.17, BASE.off + 0.002, 0.1, M.frame, V(s * (BASE.out + 0.02), (BASE.off + 0.002) / 2, z), { soft: 0.004 }), 'foot'));
+        frame.push(role(pad(0.17, BASE.clear + 0.002, 0.1, M.frame, V(s * (BASE.out + 0.02), (BASE.clear + 0.002) / 2, z), { soft: 0.004 }), 'foot'));
       }
     }
     for (const z of Object.values(BEAMS_Z)) frame.push(role(tube(BASE.tube, V(-BASE.out, railY, z), V(BASE.out, railY, z), M.frame), 'crossBeam'));
@@ -93,9 +96,16 @@ export default recipe({
     // An A-frame each side up to the cross tube, cut flat on the rail, and a storage horn on it.
     const pivotAt = (s) => V(s * BASE.out, PIVOT[0], PIVOT[1]);
     for (const s of sides) {
-      for (const z of [A_FRAME.front, A_FRAME.rear]) {
-        frame.push(role(mitered([V(s * BASE.out, RAIL_TOP, z), pivotAt(s)], A_FRAME.tube, M.frame, { solid: false, ends: [UP, null] }), 'aFrame'));
-      }
+      const [front, rear] = [A_FRAME.front, A_FRAME.rear].map((z) => V(s * BASE.out, RAIL_TOP, z));
+      const meet = pivotAt(s).setY(A_FRAME.meet);
+      frame.push(
+        role(mitered([front, meet, rear], A_FRAME.tube, M.frame, { solid: false, ends: [UP, UP] }), 'aFrame'),
+        proxy(tube(A_FRAME.tube - 0.01, front, meet, M.frame)),
+        proxy(tube(A_FRAME.tube - 0.01, rear, meet, M.frame)),
+      );
+      // The stop, its top where the beam lies on it, out to the front leg.
+      const beamUnder = PIVOT[0] - (STOP_BLOCK.z - PIVOT[1]) * Math.tan(BEAM.slope) - BEAM.tall / 2 / Math.cos(BEAM.slope);
+      frame.push(role(pad(STOP_BLOCK.wide, STOP_BLOCK.tall, STOP_BLOCK.deep, M.frame, V(s * STOP_BLOCK.x, beamUnder - STOP_BLOCK.tall / 2, STOP_BLOCK.z), { soft: 0.006 }), 'stop'));
       frame.push(pad(0.09, 0.1, 0.12, M.frame, pivotAt(s), { soft: 0.01 }));
       const [from, to] = [V(s * BASE.out, STORE.y, STORE.z), V(s * (BASE.out + STORE.out), STORE.y, STORE.z)];
       frame.push(role(rod(0.025, from, to, M.metal), 'storageHorn'), knob(M, to, 0.03, M.pulley));
@@ -105,8 +115,8 @@ export default recipe({
     // The column, cut flat on its cross beam, the pad flush on its front, and the brace back from it.
     const foot = columnAt(RAIL_TOP);
     const top = columnAt(COLUMN.top);
-    const off = COLUMN.tube / 2 + PAD.deep / 2;
-    const padMiddle = columnAt(PAD.top - (PAD.long / 2) * columnWay.y - off * columnFront.y).addScaledVector(columnFront, off);
+    const padOff = COLUMN.tube / 2 + PAD.deep / 2;
+    const padMiddle = columnAt(PAD.top - (PAD.long / 2) * columnWay.y - padOff * columnFront.y).addScaledVector(columnFront, padOff);
     const back = part(padGeometry(PAD.w, PAD.long, PAD.deep, 0.025), M.vinyl, { solid: true });
     back.position.copy(padMiddle);
     back.rotation.x = -RAKE;
@@ -141,22 +151,25 @@ export default recipe({
       const lowerEnd = end.clone().addScaledVector(beamWay, LOWER_GRIP);
       const hornAt = local(0, 0).addScaledVector(beamWay, HORN.at);
       const hornEnd = hornAt.clone().setX(s * HORN.out);
-      const centre = local(0.1, 0.76);
+      const centre = local(REACH * Math.sin(STOP), REACH * Math.cos(STOP));
       const heel = centre.clone().add(V(0, -GRIP.rise / 2, -GRIP.behind));
       const tip = centre.clone().add(V(0, GRIP.rise / 2, GRIP.ahead));
       const plate = part(plateGeometry(0.17, 0.04), M.plate, { solid: true });
       plate.position.copy(hornAt).setX(s * HORN.plateAt);
-      const hoop = curvedTube([local(-0.075, 0.47), local(0.02, 0.495), local(0.075, 0.55), local(heel.y, 0.62), heel], 0.03, M.frame);
+      const bends = [local(-0.075, 0.47), local(0.02, 0.495), local(0.075, 0.55), local(heel.y, 0.62), heel];
+      const hoop = curvedTube(bends, 0.03, M.frame);
       return [
+        // A tube inside each length of the hoop is what the body meets.
+        ...bends.slice(1).map((p, i) => proxy(tube(0.025, bends[i], p, M.frame))),
         role(beam, 'beam'),
         role(hoop, 'hoop'),
         tube(0.035, local(-0.14, 0.6), heel, M.frame),
         rod(0.0175, heel, tip, M.vinyl, { held: true }),
         knob(M, heel, 0.0225, M.frame),
         knob(M, tip, 0.0175),
-        rod(0.0175, end, lowerEnd, M.vinyl),
+        rod(0.0175, end, lowerEnd, M.vinyl, { solid: true }),
         knob(M, lowerEnd, 0.0175),
-        role(rod(0.025, hornAt, hornEnd, M.metal), 'horn'),
+        role(rod(0.025, hornAt, hornEnd, M.metal, { solid: true }), 'horn'),
         knob(M, hornEnd, 0.03, M.pulley),
         plate,
       ];

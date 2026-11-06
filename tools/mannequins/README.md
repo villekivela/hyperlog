@@ -529,7 +529,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   (the shoulders).
 - `shrug_machine` (#223, #241, the machine kind of `machine_shrug`, posed standing on the
   `standing_levers` motion) stands where its ref puts it, whatever the pose, the lifter at the origin,
-  100 mm behind the photos' grip line: a rectangular base of 75 mm tube, 38 mm up on a foot at each
+  100 mm behind the grips' place on the stop: a rectangular base of 75 mm tube, 38 mm up on a foot at each
   corner, with two cross beams; an A-frame on each rail carrying a cross tube 600 mm up; and a column
   raking back 8.8° from the front cross beam, carrying a back pad topping out at 1.24 m and the seat's
   sleeve, a brace running from it back to the cross tube. The two levers are one body on a revolute
@@ -539,7 +539,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   rising from it to the grip, a second grip running on from its end, and a plate horn near the front
   reaching out to 760 mm from the middle. The contact ties the hands to the grips. Its one option is
   `seat`, the seat's top (0.65 m, the ref's measured height); the pose lowers it to 0.45 m, and the
-  legs stand either side of it, as the ref's front photo has them.
+  legs stand either side of it.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, all posed on it, #196) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
