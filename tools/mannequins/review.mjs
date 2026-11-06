@@ -50,6 +50,8 @@ export const BATCHES = {
   'hyperextension-bench': ['45_hyperextension'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
+  // The crunch machine's one exercise, a reclined crunch on its inclined seat (#233).
+  'crunch-machine': ['machine_crunch'],
   // The hip thrust machine's exercise (#229).
   'hip-thrust': ['machine_hip_thrust'],
   // The power rack's pull-ups, chin-ups, hangs and dips, the feet off the floor (#196).
