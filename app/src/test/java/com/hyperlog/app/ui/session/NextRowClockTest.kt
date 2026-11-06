@@ -48,6 +48,21 @@ class NextRowClockTest {
     private val bench = Exercise("barbell_bench_press", "Barbell Bench Press", Equipment.Barbell, MovementPattern.HorizontalPush, GripDemand.Low, listOf("Chest"))
     private val calls = mutableListOf<String>()
 
+    private fun resting(restEndsAt: Long) = ActiveSession(
+        id = 1, startedAt = 0, exercises = emptyList(), currentId = null, entry = null,
+        padVisible = true, restEndsAt = restEndsAt, restTotalMs = 180_000,
+    )
+
+    /** A session left open would count up without end (`+220:45`), which says nothing about rest. */
+    @Test
+    fun theCountUpLeavesTheRowAfterAnHour() {
+        val hour = 3_600_000L
+        val ended = 1_000_000L
+        assertEquals("+59:59", rowClock(resting(ended), ended + hour - 1_000)?.time)
+        assertEquals(null, rowClock(resting(ended), ended + hour))
+        assertEquals(null, rowClock(resting(ended), ended + 220 * 60_000L))
+    }
+
     private fun show(
         restEndsAt: Long? = null, restTotalMs: Long = 0, breathing: Boolean = false,
         holdStartedAt: Long? = null, followUp: FollowUp? = null, padVisible: Boolean = true,

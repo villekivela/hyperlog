@@ -864,8 +864,9 @@ each planned day with the training day it lands on, and never changes the day:
        rest the whole row drains from full to empty with the time left in large digits, and the set
        table stays visible, with the pad shown or hidden. A tap on the digits opens the rest sheet
        (−15, +15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
-       is muted and counts up in large digits (`+0:12`) until the next set is logged, and the phone
-       still vibrates when rest ends. The myo breathing countdown and the iso hold use the same
+       is muted and counts up in large digits (`+0:12`) until the next set is logged or an hour has
+       passed (#269), and the phone still vibrates when rest ends. Past the hour the clock has
+       stopped saying anything about rest, so it leaves the row, which goes back to plain Next. The myo breathing countdown and the iso hold use the same
        row; the hold fills toward its target instead of draining and, at the target, turns the row solid
        with the digits stopped (owner, 2026-11-06). The breathing countdown is tinted in myo-reps'
        violet and the hold in iso hold's blue, from the technique colours; the fill's moving edge is
@@ -915,7 +916,7 @@ each planned day with the training day it lands on, and never changes the day:
        Live Update, so the countdown also sits in the status bar as a chip.
      - When rest runs out the phone buzzes twice with alarm-class vibration (through vibrate and
        silent mode), and the notification reads `Rest over` and counts up, with End rest, until the
-       next set is logged. Out of the app it also pops up, vibrating only: no sound by default.
+       next set is logged or the hour is up, when it goes with the row's clock. Out of the app it also pops up, vibrating only: no sound by default.
        The sound can be turned on in the system's settings for the "Rest over" channel. With the app on
        screen it only buzzes, once.
      - A myo-reps breathing pause shows as `Breathe` counting down to `Mini-set 2` (`25 kg × 4`),
