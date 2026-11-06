@@ -317,7 +317,7 @@ export const POSES = {
     like: 'chest_supported_machine_row',
     kit: { row_machine: { seat: [0.5, 0.2], arm: 0.36, reach: 50, horn: -70 } },
     top: { levers: 52 },
-    bottom: { levers: 134 },
+    bottom: { levers: 119.7837 },
     feet: { z: 0.56 },
     grip: { rotate: 45, pole: [1, -0.3, -1] },
   },

@@ -1,0 +1,22 @@
+{
+  "incline_machine_press": {
+    "ok": true,
+    "clip": "aa070884df37caca",
+    "at": "2026-11-06T20:17:24.038Z"
+  },
+  "leg_press_calf_press": {
+    "ok": true,
+    "clip": "4e497830d8b03ee0",
+    "at": "2026-11-06T20:17:06.475Z"
+  },
+  "machine_row": {
+    "ok": true,
+    "clip": "8fee6bba0b169036",
+    "at": "2026-11-06T20:26:52.371Z"
+  },
+  "single_leg_leg_press": {
+    "ok": true,
+    "clip": "45b3e1cccd8199f6",
+    "at": "2026-11-06T20:16:47.518Z"
+  }
+}
