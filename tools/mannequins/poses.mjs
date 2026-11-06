@@ -839,15 +839,16 @@ export const POSES = {
   },
 
   // On the right knee facing the left tower, a rope from a high pulley: from leaning forward, the hands
-  // at head height, the trunk rocks back upright as the long arms sweep it down onto the front thigh.
+  // at head height, the trunk rocks back upright as the long arms sweep down past the front thigh, the
+  // rope's ends spreading to the hips.
   cable_lat_pullover: {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 13, faces: true, attachment: 'rope', at: [-1.105, 1.7] } },
     body: { kneel: -1 },
-    top: { thigh: 0, trunk: 35, hand: [0.13, 1.17, 0.87], rotate: 90 },
-    bottom: { thigh: 0, trunk: 8, hand: [0.13, 0.62, 0.58], rotate: 90 },
-    feet: { stance: 0.22, ahead: 0.5, kneesOut: 0.5 },
+    top: { thigh: 0, trunk: 35, hand: [0.2, 1.17, 0.87], rotate: 90 },
+    bottom: { thigh: 0, trunk: 8, hand: [0.32, 0.42, 0.3], rotate: 90 },
+    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.15 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
     grip: { arc: true, rotate: 90, pole: [0.3, -1, -0.5] },
     camera: { target: [0, 0.85, 0.35], halfHeight: 1.15, azimuth: 65, elevation: 8 },

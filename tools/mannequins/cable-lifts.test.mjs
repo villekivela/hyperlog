@@ -102,7 +102,7 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   const elbow = (g) => g('upperarm_l').sub(g('lowerarm_l')).angleTo(g('hand_l').sub(g('lowerarm_l'))) * 180 / Math.PI;
   const angles = [0, 0.25, 0.5, 0.75, 1].map((d) => elbow(at(d)));
   assert.ok(Math.min(...angles) > 140, `the elbow bends to ${Math.min(...angles).toFixed(0)}°: a pullover, not a pulldown`);
-  // A rope, its two ends passing inside the raised knee where a bar would run through it.
+  // A rope, its two ends free to pass either side of the raised knee where a bar would run through it.
   assert.equal(prepare('cable_lat_pullover').kit.cable_crossover.attachment, 'rope');
   const top = at(0);
   const high = top('hand_l').y;
@@ -119,12 +119,11 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   const swing = lean(at(0)) - lean(at(1));
   assert.ok(swing > 25, `the trunk rocks ${swing.toFixed(0)}°`);
   const arm = end('upperarm_l').sub(end('lowerarm_l')).angleTo(end('upperarm_l').sub(end('pelvis'))) * 180 / Math.PI;
-  // A long arm can't reach the hip's crease from a kneel: the shoulder is nearer the thigh than that.
-  assert.ok(arm < 60, `the upper arm ${arm.toFixed(0)}° off the trunk at the finish: down toward the hip`);
-  // The finish lies on top of the thigh, not down between the legs, and the top at about head height.
+  assert.ok(arm < 45, `the upper arm ${arm.toFixed(0)}° off the trunk at the finish: by the hip`);
+  // The arms pass beside the raised thigh, the rope's ends spread, and finish by the hips.
   const finish = at(1);
-  const thighTop = (finish('thigh_l').y + finish('calf_l').y) / 2 + 0.03;
-  assert.ok(finish('hand_l').y > thighTop, `the hand ${finish('hand_l').y.toFixed(3)} at the finish, the thigh's top about ${thighTop.toFixed(3)}`);
+  const beside = finish('hand_l').x - finish('calf_l').x;
+  assert.ok(beside > 0.08, `the hand ${beside.toFixed(3)} outside the front knee at the finish`);
   const start = at(0);
   assert.ok(start('hand_l').y < start('Head').y + 0.2, `the hand ${start('hand_l').y.toFixed(3)} at the top, the head ${start('Head').y.toFixed(3)}`);
 });
