@@ -33,6 +33,8 @@ export const MOTION_TEMPOS = {
   // Pulled from arms long (a row, a machine pulldown): the clip's first half is the concentric.
   lever_handles: tempo(1, 0.3, 2, 0.5),
   chest_pad: tempo(1, 0.3, 2, 0.5),
+  // Curled up against the stack: the clip's first half is the concentric.
+  reclined_crunch: tempo(1, 0.5, 2, 0.5),
   // Driven up from the bottom: the clip's first half, the lowering, is the eccentric.
   hip_thrust: tempo(2, 0.5, 1, 1),
   bridge: tempo(2, 0.3, 1, 0.6),
