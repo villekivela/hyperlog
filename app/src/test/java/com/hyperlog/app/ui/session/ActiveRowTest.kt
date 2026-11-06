@@ -37,7 +37,9 @@ import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.session.WarmupEdit
+import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.ui.theme.techniqueColor
 import kotlin.math.abs
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -51,7 +53,7 @@ import org.robolectric.annotation.GraphicsMode
 /**
  * The active row has no highlight (docs/design/logging-screen.md, Owner decisions): its kg and
  * reps are outlined cells, the focused one in primary, and its index circle is filled with
- * primary. Checked on the pixels of a render, in light and dark.
+ * primary (a technique set keeps its colour). Checked on the pixels of a render, in light and dark.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w412dp-h915dp-xxhdpi")
@@ -126,7 +128,7 @@ class ActiveRowTest {
     }
 
     @Test
-    fun anActiveDropIsMarkedOnlyByItsCellsAndTheSetsCircleStaysPrimary() = bothThemes { dark ->
+    fun anActiveDropIsMarkedOnlyByItsCellsAndTheSetsCircleKeepsItsTechniqueColour() = bothThemes { dark ->
         val drops = Technique.Dropset(2, 25)
         val set = LoggedSet(25.0, 9, 0, 1, technique = drops, extensions = listOf(Extension(Extension.Kind.Drop, 17.5, 6)))
         val shot = shoot(
@@ -134,16 +136,16 @@ class ActiveRowTest {
             dark,
         )
         val circle = index("1")
-        assertColor("drop set, dark=$dark: the set's circle", shot.cs.primary, shot.at(circle.left + 4.dp, mid(circle)))
+        assertColor("drop set, dark=$dark: the set's circle", techniqueColor(TechniqueKind.Dropset, dark), shot.at(circle.left + 4.dp, mid(circle)))
         val reps = cell("Reps")
         val row = DpRect(circle.left, reps.top, circle.right, reps.bottom)
         shot.assertActive("active drop, dark=$dark", null, row, focused = reps, other = cell("kg"))
         // The tall pill runs whole through the active drop's index column.
-        assertColor("drop set, dark=$dark: tall pill", shot.cs.tertiaryContainer, shot.at(circle.left + 4.dp, mid(reps)))
+        assertColor("drop set, dark=$dark: tall pill", techniqueColor(TechniqueKind.Dropset, dark), shot.at(circle.left + 4.dp, mid(reps)))
     }
 
     @Test
-    fun anActiveMiniSetIsMarkedOnlyByItsCellsAndTheSetsCircleStaysPrimary() = bothThemes { dark ->
+    fun anActiveMiniSetIsMarkedOnlyByItsCellsAndTheSetsCircleKeepsItsTechniqueColour() = bothThemes { dark ->
         val myo = Technique.MyoReps(4)
         val set = LoggedSet(60.0, 12, 0, 0, technique = myo, extensions = listOf(Extension(Extension.Kind.MiniSet, 60.0, 4)))
         val shot = shoot(
@@ -151,7 +153,7 @@ class ActiveRowTest {
             dark,
         )
         val circle = index("1")
-        assertColor("myo set, dark=$dark: the set's circle", shot.cs.primary, shot.at(circle.left + 4.dp, mid(circle)))
+        assertColor("myo set, dark=$dark: the set's circle", techniqueColor(TechniqueKind.MyoReps, dark), shot.at(circle.left + 4.dp, mid(circle)))
         val reps = cell("Reps")
         // A mini-set's weight is the set's, so it is no cell.
         shot.assertActive("active mini-set, dark=$dark", null, DpRect(circle.left, reps.top, circle.right, reps.bottom), focused = reps, other = null)
@@ -171,7 +173,7 @@ class ActiveRowTest {
         val end = mid(circle) + RowHeight / 2 + SubRowHeight * 4f
         var y = circle.bottom
         while (y < end) {
-            assertColor("myo set, dark=$dark: pill's left edge at y=$y", shot.cs.tertiaryContainer, shot.at(circle.left + 1.dp, y))
+            assertColor("myo set, dark=$dark: pill's left edge at y=$y", techniqueColor(TechniqueKind.MyoReps, dark), shot.at(circle.left + 1.dp, y))
             y += 1.dp
         }
     }
