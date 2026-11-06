@@ -102,9 +102,9 @@ export const POSES = {
   // Overhand out near the bar's bends, the elbows wide, pulled to the upper chest.
   lat_pulldown_wide_grip: {
     like: 'lat_pulldown',
-    grip: { width: 0.425, elbows: 1 },
-    top: { bar: [1.58, 0.02] },
-    bottom: { bar: [1.14, 0.02] },
+    grip: { width: 0.425, elbows: 1, thumb: 'thumbless' },
+    top: { bar: [1.66, 0.02], shrug: 12 },
+    bottom: { bar: [1.14, 0.02], shrug: 0 },
   },
 
   // Two close handles in front of the face, the palms facing: the elbows drive down by the sides.
@@ -113,7 +113,7 @@ export const POSES = {
     kit: { cable_tower: { attachment: 'handles', spread: 0.095, pulley: [2.25, 0.14] } },
     grip: { width: 0.095, rotate: 0, pole: [0.1, -1, 0.3] },
     top: { bar: [1.62, 0.14], shrug: 9 },
-    bottom: { bar: [1.11, 0.14], shrug: 0 },
+    bottom: { bar: [1.11, 0.04], shrug: 0 },
   },
 
   // A narrower grip, pulled to the upper chest rather than as low. The arms hang fully extended at
@@ -816,7 +816,7 @@ export const POSES = {
     motion: 'arms',
     kit: { cable_crossover: { position: 1, faces: true, attachment: 'rope', reversed: true, at: [-1.105, 0.75] } },
     top: { shin: 3, thigh: 3, trunk: -3, upperArm: 8, forearm: 130 },
-    bottom: { shin: 3, thigh: 3, trunk: -3, upperArm: 6, forearm: 12 },
+    bottom: { shin: 3, thigh: 3, trunk: -3, upperArm: 10, forearm: 26 },
     feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
     grip: { width: 0.13, rotate: 90 },
     camera: { target: [0, 1.0, 0.2], halfHeight: 1.1, azimuth: 62, elevation: 8 },
@@ -838,19 +838,18 @@ export const POSES = {
     camera: { target: [0, 0.8, 0.3], halfHeight: 1.15, azimuth: 65, elevation: 8 },
   },
 
-  // On the right knee facing the left tower, a straight bar from a high pulley: from leaning well
-  // forward the trunk rocks back upright as the long arms sweep the bar down to the hips, the front
-  // knee open to let it by.
+  // On the right knee facing the left tower, a rope from a high pulley: from leaning well forward the
+  // trunk rocks back upright as the long arms sweep it down to the hips, inside the front knee.
   cable_lat_pullover: {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 15, faces: true, attachment: 'bar', at: [-1.105, 1.3] } },
+    kit: { cable_crossover: { position: 13, faces: true, attachment: 'rope', at: [-1.105, 1.7] } },
     body: { kneel: -1 },
-    top: { thigh: 0, trunk: 42, hand: [0.11, 1.33, 0.76], rotate: 0 },
-    bottom: { thigh: 0, trunk: 6, hand: [0.11, 0.46, 0.34], rotate: 0 },
+    top: { thigh: 0, trunk: 34, hand: [0.08, 1.33, 0.75], rotate: 90 },
+    bottom: { thigh: 0, trunk: 6, hand: [0.08, 0.45, 0.35], rotate: 90 },
     feet: { stance: 0.22, ahead: 0.5, kneesOut: 0.5 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
-    grip: { arc: true, rotate: 0, thumb: 'wrapped', pole: [0.3, -1, -0.5] },
+    grip: { arc: true, rotate: 90, pole: [0.3, -1, -0.5] },
     camera: { target: [0, 0.85, 0.35], halfHeight: 1.15, azimuth: 65, elevation: 8 },
   },
 
