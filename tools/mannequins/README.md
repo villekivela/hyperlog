@@ -236,7 +236,7 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   working arm's.
 - **`grip.restFlat`** `{ palm, fingers }` lays `grip.one`'s resting hand open on what it rests on, a
   thigh, its palm and fingers pointing those ways through the whole rep, whatever `rotate` and `wrist`
-  do to the working hand. Without it the pose's `rotate` and `wrist` turn both hands.
+  do to the working hand. Without it the pose's `rotate` and `wrist` turn both hands. A hand laid flat counts as set in the wrist check.
 - **`grip.joined`** (`free_arms`) holds one thing in both hands, that far either side of the point
   `hand` gives, which isn't mirrored. **`grip.via`** [x, y, z] (`free_arms`) curves the hand through
   that point at the middle of the rep, for a hand riding something that swings on an arc.
@@ -287,7 +287,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `row` | hinged over, pulling a bar straight up and down at `bar.z`: a bent-over row, a Pendlay row | `shin`, `thigh`, `trunk`; `bar`, its height at the top and the bottom; `grip.pole` for the elbows. A drag of the hands sets the end's `bar` and `bar.z` |
 | `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared, a light hint the hand on the bar outweighs; `grip.pole` [out, up, forward] points the elbows firmly instead, the bar slanting across the palm to let them; `body.head`, the head's tilt from the spine to rest it on the pad |
 | `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`, `body.head`; `top.over` [out, up] and `bottom.chest` [out, down] from the shoulders in the trunk's frame; `rotate`, `tilt`; `grip.lockout`, `grip.width`, `grip.elbows` |
-| `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
+| `pulldown` | seated under a thigh pad, pulling a bar down, or two `handles` running front to back, palms facing | `trunk`, `bar: [y, z]` |
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit; `feet.one` (1 the left) puts only that foot on the plate, the other flat on the floor at `feet.rest` [x, z], with `kit.leg_press.foot` ('l' or 'r') the same foot and `kit.leg_press.sits` [y, z] the hips up and forward off the seat's edge; `feet.ball` stands the balls of the feet there, heels off the plate, the ankles turned `heels` degrees from flat, heels up positive, the toes flat |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width`; `kit.chest_press.pivot` [y, z], `rest` (radians from hanging straight) and `travel` (degrees) move the levers for an incline, the handles rising as they go |

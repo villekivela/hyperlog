@@ -100,6 +100,11 @@ export const BATCHES = {
   'dip-machine': ['seated_dip_machine'],
   // The library's machine exercises on kits other lifts built (#127).
   'machine-lifts': ['single_leg_leg_press', 'leg_press_calf_press', 'incline_machine_press', 'machine_row'],
+  // The library's cable exercises on kits other lifts built (#127).
+  'cable-lifts': [
+    'lat_pulldown_wide_grip', 'neutral_grip_lat_pulldown', 'cable_rope_hammer_curl', '1_arm_cable_pulldown', 'cable_lat_pullover',
+    '1_arm_lat_pull_in', '1_arm_cable_lat_pull_around',
+  ],
 };
 
 const idsOf = (name) => {

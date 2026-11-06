@@ -1,5 +1,29 @@
 {
   "clips": {
+    "1_arm_cable_lat_pull_around": {
+      "clip": "1_arm_cable_lat_pull_around.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.2
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 25,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_cable_crossover.bin"
+      ]
+    },
     "1_arm_cable_press_around": {
       "clip": "1_arm_cable_press_around.glb",
       "equipment": "cable",
@@ -17,6 +41,30 @@
         "lowering": 2,
         "bottom": 0.3,
         "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_cable_crossover.bin"
+      ]
+    },
+    "1_arm_cable_pulldown": {
+      "clip": "1_arm_cable_pulldown.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.3
+        ],
+        "halfHeight": 1.15,
+        "azimuth": 65,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
         "top": 0.6
       },
       "resources": [
@@ -66,6 +114,30 @@
         "lowering": 2,
         "bottom": 0.3,
         "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_cable_crossover.bin"
+      ]
+    },
+    "1_arm_lat_pull_in": {
+      "clip": "1_arm_lat_pull_in.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.1
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 20,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
         "top": 0.6
       },
       "resources": [
@@ -940,6 +1012,30 @@
         "kit_cable_crossover.bin"
       ]
     },
+    "cable_lat_pullover": {
+      "clip": "cable_lat_pullover.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.85,
+          0.35
+        ],
+        "halfHeight": 1.15,
+        "azimuth": 65,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_cable_crossover.bin"
+      ]
+    },
     "cable_lateral_raise": {
       "clip": "cable_lateral_raise.glb",
       "equipment": "cable",
@@ -975,6 +1071,30 @@
         ],
         "halfHeight": 1.15,
         "azimuth": 65,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_cable_crossover.bin"
+      ]
+    },
+    "cable_rope_hammer_curl": {
+      "clip": "cable_rope_hammer_curl.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          1,
+          0.2
+        ],
+        "halfHeight": 1.1,
+        "azimuth": 62,
         "elevation": 8
       },
       "tempo": {
@@ -2203,6 +2323,30 @@
         "kit_cable_tower.bin"
       ]
     },
+    "lat_pulldown_wide_grip": {
+      "clip": "lat_pulldown_wide_grip.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          1.12,
+          0.38
+        ],
+        "halfHeight": 1.18,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_cable_tower.bin"
+      ]
+    },
     "leg_extension": {
       "clip": "leg_extension.glb",
       "equipment": "machine",
@@ -2585,6 +2729,30 @@
       "resources": [
         "mannequin.bin",
         "kit_shrug_machine.bin"
+      ]
+    },
+    "neutral_grip_lat_pulldown": {
+      "clip": "neutral_grip_lat_pulldown.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          1.12,
+          0.38
+        ],
+        "halfHeight": 1.18,
+        "azimuth": 62,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_cable_tower.bin"
       ]
     },
     "neutral_grip_pullup": {
