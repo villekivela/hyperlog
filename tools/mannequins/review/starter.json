@@ -2,26 +2,30 @@
   "2_grip_lat_pulldown": {
     "ok": true,
     "note": "2 grip lat pulldown is exercise where first set is done with 1.5 shoulder width grip and second set with narrow shoulder width palms in like curl",
-    "clip": "bea2b87c13abe79e",
-    "tuned": "{\"top.wrist\":[0,29.3072],\"top.rotate\":0,\"grip.width\":0.4018,\"bottom.bar\":[1.119,-0.0434],\"kit.cable_tower.thighPad\":[0.6819,0.1745],\"kit.cable_tower.seat\":[0.48,-0.01],\"kit.cable_tower.pulley\":[2.13,-0.04],\"kit.cable_tower.column\":0.92,\"top.bar\":[1.62,-0.05]}"
+    "clip": "30a16946bbb2a9d1",
+    "tuned": "{\"top.wrist\":[0,29.3072],\"top.rotate\":0,\"grip.width\":0.4018,\"bottom.bar\":[1.119,-0.0434],\"kit.cable_tower.thighPad\":[0.6819,0.1745],\"kit.cable_tower.seat\":[0.48,-0.01],\"kit.cable_tower.pulley\":[2.13,-0.04],\"kit.cable_tower.column\":0.92,\"top.bar\":[1.62,-0.05]}",
+    "at": "2026-11-06T04:46:26.964Z"
   },
   "bayesian_cable_curl": {
     "ok": true,
     "note": "should have more stable stance",
-    "clip": "7de401b33eeba5f5",
-    "tuned": "{}"
+    "clip": "f68c4741d1f4ff3b",
+    "tuned": "{}",
+    "at": "2026-11-06T04:46:34.175Z"
   },
   "cable_flye": {
     "ok": true,
     "note": "cant really tune  for the movement to be correct, grip rotate needs different top and bottom values",
-    "clip": "a59dd26267f00200",
-    "tuned": "{}"
+    "clip": "d2bc9db9384a3a73",
+    "tuned": "{}",
+    "at": "2026-11-06T04:46:40.792Z"
   },
   "cable_lateral_raise": {
     "ok": true,
     "note": "arm should be pretty straight through out the movement no it bends at elbow in the middle",
-    "clip": "7d7e256619c9944f",
-    "tuned": "{\"top.hand\":[0.8229,1.5221,0.3638],\"bottom.hand\":[0.0309,0.8331,0.0938],\"grip.pole\":[1,-0.2505,-0.7094]}"
+    "clip": "c8b934ee3ba2a4f4",
+    "tuned": "{\"top.hand\":[0.8229,1.5221,0.3638],\"bottom.hand\":[0.0309,0.8331,0.0938],\"grip.pole\":[1,-0.2505,-0.7094]}",
+    "at": "2026-11-06T04:46:47.901Z"
   },
   "cable_shoulder_press": {
     "ok": true,
@@ -33,8 +37,9 @@
   "chest_supported_machine_row": {
     "ok": true,
     "note": "machine looks bad check this for example https://www.google.com/search?sca_esv=42710b0963df5426&hl=en&sxsrf=AKL5yDhBFHTOFa_AwJxjfp_Am3OrMQ2w6A:1793686334813&udm=2&fbs=ACAhTvwdifjn2dKXmjtOfBxVFl_koHVe5RLSnJlTH2QYaq_YVV3xLDZ0MDF3xjYYYn11fZzAJAouEckp90rh9mUoTnN1fiUzV9PPNstmX25bGqkzrH9QbYFRp3JhDulF-28WKTsOzE5AHofung3bnAaCfvU7vOaaXPn-dOepfLL406XQ68rOBiTNfqLSpIwDgcLu4BBL920t&q=chest+supported+row+machine&sa=X&ved=2ahUKEwjwq8ymkuuXAxX6HBAIHSFoFxIQtKgLegQIEhAB&biw=2538&bih=1397&dpr=1.5#sv=CAMSURoyKhBlLTFrZEpocC1mblk2YzBNMg4xa2RKaHAtZm5ZNmMwTToONTNKRWVMcFNsUUdOV00gBCoXCgFzEhBlLTFrZEpocC1mblk2YzBNGAEwARgHILPo5bcPSggQAhgBIAIoAQ",
-    "clip": "a18955c3b2d39395",
-    "tuned": "{}"
+    "clip": "f9ac49ae210e4d23",
+    "tuned": "{}",
+    "at": "2026-11-06T04:47:14.060Z"
   },
   "close_grip_bench_press": {
     "ok": true,
@@ -53,49 +58,57 @@
   "leg_extension": {
     "ok": true,
     "note": "machine does not look complete and there is some weird placementes, usually the stack is next to user",
-    "clip": "e4e13ca0e1e9265d",
-    "tuned": "{}"
+    "clip": "541a7867841ca428",
+    "tuned": "{}",
+    "at": "2026-11-06T04:47:21.338Z"
   },
   "lying_leg_curl": {
     "ok": true,
     "note": "needs better machine here is reference https://www.gymsolutions.com.au/wp-content/uploads/2024/10/IMG_9973.jpg",
-    "clip": "9c11c2c9e1334c7f",
-    "tuned": "{}"
+    "clip": "f2c23e537c76086e",
+    "tuned": "{}",
+    "at": "2026-11-06T04:47:30.822Z"
   },
   "machine_preacher_curl": {
     "ok": true,
     "note": "would need real machine",
-    "clip": "abcdf92f623765eb",
-    "tuned": "{\"kit.preacher_curl_machine.pad\":0.0854}"
+    "clip": "e22ee0f06b79d6a4",
+    "tuned": "{\"kit.preacher_curl_machine.pad\":0.0854}",
+    "at": "2026-11-06T04:47:42.016Z"
   },
   "machine_pulldown": {
     "ok": true,
     "note": "machine looks bad",
-    "clip": "d68e0fd0570261e9",
-    "tuned": "{}"
+    "clip": "e2ccc996b48919cb",
+    "tuned": "{}",
+    "at": "2026-11-06T04:47:52.346Z"
   },
   "overhead_cable_triceps_extension": {
     "ok": true,
     "note": "",
-    "clip": "d58dd17ff7066c0e",
-    "tuned": "{}"
+    "clip": "fcd27dc14bc852ad",
+    "tuned": "{}",
+    "at": "2026-11-06T04:46:56.227Z"
   },
   "reverse_cable_crossover": {
     "ok": true,
     "note": "otherwise ok but the cable is not attached to the handle",
-    "clip": "c62a0a188f9b7080",
-    "tuned": "{}"
+    "clip": "eec37440dbaf51f2",
+    "tuned": "{}",
+    "at": "2026-11-06T04:47:04.181Z"
   },
   "seated_calf_raise": {
     "ok": true,
     "note": "machine looks weird, needs updated machine",
-    "clip": "83a299763a272204",
-    "tuned": "{}"
+    "clip": "b83e7b421427a802",
+    "tuned": "{}",
+    "at": "2026-11-06T04:48:00.738Z"
   },
   "seated_leg_curl": {
     "ok": true,
     "note": "machine does not look complete and there is some weird placementes, usually the stack is next to user",
-    "clip": "c765507b7aa136ba",
-    "tuned": "{}"
+    "clip": "5aa5262d1defb2e1",
+    "tuned": "{}",
+    "at": "2026-11-06T04:48:08.377Z"
   }
 }
