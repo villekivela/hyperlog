@@ -46,6 +46,8 @@ export const BATCHES = {
   ],
   // The pec deck's three exercises, posed to prove a body fits it (#241).
   'pec-deck': ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'],
+  // The lateral raise machine's seated raise, posed to prove a body fits it (#241).
+  'lateral-raise': ['machine_lateral_raise'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
   // The hip thrust machine's exercise (#229).
@@ -55,6 +57,8 @@ export const BATCHES = {
     'pullup', 'pullup_wide_grip', 'close_grip_pullup', 'neutral_grip_pullup', '2_grip_pullup', 'chinup', 'chinup_wide_grip', 'close_grip_chinup',
     'dead_hang', 'hanging_leg_raise', 'dip', 'close_grip_dip', 'weighted_pullup', 'weighted_chinup', '2_grip_pullup_weighted', 'weighted_dip',
   ],
+  // The shoulder press machine's one exercise, machine-first (#225).
+  'shoulder-press': ['machine_shoulder_press'],
   // The captain's chair's one exercise, a knee raise with the forearms on the pads (#237).
   'captains-chair': ['roman_chair_crunch'],
   // The glute-ham developer's one exercise (#230), kneeling on its pads with the ankles in its rollers.

@@ -2274,6 +2274,30 @@
         "kit_hip_thrust_machine.bin"
       ]
     },
+    "machine_lateral_raise": {
+      "clip": "machine_lateral_raise.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.8,
+          0.1
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 215,
+        "elevation": 12
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_lateral_raise_machine.bin"
+      ]
+    },
     "machine_preacher_curl": {
       "clip": "machine_preacher_curl.glb",
       "equipment": "machine",
@@ -2320,6 +2344,30 @@
       "resources": [
         "mannequin.bin",
         "kit_pulldown_machine.bin"
+      ]
+    },
+    "machine_shoulder_press": {
+      "clip": "machine_shoulder_press.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          -0.1,
+          0.98,
+          0.1
+        ],
+        "halfHeight": 1.2,
+        "azimuth": 56,
+        "elevation": 12
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.3,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_shoulder_press.bin"
       ]
     },
     "neutral_grip_pullup": {

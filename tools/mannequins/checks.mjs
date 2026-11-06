@@ -231,6 +231,8 @@ function checkLinkage(kits, { rig, parts, vertices, skinned, started, limbs }, n
           note(miss - LIMITS.grip, `the ${k} hand ${(miss * 100).toFixed(1)} cm off the ${c.point}`);
           continue;
         }
+        // One arm's pad bears on that arm alone.
+        if (c.hand && c.hand !== k) continue;
         // The limb on this side: a spine's bones, on neither, count for both.
         const limb = limbs[`${c.landmark}_${k}`] ??= vertices.flatMap((b, i) => (
           LIMBS[c.landmark].test(b.bone) && (!/_[lr]$/.test(b.bone) || b.bone.endsWith(`_${k}`)) ? [i] : []));

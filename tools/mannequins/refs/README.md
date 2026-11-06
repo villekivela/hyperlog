@@ -26,12 +26,12 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 4 | [`power_rack`](power_rack/ref.md) | 16 | Rogue Monster Lite Rack (RML-390BT) with the Rogue Crown Pull-up Bar and Monster Lite Matador dip handles as add-ons; built (#189, named the pull-up and dip station in the issue), posed (#196) |
 | 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar; built (#209), not yet posed |
 | 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY); built (#208), posed (#241) |
-| 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise; built (#212, seated only), not yet posed |
+| 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise; built (#212, seated only), seated raise posed (#241) |
 | 8 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction; built (#214), not yet posed |
 | 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar; built (#219), not yet posed |
 | 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension; built (#220), not yet posed |
 | 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug; built (#223), not yet posed |
-| 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
+| 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press; built and posed (#225) |
 | 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip; built and posed (#226) |
 | 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive; built and posed (#229) |
 | 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD; built and posed (#230) |
@@ -73,7 +73,7 @@ chosen from a fit rule at low confidence. What stays chosen, or rough, per machi
 gaps says why):
 
 - `t_bar_row_machine` (built, #176; posed, #188): the foot plate setting for the mannequin is
-  solved from the fit rule, near photo 07's but not measured on it; the top of the row comes from a three-quarter photo. The recipe runs the neutral grips fore and aft through the
+  solved from the fit rule, near photo 07's but not measured on it; the top of the row comes from a three-quarter photo. The recipe lays one bar grip a side across the machine, held overhand, as the owner asked, where the ref shows neutral grips fore and aft through the
   yoke's top blocks, as photos 05 and 06 show them, where the ref's spec calls them vertical.
 - `cable_crossover`: the pulley heights and hole pitch come from three-quarter photos (about ±50 to
   80 mm); the carriage position per exercise is chosen.
@@ -85,8 +85,9 @@ gaps says why):
 - `pec_deck` (built, #208; posed, #241): built at 2.0 m to the demo's lifter against the page's 1.8 m; the seat
   range, the start position's step, the lever radius and the rear beam's reach stay chosen or rough; no top or
   straight-front view.
-- `lateral_raise_machine`: the seat range is chosen and the pivot spacing is rough. The standing
-  exercise's video shows another, standing machine, with no reference model of its own.
+- `lateral_raise_machine` (built, #212; seated raise posed, #241): the seat range is chosen and the pivot spacing is
+  rough. The standing exercise's video shows another, standing machine, with no reference model of its own, so it
+  stays unposed.
 - `hip_machine` (built, #214): the seat range, closed pad spacing and the range of motion stay chosen or rough; no
   side-on photo, and the video is another make.
 - `safety_bar`: the handle arms' length and angle are chosen; the published width and height fit the

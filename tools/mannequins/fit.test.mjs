@@ -13,6 +13,7 @@ import { POSES } from './poses.mjs';
 const MACHINES = {
   leg_press: 'sled',
   machine_chest_press: 'levers',
+  machine_shoulder_press: 'yoke',
   leg_extension: 'lever',
   seated_leg_curl: 'lever',
   lying_leg_curl: 'lever',
@@ -27,6 +28,7 @@ const MACHINES = {
   pec_deck: 'left',
   reverse_pec_deck: 'left',
   '1_arm_reverse_pec_deck': 'left',
+  machine_lateral_raise: 'arm_l',
   seated_dip_machine: 'arms',
   machine_hip_thrust: 'carriage',
 };

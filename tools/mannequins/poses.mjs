@@ -148,6 +148,19 @@ export const POSES = {
     camera: { target: [0, 0.98, 0.1], halfHeight: 1.04, azimuth: 56, elevation: 12 },
   },
 
+  // Seated against the pad, 10° back, the neutral grips pressed from shoulder level to the arms near straight overhead.
+  machine_shoulder_press: {
+    equipment: 'machine',
+    motion: 'shoulder_press',
+    kit: { shoulder_press: {} },
+    body: { trunk: -18 },
+    feet: { stance: 0.17, z: 0.42, toeOut: 12 },
+    // The bar sits at the base of the fingers and at the bottom, where the hands are close to the shoulders, the wrist flexes 12° toward the bar so the fingers close round its front; at the top the wrist is straight.
+    grip: { sits: 'base' },
+    bottom: { wrist: [-12, 0] },
+    camera: { target: [-0.1, 0.98, 0.1], halfHeight: 1.2, azimuth: 56, elevation: 12 },
+  },
+
   // Seated against the carriage's back pad, the feet on its plates, the hands on the grips: the
   // arms from straight down at the hips (the top) to the handles at the lower chest (the bottom),
   // the carriage rocking back with them.
@@ -345,6 +358,18 @@ export const POSES = {
     feet: { stance: 0.1, toeOut: 8 },
     grip: { pole: [0.8, -0.3, 0.3] },
     camera: { target: [0, 0.75, 0.1], halfHeight: 1.0, azimuth: 70, elevation: 8 },
+  },
+
+  // The chest on its pad, the upper arms under the arm pads and the elbows bent, the hands on the
+  // grips: from the upper arms by the sides up to level.
+  machine_lateral_raise: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { lateral_raise_machine: {} },
+    body: { trunk: 0, look: 0 },
+    feet: { stance: 0.17, z: 0.3, toeOut: 10 },
+    grip: {},
+    camera: { target: [0, 0.8, 0.1], halfHeight: 1.05, azimuth: 215, elevation: 12 },
   },
 
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
