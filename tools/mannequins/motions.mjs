@@ -519,8 +519,9 @@ export const MOTIONS = {
       ...seatedFeet(e, L),
       bar: V(0, ...s.bar),
       grip: e.grip.width,
-      // Two handles run front to back, palms facing, where a bar runs across.
-      ...(e.kit.cable_tower?.attachment === 'handles' ? { across: () => V(0, 0, 1) } : {}),
+      // Two handles run front to back, where a bar runs across. The hands are up, so with the palms
+      // facing the thumbs point back at the lifter.
+      ...(e.kit.cable_tower?.attachment === 'handles' ? { across: () => V(0, 0, -1) } : {}),
       // The shoulders let up into the stretch at the top, down as the elbows drive down.
       shrug: s.shrug,
       // `elbows` turns the elbows out from the sides: 1 out wide, 0 straight down by the sides.

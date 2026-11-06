@@ -45,6 +45,18 @@ test('the neutral-grip pulldown holds a close handle, palms facing, the elbows d
   // Two grips running front to back, each in its own fist, palms facing: a grip across the body would
   // lie along the fingers.
   assert.equal(prepare('neutral_grip_lat_pulldown').kit.cable_tower.attachment, 'handles');
+  for (const d of [0, 0.5, 1]) {
+    const pose = at(d);
+    for (const [k, side] of [['l', 1], ['r', -1]]) {
+      // Closed fingers fold toward the palm, so their fold shows the way it faces.
+      const fingers = pose(`middle_01_${k}`).sub(pose(`hand_${k}`)).normalize();
+      const fold = pose(`middle_04_leaf_${k}`).sub(pose(`middle_01_${k}`)).projectOnPlane(fingers);
+      assert.ok(fold.x * side < 0, `the ${k} palm faces ${fold.x.toFixed(3)} across at ${d}, away from the other hand`);
+      // Hands up with the palms facing, the thumbs point back at the lifter.
+      const thumbs = pose(`index_01_${k}`).sub(pose(`pinky_01_${k}`));
+      assert.ok(thumbs.z < 0, `the ${k} thumb side ${thumbs.z.toFixed(3)} forward at ${d}`);
+    }
+  }
   const bottom = at(1);
   // Where the hands hold, not the wrists, which a palm's thickness puts further out.
   const apart = heldAt(stage.rig, 'l').x - heldAt(stage.rig, 'r').x;

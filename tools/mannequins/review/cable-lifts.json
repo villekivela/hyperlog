@@ -1,0 +1,37 @@
+{
+  "1_arm_cable_lat_pull_around": {
+    "ok": true,
+    "clip": "96dd247b75cb6d37",
+    "at": "2026-11-06T19:38:06.656Z"
+  },
+  "1_arm_cable_pulldown": {
+    "ok": true,
+    "clip": "fc3d920de31c7d69",
+    "at": "2026-11-06T19:27:21.615Z"
+  },
+  "1_arm_lat_pull_in": {
+    "ok": true,
+    "clip": "eb5e7c76656d733b",
+    "at": "2026-11-06T19:37:32.983Z"
+  },
+  "cable_lat_pullover": {
+    "ok": true,
+    "clip": "1bfb09df2b2c7f41",
+    "at": "2026-11-06T19:27:40.720Z"
+  },
+  "cable_rope_hammer_curl": {
+    "ok": true,
+    "clip": "78279effc15dbad8",
+    "at": "2026-11-06T19:26:52.310Z"
+  },
+  "lat_pulldown_wide_grip": {
+    "ok": true,
+    "clip": "3d11e07ac22e6e65",
+    "at": "2026-11-06T19:25:47.318Z"
+  },
+  "neutral_grip_lat_pulldown": {
+    "ok": true,
+    "clip": "205bb9ad855dded6",
+    "at": "2026-11-06T20:05:39.389Z"
+  }
+}
