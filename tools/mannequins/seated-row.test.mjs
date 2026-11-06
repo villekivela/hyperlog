@@ -97,9 +97,18 @@ test('the wide-grip seated row stays upright and draws a long bar in, the elbows
   assert.ok(pull('lowerarm_l').z < pull('upperarm_l').z + 0.03, 'and back');
   const held = heldAt(stage.rig, 'l').x;
   assert.ok(held > 0.3 && held < 0.46, `the hand at ${held.toFixed(3)} on the bar's sleeve`);
+  const chest = pull('hand_l').z - pull('spine_03').z;
+  assert.ok(chest < 0.22, `the hands ${chest.toFixed(3)} off the chest at the finish`);
+  const finish = pull('upperarm_l').sub(pull('upperarm_r')).length();
+  const open = at(0);
+  const start = open('upperarm_l').sub(open('upperarm_r')).length();
+  assert.ok(start - finish > 0.05, `the shoulders ${start.toFixed(3)} apart at the reach, ${finish.toFixed(3)} at the squeeze: the blades work`);
+  const pulled = at(1)('hand_l').clone();
+  const travel = at(0)('hand_l').distanceTo(pulled);
+  assert.ok(travel > 0.31, `the hands travel ${travel.toFixed(3)}`);
 });
 
-test('the seated Kelso shrug holds the trunk still and draws the shoulders back on long arms', async () => {
+test('the seated Kelso shrug leans back on bent arms, the bar at the lower chest, and only the blades work', async () => {
   const { stage, at } = await posed('seated_cable_kelso_shrug');
   assert.deepEqual(failing('seated_cable_kelso_shrug', stage), []);
   const entry = prepare('seated_cable_kelso_shrug');
@@ -110,9 +119,13 @@ test('the seated Kelso shrug holds the trunk still and draws the shoulders back 
   assert.ok(Math.abs(leanA - leanOf(b)) < 6, `the trunk moves ${Math.abs(leanA - leanOf(b)).toFixed(0)}°: still`);
   assert.ok(shoulderA.z - b('upperarm_l').z > 0.025, `the shoulders draw ${(shoulderA.z - b('upperarm_l').z).toFixed(3)} back`);
   const travel = handA.z - b('hand_l').z;
-  assert.ok(travel > 0.05 && travel < 0.2, `the hands travel ${travel.toFixed(3)}: only the blades move them`);
-  const long = [0, 0.5, 1].map((d) => { const g = at(d); return bend(g('upperarm_l'), g('lowerarm_l'), g('hand_l')); });
-  assert.ok(Math.min(...long) > 145, `the elbows ${long.map((e) => e.toFixed(0)).join('/')}: the arms long, a shrug and not a row`);
+  assert.ok(travel > 0.12 && travel < 0.34, `the hands travel ${travel.toFixed(3)}: a short pull`);
+  const elbows = [0, 0.5, 1].map((d) => { const g = at(d); return bend(g('upperarm_l'), g('lowerarm_l'), g('hand_l')); });
+  assert.ok(Math.max(...elbows) < 150 && Math.min(...elbows) > 85, `the elbows ${elbows.map((e) => e.toFixed(0)).join('/')}: bent through the rep`);
+  const end = at(1);
+  assert.ok(leanOf(end) < -5, `the trunk ${leanOf(end).toFixed(0)}°: leaning a little back`);
+  const off = end('hand_l').z - end('spine_03').z;
+  assert.ok(off < 0.3, `the hands ${off.toFixed(3)} off the chest: at the lower chest`);
 });
 
 test('the seated cable deadlift swings the trunk from over the legs to well back, on long arms', async () => {

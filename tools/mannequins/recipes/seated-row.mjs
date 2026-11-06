@@ -64,6 +64,8 @@ export default recipe({
     const low = V(0, ...PLATE_LOW);
     const high = V(0, ...PLATE_HIGH);
     const exit = V(0, ...EXIT);
+    // Where the lifter's run leaves the wheel, on its rim.
+    const rim = exit.clone().setZ(EXIT[1] - WHEEL);
     const top = TOWER_Y - 0.012;
     const frameFoot = low.clone().setY(0.1);
     // The top wheel hangs from the stack frame's crossbar, right over the stack.
@@ -95,17 +97,17 @@ export default recipe({
       ...TOWER_Z.flatMap((z) => [-1, 1].map((s) => tube(0.076, V(s * TOWER_X, 0.038, z - (z > 1.5 ? 0.04 : -0.04)), V(s * TOWER_X, top, z - (z > 1.5 ? 0.04 : -0.04)), M.frame))),
       ...[-1, 1].map((s) => tube(0.07, V(s * TOWER_X, 0.035, TOWER_Z[0]), V(s * TOWER_X, 0.035, TOWER_Z[1]), M.frame)),
       tube(0.06, V(-TOWER_X, 0.1, TOWER_Z[0] + 0.04), V(TOWER_X, 0.1, TOWER_Z[0] + 0.04), M.frame),
-      tube(0.05, V(-TOWER_X, EXIT[0] - 0.09, TOWER_Z[0] + 0.04), V(TOWER_X, EXIT[0] - 0.09, TOWER_Z[0] + 0.04), M.frame),
+      tube(0.05, V(-TOWER_X, EXIT[0] - 0.05, TOWER_Z[0] + 0.04), V(TOWER_X, EXIT[0] - 0.05, TOWER_Z[0] + 0.04), M.frame),
       // The stack's base, under its uprights and guide rods.
       tube(0.07, V(-TOWER_X, 0.035, STACK_Z), V(TOWER_X, 0.035, STACK_Z), M.frame),
       pad(0.686, 0.024, TOWER_Z[1] - TOWER_Z[0], M.frame, V(0, top, (TOWER_Z[0] + TOWER_Z[1]) / 2), { soft: 0.004 }),
       ...stackFrame(STACK_Z, top - 0.04, M),
       // The exit's wheel on an arm from the tie across the tower's front, below the cable's run.
-      tube(0.05, V(0, EXIT[0] - 0.09, exit.z), V(0, EXIT[0] - 0.09, TOWER_Z[0] + 0.04), M.frame),
+      tube(0.05, V(0, EXIT[0] - 0.05, exit.z - 0.05), V(0, EXIT[0] - 0.05, TOWER_Z[0] + 0.04), M.frame),
       ...pulley(exit, M),
       ...pulley(wheelTop, M),
       // The cable inside the tower, from the exit's wheel up to the one over the stack.
-      rod(0.0045, V(0, EXIT[0] + WHEEL, EXIT[1]), V(0, wheelTop.y, wheelTop.z - WHEEL), M.metal),
+      rod(0.0045, V(0, EXIT[0], EXIT[1] + WHEEL), V(0, wheelTop.y, wheelTop.z - WHEEL), M.metal),
     ];
     const cable = part(rodGeometry(0.0045, 8), M.metal);
     const drop = part(rodGeometry(0.0045, 8), M.metal);
@@ -116,7 +118,7 @@ export default recipe({
     handle.name = 'cable_handle';
     grip.forEach((m, i) => { m.name = `cable_handle_${i}`; handle.add(m); });
     // Turned to the cable, which comes from ahead: its hook toward the exit, two handles' grips square to it.
-    const toExit = (P) => exit.clone().sub(P.bar).normalize();
+    const toExit = (P) => rim.clone().sub(P.bar).normalize();
     const hook = (P) => P.bar.clone().addScaledVector(toExit(P), above);
     return {
       parts: [...parts, cable, drop, ...weights.parts, handle],
@@ -134,9 +136,9 @@ export default recipe({
         handle.position.copy(P.bar);
         handle.quaternion.setFromUnitVectors(UP, toExit(P));
         const at = hook(P);
-        span(cable, at, exit);
+        span(cable, at, rim);
         return {
-          joints: { stack: { value: Math.max(0, at.distanceTo(exit) - hook(P0).distanceTo(exit)), origin: V(0, 0, STACK_Z) } },
+          joints: { stack: { value: Math.max(0, at.distanceTo(rim) - hook(P0).distanceTo(rim)), origin: V(0, 0, STACK_Z) } },
           points: { grips: [-1, 1].map((s) => gripTarget(P, s)), plates: [-1, 1].map((s) => P.plate.clone().setX(s * PLATES_OUT)) },
         };
       },
