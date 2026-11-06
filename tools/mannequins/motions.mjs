@@ -532,21 +532,22 @@ export const MOTIONS = {
 
   /**
    * Sat on a low bench, the feet on two plates leaning away: the trunk at `trunk`, the hips `slide`
-   * metres along the pad from their place, and a bar or two handles at `bar` [y, z], `grip.width`
+   * metres along the pad from their place and `rise` metres up as the pelvis rolls, and a bar or two handles at `bar` [y, z], `grip.width`
    * either side. Or, for long arms through a trunk's big swing, `arm` degrees below level ahead of
-   * the shoulders, `grip.reach` metres from them. The ankles sit `feet.down` below the plates'
+   * the shoulders, `reach` metres from them. The ankles sit `feet.down` below the plates'
    * middle, `feet.stance` out.
    */
   seated_row(e, s, L) {
-    const hipC = V(0, ...e.body.hip).add(V(0, 0, s.slide ?? 0));
+    const hipC = V(0, ...e.body.hip).add(V(0, s.rise ?? 0, s.slide ?? 0));
     const lean = spineLean(s.trunk, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const { plate, plateUp, plateOut } = s.linkage;
+    const { plate, plateUp, plateOut, exit } = s.linkage;
     const ankle = plate.clone().addScaledVector(plateUp, -e.feet.down).addScaledVector(plateOut, L.ankleY);
     const shoulders = shouldersOf(hipC, u, L).setX(0);
     const bar = s.arm === undefined ? V(0, ...s.bar)
-      : shoulders.addScaledVector(V(0, -Math.sin(rad(s.arm)), Math.cos(rad(s.arm))), e.grip.reach);
+      : shoulders.addScaledVector(V(0, -Math.sin(rad(s.arm)), Math.cos(rad(s.arm))), s.reach);
+    const cable = exit.clone().sub(bar).normalize();
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
@@ -557,7 +558,7 @@ export const MOTIONS = {
       bar,
       grip: e.grip.width,
       shrug: s.shrug,
-      ...(e.kit.seated_row.attachment === 'handles' ? { across: () => V(0, 1, 0) } : {}),
+      ...(e.kit.seated_row.attachment === 'handles' ? { across: () => V(0, cable.z, -cable.y) } : {}),
       armPole: elbowsTo(e, [0.5, -1, -0.5]),
       plate, plateUp,
     };

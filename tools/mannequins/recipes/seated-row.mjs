@@ -24,7 +24,7 @@ const PLATE_HIGH = [0.4, 0.865];
 const PLATES_OUT = 0.14;
 const PLATE_THICK = 0.02;
 // Where the deck meets the tower, the tower's front and back, its height and its posts' half width.
-const DECK_END = [0.57, 1.23];
+const DECK_END = [0.59, 1.3];
 const TOWER_Z = [1.26, 1.87];
 const TOWER_Y = 2.413;
 const TOWER_X = 0.305;
@@ -41,7 +41,8 @@ const PLATE_OUT = V(0, PLATE_UP.z, -PLATE_UP.y);
 function panel(w, thick, A, B, up, material, opts) {
   const mesh = pad(w, thick, A.distanceTo(B), material, A.clone().lerp(B, 0.5), opts);
   const along = B.clone().sub(A).normalize();
-  mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(up.clone().cross(along).normalize(), up.clone().normalize(), along));
+  const square = up.clone().addScaledVector(along, -up.dot(along)).normalize();
+  mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(square.clone().cross(along), square, along));
   return mesh;
 }
 
@@ -56,7 +57,7 @@ export default recipe({
   stacks: [{ joint: 'stack', ratio: 1 }],
   linkage: () => ({
     hip: [SEAT_Y + SITS, 0],
-    at: () => ({ plate: V(0, ...PLATE_LOW).lerp(V(0, ...PLATE_HIGH), 0.5).addScaledVector(PLATE_OUT, PLATE_THICK), plateUp: PLATE_UP, plateOut: PLATE_OUT }),
+    at: () => ({ exit: V(0, ...EXIT), plate: V(0, ...PLATE_LOW).lerp(V(0, ...PLATE_HIGH), 0.5).addScaledVector(PLATE_OUT, PLATE_THICK), plateUp: PLATE_UP, plateOut: PLATE_OUT }),
   }),
   standsAlone: { camera: { target: [0, 0.9, 0.7], halfHeight: 1.4, azimuth: 70, elevation: 12 } },
   build({ attachment = 'handles', spread } = {}, M) {
@@ -64,16 +65,19 @@ export default recipe({
     const high = V(0, ...PLATE_HIGH);
     const exit = V(0, ...EXIT);
     const top = TOWER_Y - 0.012;
-    const wheelTop = V(0, top - 0.2, STACK_Z - WHEEL);
-    const ux = UPRIGHTS;
     const frameFoot = low.clone().setY(0.1);
+    // The top wheel hangs from the stack frame's crossbar, right over the stack.
+    const wheelTop = V(0, top - 0.04 - 0.035 - WHEEL - 0.02, STACK_Z);
+    // Where a rib's line stands at height `y`.
+    const ribAt = (y) => frameFoot.z + (high.z - 0.04 * PLATE_OUT.z - frameFoot.z) * (y - frameFoot.y) / (high.y - 0.04 * PLATE_OUT.y - frameFoot.y);
+    const ux = UPRIGHTS;
     const parts = [
       // The bench: the pad on its board, on a rail from the plates' frame to the rear post, a lower
       // beam under it, and the post down to its foot.
       pad(PAD_W, 0.065, PAD_Z[1] - PAD_Z[0], M.vinyl, V(0, SEAT_Y - 0.0325, (PAD_Z[0] + PAD_Z[1]) / 2)),
       pad(PAD_W - 0.04, 0.012, PAD_Z[1] - PAD_Z[0] - 0.04, M.frame, V(0, SEAT_Y - 0.071, (PAD_Z[0] + PAD_Z[1]) / 2), { soft: 0.003, solid: false }),
-      tube(0.06, V(0, 0.32, POST_Z), V(0, 0.32, high.z - 0.06), M.frame),
-      tube(0.055, V(0, 0.13, POST_Z), V(0, 0.13, frameFoot.z), M.frame),
+      tube(0.06, V(0, 0.32, POST_Z), V(0, 0.32, ribAt(0.32)), M.frame),
+      tube(0.055, V(0, 0.13, POST_Z), V(0, 0.13, ribAt(0.13)), M.frame),
       tube(0.075, V(0, 0.035, POST_Z), V(0, 0.35, POST_Z), M.frame),
       tube(0.07, V(-0.15, 0.035, POST_Z), V(0.15, 0.035, POST_Z), M.frame),
       ...[-1, 1].map((s) => endCap(s * 0.15, POST_Z, M)),
@@ -85,32 +89,35 @@ export default recipe({
       ...[-1, 1].map((s) => panel(0.19, PLATE_THICK, low.clone().setX(s * PLATES_OUT), high.clone().setX(s * PLATES_OUT), PLATE_OUT, M.metal, { soft: 0.004 })),
       // The deck, rubber on a plate, from the plates' top edge to the tower, and the low beam under it.
       panel(0.5, 0.03, high.clone().addScaledVector(PLATE_OUT, -0.015), V(0, ...DECK_END), V(0, 1, 0), M.vinyl, { soft: 0.006 }),
-      tube(0.06, V(0, 0.1, low.z), V(0, 0.1, TOWER_Z[0]), M.frame),
+      tube(0.05, V(-TOWER_X, DECK_END[0] - 0.04, TOWER_Z[0] + 0.04), V(TOWER_X, DECK_END[0] - 0.04, TOWER_Z[0] + 0.04), M.frame),
+      tube(0.06, V(0, 0.1, low.z), V(0, 0.1, TOWER_Z[0] + 0.04), M.frame),
       // The tower: a post at each corner on its foot rail, tied at the exit's height and at the top.
       ...TOWER_Z.flatMap((z) => [-1, 1].map((s) => tube(0.076, V(s * TOWER_X, 0.038, z - (z > 1.5 ? 0.04 : -0.04)), V(s * TOWER_X, top, z - (z > 1.5 ? 0.04 : -0.04)), M.frame))),
       ...[-1, 1].map((s) => tube(0.07, V(s * TOWER_X, 0.035, TOWER_Z[0]), V(s * TOWER_X, 0.035, TOWER_Z[1]), M.frame)),
       tube(0.06, V(-TOWER_X, 0.1, TOWER_Z[0] + 0.04), V(TOWER_X, 0.1, TOWER_Z[0] + 0.04), M.frame),
-      tube(0.05, V(-TOWER_X, EXIT[0] + WHEEL + 0.05, TOWER_Z[0] + 0.04), V(TOWER_X, EXIT[0] + WHEEL + 0.05, TOWER_Z[0] + 0.04), M.frame),
+      tube(0.05, V(-TOWER_X, EXIT[0] - 0.09, TOWER_Z[0] + 0.04), V(TOWER_X, EXIT[0] - 0.09, TOWER_Z[0] + 0.04), M.frame),
+      // The stack's base, under its uprights and guide rods.
+      tube(0.07, V(-TOWER_X, 0.035, STACK_Z), V(TOWER_X, 0.035, STACK_Z), M.frame),
       pad(0.686, 0.024, TOWER_Z[1] - TOWER_Z[0], M.frame, V(0, top, (TOWER_Z[0] + TOWER_Z[1]) / 2), { soft: 0.004 }),
       ...stackFrame(STACK_Z, top - 0.04, M),
-      // The exit's wheel on an arm from the tie across the tower's front.
-      tube(0.05, V(0, EXIT[0] + WHEEL + 0.05, exit.z), V(0, EXIT[0] + WHEEL + 0.05, TOWER_Z[0] + 0.04), M.frame),
+      // The exit's wheel on an arm from the tie across the tower's front, below the cable's run.
+      tube(0.05, V(0, EXIT[0] - 0.09, exit.z), V(0, EXIT[0] - 0.09, TOWER_Z[0] + 0.04), M.frame),
       ...pulley(exit, M),
       ...pulley(wheelTop, M),
       // The cable inside the tower, from the exit's wheel up to the one over the stack.
-      rod(0.0045, V(0, EXIT[0] + WHEEL, EXIT[1] + WHEEL), V(0, wheelTop.y + WHEEL, wheelTop.z), M.metal),
+      rod(0.0045, V(0, EXIT[0] + WHEEL, EXIT[1]), V(0, wheelTop.y, wheelTop.z - WHEEL), M.metal),
     ];
     const cable = part(rodGeometry(0.0045, 8), M.metal);
     const drop = part(rodGeometry(0.0045, 8), M.metal);
-    const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: top - 0.3, toward: -1 });
+    const weights = weightStack(V(0, 0, STACK_Z), M, { rodTop: top - 0.075, toward: -1 });
     if (!ATTACHMENTS[attachment]) throw new Error(`No cable attachment "${attachment}"`);
     const { parts: grip, hook: above } = ATTACHMENTS[attachment](M, { spread });
     const handle = new THREE.Group();
     handle.name = 'cable_handle';
     grip.forEach((m, i) => { m.name = `cable_handle_${i}`; handle.add(m); });
-    // Turned to the cable, which comes from ahead: its hook forward, two handles' grips upright.
-    handle.rotation.x = Math.PI / 2;
-    const hook = (P) => P.bar.clone().add(V(0, 0, above));
+    // Turned to the cable, which comes from ahead: its hook toward the exit, two handles' grips square to it.
+    const toExit = (P) => exit.clone().sub(P.bar).normalize();
+    const hook = (P) => P.bar.clone().addScaledVector(toExit(P), above);
     return {
       parts: [...parts, cable, drop, ...weights.parts, handle],
       bodies: { stack: [] },
@@ -119,12 +126,13 @@ export default recipe({
         stack: {
           lift(l) {
             weights.lift(l);
-            span(drop, V(0, wheelTop.y, STACK_Z), weights.top(l));
+            span(drop, wheelTop, weights.top(l));
           },
         },
       },
       drive(P, P0) {
         handle.position.copy(P.bar);
+        handle.quaternion.setFromUnitVectors(UP, toExit(P));
         const at = hook(P);
         span(cable, at, exit);
         return {

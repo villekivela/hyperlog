@@ -98,6 +98,8 @@ export const BATCHES = {
   ],
   // The seated dip machine's one exercise, machine-first (#226).
   'dip-machine': ['seated_dip_machine'],
+  // The seated row station's four exercises, machine-first (#127).
+  'seated-row': ['seated_cable_row', 'wide_grip_seated_cable_row', 'seated_cable_kelso_shrug', 'seated_cable_deadlift'],
 };
 
 const idsOf = (name) => {
