@@ -859,7 +859,7 @@ export const POSES = {
   '1_arm_lat_pull_in': {
     equipment: 'cable',
     motion: 'free_arms',
-    kit: { cable_crossover: { position: 13, hands: [1], at: [0, 0.05] } },
+    kit: { cable_crossover: { position: 13, hands: [1], at: [0, 0.4] } },
     body: { kneel: true },
     top: { thigh: 2, trunk: 2, hand: [0.78, 1.22, 0.05], rotate: 90 },
     bottom: { thigh: 2, trunk: 2, hand: [0.28, 0.44, 0.12], rotate: 90 },
