@@ -834,19 +834,19 @@ export const POSES = {
     bottom: { thigh: 0, trunk: 6, hand: [0.27, 0.93, 0.3], rotate: 90 },
     feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
-    grip: { rotate: 90, pole: [0.8, -1, -0.5], one: 1, rest: [-0.16, 0.66, 0.3], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
+    grip: { rotate: 90, pole: [0.8, -1, -0.5], one: 1, rest: [-0.16, 0.54, 0.34], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
     camera: { target: [0, 0.8, 0.3], halfHeight: 1.15, azimuth: 65, elevation: 8 },
   },
 
-  // On the right knee facing the left tower, a rope from a high pulley: from leaning well forward the
-  // trunk rocks back upright as the long arms sweep it down to the hips, inside the front knee.
+  // On the right knee facing the left tower, a rope from a high pulley: from leaning forward, the hands
+  // at head height, the trunk rocks back upright as the long arms sweep it down onto the front thigh.
   cable_lat_pullover: {
     equipment: 'cable',
     motion: 'free_arms',
     kit: { cable_crossover: { position: 13, faces: true, attachment: 'rope', at: [-1.105, 1.7] } },
     body: { kneel: -1 },
-    top: { thigh: 0, trunk: 34, hand: [0.08, 1.33, 0.75], rotate: 90 },
-    bottom: { thigh: 0, trunk: 6, hand: [0.08, 0.45, 0.35], rotate: 90 },
+    top: { thigh: 0, trunk: 35, hand: [0.13, 1.17, 0.87], rotate: 90 },
+    bottom: { thigh: 0, trunk: 8, hand: [0.13, 0.62, 0.58], rotate: 90 },
     feet: { stance: 0.22, ahead: 0.5, kneesOut: 0.5 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
     grip: { arc: true, rotate: 90, pole: [0.3, -1, -0.5] },
@@ -880,7 +880,7 @@ export const POSES = {
     bottom: { thigh: 0, trunk: 8, hand: [0.08, 0.92, 0.34], rotate: 90, offsets: { spine_01: [0, 0, 0], spine_02: [0, 0, 0], spine_03: [0, 0, 0] } },
     feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
-    grip: { rotate: 90, pole: [0.4, -1, 0.2], one: 1, rest: [-0.16, 0.66, 0.3], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
+    grip: { rotate: 90, pole: [0.4, -1, 0.2], one: 1, rest: [-0.16, 0.54, 0.34], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
     camera: { target: [0, 0.8, 0.2], halfHeight: 1.1, azimuth: 25, elevation: 8 },
   },
 

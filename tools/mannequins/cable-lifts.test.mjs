@@ -85,7 +85,8 @@ test('the 1-arm pulldown kneels on one knee and drives the elbow from long overh
   assert.deepEqual(failing('1_arm_cable_pulldown', stage), []);
   const top = at(0);
   assert.ok(top('calf_l').y < 0.12, `the working side's knee ${top('calf_l').y.toFixed(3)} up`);
-  assert.ok(top('hand_r').distanceTo(top('calf_r')) < 0.3, `the free hand ${top('hand_r').distanceTo(top('calf_r')).toFixed(3)} from the front knee`);
+  const brace = top('middle_01_r').y - top('calf_r').y;
+  assert.ok(brace < 0.13, `the free hand ${brace.toFixed(3)} above the front knee's joint: resting on it, not hovering`);
   assert.ok(top('hand_l').y > top('Head').y, `the hand ${top('hand_l').y.toFixed(3)} at the top, over the head`);
   const reach = top('upperarm_l').sub(top('lowerarm_l')).angleTo(top('hand_l').sub(top('lowerarm_l'))) * 180 / Math.PI;
   assert.ok(reach > 145, `the elbow ${reach.toFixed(0)}° at the top: the arm long`);
@@ -118,7 +119,14 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   const swing = lean(at(0)) - lean(at(1));
   assert.ok(swing > 25, `the trunk rocks ${swing.toFixed(0)}°`);
   const arm = end('upperarm_l').sub(end('lowerarm_l')).angleTo(end('upperarm_l').sub(end('pelvis'))) * 180 / Math.PI;
-  assert.ok(arm < 35, `the upper arm ${arm.toFixed(0)}° off the trunk at the finish: by the hip`);
+  // A long arm can't reach the hip's crease from a kneel: the shoulder is nearer the thigh than that.
+  assert.ok(arm < 60, `the upper arm ${arm.toFixed(0)}° off the trunk at the finish: down toward the hip`);
+  // The finish lies on top of the thigh, not down between the legs, and the top at about head height.
+  const finish = at(1);
+  const thighTop = (finish('thigh_l').y + finish('calf_l').y) / 2 + 0.03;
+  assert.ok(finish('hand_l').y > thighTop, `the hand ${finish('hand_l').y.toFixed(3)} at the finish, the thigh's top about ${thighTop.toFixed(3)}`);
+  const start = at(0);
+  assert.ok(start('hand_l').y < start('Head').y + 0.2, `the hand ${start('hand_l').y.toFixed(3)} at the top, the head ${start('Head').y.toFixed(3)}`);
 });
 
 test('the 1-arm lat pull-in kneels on both knees and draws the long arm in and down to the side', async () => {
@@ -141,7 +149,8 @@ test('the cable lat pull-around reaches across the body and drives the elbow dow
   assert.deepEqual(failing('1_arm_cable_lat_pull_around', stage), []);
   const top = at(0);
   assert.ok(top('calf_l').y < 0.12, `the working side's knee ${top('calf_l').y.toFixed(3)} up`);
-  assert.ok(top('hand_r').distanceTo(top('calf_r')) < 0.3, `the free hand ${top('hand_r').distanceTo(top('calf_r')).toFixed(3)} from the front knee`);
+  const brace = top('middle_01_r').y - top('calf_r').y;
+  assert.ok(brace < 0.13, `the free hand ${brace.toFixed(3)} above the front knee's joint: resting on it, not hovering`);
   assert.ok(top('hand_l').x < top('upperarm_r').x - 0.05, `the left hand ${top('hand_l').x.toFixed(3)} at the top: past the far shoulder, ${top('upperarm_r').x.toFixed(3)}`);
   const across = top('upperarm_l').sub(top('upperarm_r'));
   const turned = Math.atan2(across.z, across.x) * 180 / Math.PI;
