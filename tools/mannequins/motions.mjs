@@ -114,6 +114,8 @@ export function frameAt(entry, d, L) {
   if (e.grip?.one) P.resting = -e.grip.one;
   // `grip.restOn` is the radius of what that hand rests on, to close round it.
   if (e.grip?.restOn) P.restOn = e.grip.restOn;
+  // `grip.restStraight` keeps that hand straight where the pose bends the working wrist.
+  if (e.grip?.restStraight) P.restStraight = true;
   // An arm traced from footage, or elbows the entry points (`grip.pole`), keep the elbow there.
   if (e.trace?.angles?.upperArm || e.grip?.pole) P.armTraced = true;
   return P;
@@ -227,26 +229,32 @@ const TUCK = 72;
 
 /**
  * Kneeling: the knees on the floor at `feet.z`, `feet.stance` either side, the hips over them, back
- * by `s.thigh` degrees, the shins lying back along the floor and the toes tucked under.
+ * by `s.thigh` degrees, the shins lying back along the floor and the toes tucked under. With
+ * `body.kneel` a side (1 the left, -1 the right) only that knee is down, and the other foot stands
+ * flat `feet.ahead` in front of it.
  */
 function kneeling(e, s, L) {
   const z = e.feet.z ?? 0;
   const hipC = V(0, KNEE_Y + L.thigh * STRAIGHT * Math.cos(rad(s.thigh)), z - L.thigh * STRAIGHT * Math.sin(rad(s.thigh)));
   const ankleY = L.ballY - TOES.y * Math.hypot(L.ballAhead, L.ankleY - L.ballY);
-  const ankles = [-1, 1].map((side) => V(side * e.feet.stance, ankleY, z - Math.sqrt((L.shin * STRAIGHT) ** 2 - (ankleY - KNEE_Y) ** 2)));
+  const down = e.body.kneel === true ? null : e.body.kneel;
+  const stands = (side) => down !== null && side !== down;
+  const ankles = [-1, 1].map((side) => (stands(side)
+    ? V(side * e.feet.stance, L.ankleY, z + e.feet.ahead)
+    : V(side * e.feet.stance, ankleY, z - Math.sqrt((L.shin * STRAIGHT) ** 2 - (ankleY - KNEE_Y) ** 2))));
   return {
     hipC,
     feet: {
       ankles,
       toeOut: 0,
       // The foot's own pitch taken out, so its toes point where they're tucked.
-      foot: () => ({
+      foot: (side) => (stands(side) ? undefined : {
         heading: TOES.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(INSTEP, Math.sin(L.footPitch)),
         top: INSTEP.clone().multiplyScalar(Math.cos(L.footPitch)).addScaledVector(TOES, -Math.sin(L.footPitch)),
       }),
-      kneePole: () => V(0, -0.6, 1).normalize(),
-      support: () => null,
-      offsets: { ball_l: [-TUCK, 0, 0], ball_r: [-TUCK, 0, 0] },
+      kneePole: (side) => (stands(side) ? V(side * (e.feet.kneesOut ?? 0), 1, 1).normalize() : V(0, -0.6, 1).normalize()),
+      support: (side) => (stands(side) ? floor : null),
+      offsets: down === null ? { ball_l: [-TUCK, 0, 0], ball_r: [-TUCK, 0, 0] } : { [down > 0 ? 'ball_l' : 'ball_r']: [-TUCK, 0, 0] },
     },
   };
 }

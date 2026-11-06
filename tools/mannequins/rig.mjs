@@ -528,7 +528,7 @@ export function poseRig(rig, P, near = {}, holding = null) {
     const twist = (fingers) => along.clone().applyAxisAngle(fingers, -s * rad(P.gripRotate ?? 0));
     // The pose's own bend of the wrist, [flexion toward the palm, deviation toward the index
     // finger], in degrees.
-    const [flex, deviate] = P.wrist ?? [0, 0];
+    const [flex, deviate] = (P.restStraight && P.resting === s ? null : P.wrist) ?? [0, 0];
     const fixed = !P.hand || (Boolean(P.across) && !P.heldFree);
     // The bar's own radius (the kit's part under the hand), seated on the palm's skin at the grip's landmark.
     const radius = P.radius?.[s] ?? DEFAULT_RADIUS;

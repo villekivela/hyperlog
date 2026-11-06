@@ -224,13 +224,16 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   and can't roll in it. Every dumbbell entry wants it. **`heavy: true`** gives it bigger heads, for a
   lift done with a big dumbbell, such as the Kroc row.
 - **`body.kneel`** (`arms`, `free_arms`, `row`) puts the body on its knees at `feet.z`, the shins
-  back along the floor and the toes tucked; `thigh` sets the hips over them.
+  back along the floor and the toes tucked; `thigh` sets the hips over them. A side (1 the left, -1
+  the right) puts that knee down alone, the other foot flat `feet.ahead` in front of it.
 - **`feet.lift`** (standing `arms`, `free_arms`, `row`) takes one foot off the floor (1 the left), and
   `top.leg`, `bottom.leg` set that leg: [back, out, bend] in degrees, the thigh from straight down,
   behind the hip and out to its side, and the knee's bend.
 - **`grip.restOn`** closes `grip.one`'s resting hand round a bar of that radius, a tower's post, where
   it would otherwise lie relaxed. **`grip.restPole`** points that arm's elbow, as `grip.pole` does the
   working arm's.
+- **`grip.restStraight`** keeps `grip.one`'s resting hand straight, for a lift that bends the working
+  wrist a long way. Without it the pose's `wrist` bends both hands.
 - **`grip.joined`** (`free_arms`) holds one thing in both hands, that far either side of the point
   `hand` gives, which isn't mirrored. **`grip.via`** [x, y, z] (`free_arms`) curves the hand through
   that point at the middle of the rep, for a hand riding something that swings on an arc.

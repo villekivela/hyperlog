@@ -37,6 +37,39 @@ test('a kneeling body rests on its knees, shins back along the floor, and passes
   }
 });
 
+test('a body on one knee rests that knee on the floor and stands the other foot flat ahead of it', async () => {
+  const entry = {
+    ...STAND, body: { kneel: -1 }, feet: { stance: 0.14, ahead: 0.5 }, grip: { width: 0.2 },
+    top: { thigh: 5, trunk: 20, ...arms }, bottom: { thigh: 5, trunk: 30, ...arms },
+  };
+  assert.deepEqual(failing(await checkPose('shape', poses(entry))), []);
+  const bones = (await staged(entry))(0);
+  const [knee, ankle] = [wpos(bones.calf_r), wpos(bones.foot_r)];
+  assert.ok(knee.y < 0.12, `the right knee ${knee.y.toFixed(3)} up`);
+  assert.ok(ankle.z < knee.z - 0.3, 'the right shin runs back along the floor');
+  const [front, frontKnee] = [wpos(bones.foot_l), wpos(bones.calf_l)];
+  assert.ok(Math.abs(front.z - 0.5) < 0.01, `the left ankle at z ${front.z.toFixed(3)}`);
+  assert.ok(front.y < 0.15, `the left ankle ${front.y.toFixed(3)} up, its foot flat on the floor`);
+  assert.ok(frontKnee.y > 0.35, `the left knee ${frontKnee.y.toFixed(3)} up, off the floor`);
+});
+
+test('with grip.restStraight the resting hand stays straight while the working wrist bends', async () => {
+  const entry = {
+    ...STAND, grip: { ...STAND.grip, restStraight: true },
+    top: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [38, 0] },
+    bottom: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [-38, 0] },
+  };
+  const at = await staged(entry);
+  const bend = (d, k) => {
+    const bones = at(d);
+    const fore = wpos(bones[`hand_${k}`]).sub(wpos(bones[`lowerarm_${k}`]));
+    const hand = wpos(bones[`middle_01_${k}`]).sub(wpos(bones[`hand_${k}`]));
+    return (fore.angleTo(hand) * 180) / Math.PI;
+  };
+  assert.ok(bend(0, 'l') > 25, `the working wrist bends ${bend(0, 'l').toFixed(1)}°`);
+  for (const d of [0, 1]) assert.ok(bend(d, 'r') < 12, `the resting wrist bends ${bend(d, 'r').toFixed(1)}° at ${d}`);
+});
+
 test('a lifted leg swings back from the hip, the other foot still planted, and passes its checks', async () => {
   const entry = {
     ...STAND, feet: { stance: 0.1, lift: 1 },
