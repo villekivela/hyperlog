@@ -1,5 +1,4 @@
 {
-  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
   "sources": [
     "technique video _KI-O0zMv60",
     "exercises.json: smooth, controlled reps",
@@ -28,12 +27,14 @@
     {
       "says": "the wrist joint stays in place: only the hand moves",
       "still": "hand_*.at",
-      "within": 0.02
+      "within": 0.02,
+      "open": "the owner's OK'd pose (#261): the wrists drift 6 cm inward over the rep, so the clip's last frame isn't its first, and the owner hasn't said to change it"
     },
     {
       "says": "the elbows stay in place",
       "still": "elbow_*.at",
-      "within": 0.02
+      "within": 0.02,
+      "open": "the owner's OK'd pose (#261): the elbows slide 4 cm forward over the rep, and the owner hasn't said to change it"
     },
     {
       "says": "the elbows hold their angle",

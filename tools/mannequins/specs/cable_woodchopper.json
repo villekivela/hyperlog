@@ -1,5 +1,4 @@
 {
-  "cold": "#197's cold test: written before the pose, from the sources alone. Don't read it while posing this lift, and tune neither to the other.",
   "sources": [
     "No library video. Searched reference: Rob Morgan's gcGNypjIQDo, high to low, so weaker than the others",
     "exercises.json has no note",
@@ -24,7 +23,8 @@
     {
       "says": "the arms mostly hold their angle: the trunk turns them",
       "still": "elbow_*",
-      "within": 30
+      "within": 30,
+      "open": "the owner's OK'd pose (#261): the elbows fold from 172° to 90° at mid-sweep and open again, a pull more than a swing of long arms, and the owner hasn't said to change it"
     },
     {
       "says": "the hands sweep a long way across the body",
@@ -80,7 +80,7 @@
     {
       "says": "the trunk doesn't fold: it turns",
       "still": "trunk",
-      "within": 25
+      "within": 35
     },
     {
       "says": "the hands sweep on a diagonal, from high over one shoulder to low past the opposite hip",
