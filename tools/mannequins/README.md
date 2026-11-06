@@ -597,8 +597,9 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   little behind the shoulder line and sweeps 0 to 110°, the hands meeting at 104°. With `facing: 'pad'`
   the kit stands turned round the mannequin, which always faces +z: the rear delt fly rests 45° behind
   that line, the levers past the tower's sides, and sweeps 0 to 60°, the arms in line with the shoulders
-  at 57°. `hips` sets how far along the seat that lifter sits, and `one` keeps the right arm at rest for
-  a one-arm lift. Contacts: the hands on `leftGrip` and `rightGrip`, or `leftShort` and `rightShort`
+  at 57°. `hips` sets how far along the seat that lifter sits, and `one` keeps one arm at rest for a one-arm
+  lift. With `facing: 'side'` the lifter sits across the seat, the pad on the left, and the right arm
+  works the right lever and carries the stack, from 10° to 65°. Contacts: the hands on `leftGrip` and `rightGrip`, or `leftShort` and `rightShort`
   facing the pad, each naming its `hand`, `backPad` on the frame, the back or the chest, and `seatTop`, the thighs. Its one fit
   rule sets `seat`, `[y, z]`, so the shoulders are level with the grips, 0.44 to 0.62 m up. It departs
   from the ref: it has one start for each exercise (the ref's knob has five, 15° apart, chosen), the

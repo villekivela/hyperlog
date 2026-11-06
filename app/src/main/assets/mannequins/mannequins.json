@@ -105,10 +105,10 @@
         "target": [
           0,
           1.05,
-          0.05
+          0.1
         ],
         "halfHeight": 1.12,
-        "azimuth": 140,
+        "azimuth": 40,
         "elevation": 10
       },
       "tempo": {

@@ -30,6 +30,9 @@ const LEVER = 0.55;
 const MODES = {
   fly: { rest: rad(-10), sweep: rad(110), held: 'Grip', on: 'back' },
   rear: { rest: rad(-45), sweep: rad(60), held: 'Short', on: 'chest' },
+  // Sat across the seat, side-on to the machine, the pad on the lifter's left and nothing on it: the
+  // right lever, from the grip across the chest round toward the right side.
+  side: { rest: rad(10), sweep: rad(70), held: 'Grip', on: null },
 };
 // The vertical grip's middle is fixed at 1.1 m, and the seat moves. Each grip's middle stands this
 // far off the drop arm, the short one a little lower, near the drop arm's foot.
@@ -63,19 +66,25 @@ const STACK_RATIO = 0.09;
 // The arch's tube.
 const ARCH_RADIUS = 0.045;
 
-const mode = ({ facing }) => (facing === 'pad' ? 'rear' : 'fly');
+const mode = ({ facing }) => ({ pad: 'rear', side: 'side' }[facing] ?? 'fly');
+// Where the hips sit on the seat, sat across it, from the middle of the machine.
+const ACROSS = { x: 0.12, z: 0.09 };
 /** The way a lever on side `s` runs at angle `a` from straight out, and the way square to it, ahead of it at 0. */
 const leverDir = (s, a) => V(s * Math.cos(a), 0, Math.sin(a));
 const aheadOf = (s, a) => V(-s * Math.sin(a), 0, Math.cos(a));
-/** A point of the kit where it stands: turned round the mannequin when facing the pad. */
-const standing = (options) => (p) => (mode(options) === 'rear' ? V(-p.x, p.y, -p.z) : p.clone());
+/** A point of the kit where it stands: turned round the mannequin facing the pad, or a quarter sat across it. */
+const standing = (options) => (p) => ({
+  rear: V(-p.x, p.y, -p.z), side: V(ACROSS.z - p.z, p.y, p.x), fly: p.clone(),
+}[mode(options)]);
 /** Where side `s`'s grip is with the arm at angle `a`: the vertical one, or the short one. */
 function gripAt(s, a, m) {
   const end = V(s * AXIS.x, 0, AXIS.z).addScaledVector(leverDir(s, a), LEVER);
   return m === 'rear' ? end.addScaledVector(aheadOf(s, a), -GRIP_OFF).setY(SHORT_Y) : end.addScaledVector(aheadOf(s, a), GRIP_OFF).setY(GRIP_Y);
 }
-/** How far the arm on side `s` has swept with the rep at `value`: with `one`, the right arm stays. */
-const sweptBy = ({ one }, s, value) => (one && s > 0 ? 0 : value);
+/** The arm the stack hangs on: sat across the seat, the right one works and the left stays. */
+const workingArm = (options) => (mode(options) === 'side' ? 'right' : 'left');
+/** How far the arm on side `s` has swept with the rep at `value`: with `one`, only the working arm does. */
+const sweptBy = (options, s, value) => (options.one && (s < 0 ? 'left' : 'right') !== workingArm(options) ? 0 : value);
 const jointsOf = (options) => {
   const limits = [0, MODES[mode(options)].sweep];
   return { left: revolute({ axis: V(0, 1, 0), limits }), right: revolute({ axis: V(0, -1, 0), limits }) };
@@ -96,15 +105,18 @@ export default recipe({
   contacts: (options) => {
     const rear = mode(options) === 'rear';
     const { held, on } = MODES[mode(options)];
+    const seatTop = { body: 'frame', point: 'seatTop', landmark: 'thighs' };
+    // Sat across the seat the right hand holds the right arm's grip, and the other rests.
+    if (mode(options) === 'side') return [{ body: 'right', point: `right${held}`, landmark: 'hands', hand: 'r' }, seatTop];
     return [
       // Turned round, the kit's left arm is on the mannequin's left.
       { body: 'left', point: `left${held}`, landmark: 'hands', hand: rear ? 'l' : 'r' },
       { body: 'right', point: `right${held}`, landmark: 'hands', hand: rear ? 'r' : 'l', ...(options.one ? { optional: true } : {}) },
       { body: 'frame', point: 'backPad', landmark: on },
-      { body: 'frame', point: 'seatTop', landmark: 'thighs' },
+      seatTop,
     ];
   },
-  stacks: [{ joint: 'left', ratio: STACK_RATIO }],
+  stacks: (options) => [{ joint: workingArm(options), ratio: STACK_RATIO }],
   rep: { joint: 'left', from: 'min' },
   fit: [
     {
@@ -117,18 +129,23 @@ export default recipe({
     const { seat = SEAT, hips = 0 } = options;
     const m = mode(options);
     const at = standing(options);
-    // The kit's side each hand is on: turned round, the kit's left is the mannequin's.
-    const kitSide = (side) => (m === 'rear' ? -side : side);
-    const hip = m === 'rear' ? seat[1] + hips : BACK.face + L.trunkBack + 0.02;
+    // The kit's side each hand is on: facing the pad the kit's left is the mannequin's, and sat
+    // across the seat the right hand has the kit's right arm.
+    const kitSide = (side) => (m === 'fly' ? side : -side);
+    const hip = { rear: -(seat[1] + hips), side: ACROSS.x, fly: BACK.face + L.trunkBack + 0.02 }[m];
     return {
-      hip: [seat[0] + SITS, m === 'rear' ? -hip : hip],
+      hip: [seat[0] + SITS, hip],
       at: (value) => {
         const angle = (side) => MODES[m].rest + sweptBy(options, kitSide(side), value);
         return {
           pivot: at(V(0, AXIS.y, AXIS.z)),
           handle: (side) => at(gripAt(kitSide(side), angle(side), m)),
-          // A neutral grip's index finger up; on the short grip, along it to its tip.
-          across: (side) => (m === 'rear' ? at(aheadOf(kitSide(side), angle(side)).negate()) : V(0, 1, 0)),
+          // A neutral grip's index finger up; on the short grip, along it to its tip. Sat across the
+          // seat the left hand holds nothing and lies flat on its thigh, the knuckles across it.
+          across: (side) => {
+            if (m === 'side' && side > 0) return V(-1, 0, 0);
+            return m === 'rear' ? at(aheadOf(kitSide(side), angle(side)).negate()) : V(0, 1, 0);
+          },
         };
       },
     };
@@ -243,7 +260,7 @@ export default recipe({
       parts: [...frame, ...arms.flatMap((a) => a.nodes)],
       bodies: { left: arms[0].nodes, right: arms[1].nodes },
       stacks: {
-        left: {
+        [workingArm(options)]: {
           lift(raised) {
             // A machine no one is on has its stack sat down.
             const l = posed ? raised : raised - HELD;
@@ -254,6 +271,10 @@ export default recipe({
       },
       stand(g) {
         if (m === 'rear') g.rotation.y = Math.PI;
+        if (m === 'side') {
+          g.rotation.y = -Math.PI / 2;
+          g.position.x = ACROSS.z;
+        }
       },
       drive(P) {
         // Without a pose the arms rest.

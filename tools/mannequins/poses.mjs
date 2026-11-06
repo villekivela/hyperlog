@@ -341,11 +341,18 @@ export const POSES = {
     shadow: { size: [1.5, 1.6], at: [0, 0.2] },
   },
 
-  // The same with one arm, the other hand on the thigh.
+  // Sat across the seat, side-on to the machine, the pad on the left: the right arm sweeps from the
+  // grip across the chest out toward the side, the left hand on its thigh.
   '1_arm_reverse_pec_deck': {
-    like: 'reverse_pec_deck',
-    kit: { pec_deck: { one: true } },
-    grip: { one: 1, rest: [-0.2, 0.74, 0.22] },
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: { facing: 'side', one: true } },
+    body: { trunk: 0, look: 0.1 },
+    bottom: { left: 55 },
+    feet: { stance: 0.17, z: 0.55, toeOut: 12 },
+    grip: { one: -1, rest: [0.14, 0.625, 0.38], pole: [1, -0.3, -0.2], restPole: [0, -1, 0.3] },
+    camera: { target: [0, 1.05, 0.1], halfHeight: 1.12, azimuth: 40, elevation: 10 },
+    shadow: { size: [1.6, 1.5], at: [0.2, 0.1] },
   },
 
   // Seated, the upper back on the carriage's pads and the belt over the hips, the feet flat on the

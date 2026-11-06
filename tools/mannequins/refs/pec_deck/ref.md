@@ -4,7 +4,7 @@
 Seated horizontal adduction (pec fly) on two lever arms that swing in a horizontal plane about vertical axes overhead, loaded by one weight stack. The same machine serves the rear-delt fly (horizontal abduction): the user straddles the same seat facing the back pad, chest on it. The seat does not turn and nothing is adjusted between the two (Hammer Strength demo video at 0:33 to 0:35; the page says the handle placement removes adjusting between exercises).
 - `pec_deck`: seated, back on the pad, hands on the vertical grips beside the shoulders, arms sweep together in front of the chest.
 - `reverse_pec_deck`: chest on the pad, arms forward to the short level grips, arms sweep apart to the sides.
-- `1_arm_reverse_pec_deck`: one arm at a time. Its video shows a different machine used sideways (below); on this machine it is the reverse fly with one hand.
+- `1_arm_reverse_pec_deck`: one arm at a time, sat sideways across the seat as its video shows, on another machine (below). The kit keeps the seat where the owner set it, the pad on the lifter's left: the right arm works the right lever and the left hand lies on the thigh. The right shoulder stands 0.39 m off that lever's axis, so the arm starts long and ends bent, where the video's stays straight (owner, #241).
 
 One machine, no variants: which grip the hand takes is a hand-position difference, not a movement difference.
 

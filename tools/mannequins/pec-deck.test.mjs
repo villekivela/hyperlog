@@ -339,13 +339,41 @@ test('reverse_pec_deck: the hips stay on the seat through the rep, and the pad\'
   assert.equal(kit.kits.pec_deck.contacts.find((c) => c.point === 'backPad').landmark, 'chest');
 });
 
-test('1_arm_reverse_pec_deck: one arm opens, and the other arm of the machine stays at its rest', async () => {
+// The owner, in the studio: this lift sits side-on to the machine, as its video does.
+test('1_arm_reverse_pec_deck: side-on to the machine, the pad out on the lifter\'s left, the hips on the seat', async () => {
   assert.deepEqual(await fails('1_arm_reverse_pec_deck'), []);
-  const { pose, kit } = await buildStage(prepare('1_arm_reverse_pec_deck'));
+  const { pose, rig, kit } = await buildStage(prepare('1_arm_reverse_pec_deck'));
+  pose(0);
+  const padAt = new THREE.Box3().setFromObject(kit.group.getObjectByName('pec_deck_back')).getCenter(new THREE.Vector3());
+  const hips = wpos(rig.bones.pelvis);
+  assert.ok(Math.abs(padAt.x - hips.x) > Math.abs(padAt.z - hips.z), 'the pad out to one side of the hips, not ahead or behind');
+  assert.ok(padAt.x > hips.x, 'on the lifter\'s left');
+});
+
+// The owner: the body stays as it sits and the right hand does the work. From there the right shoulder
+// stands 0.39 m off its lever's axis, so the arm starts long and shortens as it opens.
+test('1_arm_reverse_pec_deck: the right arm sweeps from across the chest out toward the side, and the other arm of the machine stays at its rest', async () => {
+  const { pose, rig, kit } = await buildStage(prepare('1_arm_reverse_pec_deck'));
+  const { joints } = kit.kits.pec_deck;
+  const reach = () => wpos(rig.bones.upperarm_r).distanceTo(heldAt(rig, 'r'));
+  pose(0);
+  const start = heldAt(rig, 'r').clone();
+  const shoulder = wpos(rig.bones.upperarm_r);
+  assert.ok(start.x > shoulder.x + 0.1, `the hand across the chest, at x ${start.x.toFixed(2)} against ${shoulder.x.toFixed(2)}`);
+  assert.ok(reach() > 0.5, `the arm long at the start, ${reach().toFixed(2)} m to the grip`);
   pose(1);
-  const { left, right } = kit.kits.pec_deck.joints;
-  assert.ok(left.value > rad(40), 'the working arm is open');
-  assert.equal(right.value, 0, 'the other stays');
+  const end = heldAt(rig, 'r');
+  assert.ok(end.x < shoulder.x - 0.1, `the hand out past the shoulder, at x ${end.x.toFixed(2)}`);
+  assert.ok(joints.right.value > rad(40), 'the working arm swept');
+  assert.equal(joints.left.value, 0, 'the other stays');
+});
+
+test('the side-on stack rises with the working arm', async () => {
+  const { pose, kit } = await buildStage(prepare('1_arm_reverse_pec_deck'));
+  pose(0);
+  const low = head(kit.kits.pec_deck).max.y;
+  pose(1);
+  assert.ok(head(kit.kits.pec_deck).max.y > low + 0.05, 'it rises');
 });
 
 test('1_arm_reverse_pec_deck: the free hand rests on its thigh, and the working hand holds its grip', async () => {
@@ -353,11 +381,30 @@ test('1_arm_reverse_pec_deck: the free hand rests on its thigh, and the working 
   const { pose, rig, kit } = await buildStage(entry);
   for (const d of [0, 0.5, 1]) {
     pose(d);
-    const free = heldAt(rig, 'r');
+    const free = heldAt(rig, 'l');
     close(free.distanceTo(V(...entry.grip.rest)), 0, 0.03, `the free hand at its rest, ${d} of the way`);
-    assert.ok(free.distanceTo(wpos(rig.bones.calf_r)) < 0.3, 'by the knee');
-    const grip = kit.kits.pec_deck.contacts.find((c) => c.point === 'leftShort').at[0];
-    close(heldAt(rig, 'l').distanceTo(grip), 0, 0.015, 'the working hand on its grip');
+    assert.ok(free.distanceTo(wpos(rig.bones.calf_l)) < 0.3, 'by the knee');
+    const grip = kit.kits.pec_deck.contacts.find((c) => c.point === 'rightGrip').at[0];
+    close(heldAt(rig, 'r').distanceTo(grip), 0, 0.015, 'the working hand on its grip');
+  }
+});
+
+// The hand lies on the thigh, not over it: straight down from the palm, the skin of the hand and the
+// skin of the thigh meet, on the thigh's top, short of the knee.
+test('1_arm_reverse_pec_deck: the free hand lies flat on the thigh, no daylight under it, behind the knee', async () => {
+  const { pose, rig } = await buildStage(prepare('1_arm_reverse_pec_deck'));
+  const skinAlong = (from, way) => {
+    const ray = new THREE.Raycaster(from, V(0, way, 0));
+    return rig.meshes.flatMap((m) => { m.computeBoundingSphere?.(); m.computeBoundingBox?.(); return ray.intersectObject(m, false); }).map((h) => h.point.y).sort((a, b) => b - a);
+  };
+  for (const d of [0, 0.5, 1]) {
+    pose(d);
+    const palm = heldAt(rig, 'l');
+    const [handTop, thighTop] = skinAlong(palm.clone().setY(1), -1);
+    const handUnder = skinAlong(palm.clone().setY(0), 1)[0];
+    assert.ok(handTop - handUnder < 0.07, `the hand flat, ${((handTop - handUnder) * 100).toFixed(1)} cm through it`);
+    close(handUnder - thighTop, 0.005, 0.01, `the palm on the thigh, ${d} of the way`);
+    assert.ok(palm.z < wpos(rig.bones.calf_l).z - 0.06, 'short of the knee');
   }
 });
 
@@ -366,11 +413,13 @@ test('each lift opens at the stretch and closes at the squeeze, the stack rising
   for (const id of IDS) {
     const { pose, kit } = await buildStage(prepare(id));
     pose(0);
-    const stretch = kit.kits.pec_deck.joints.left.value;
+    // Sat across the seat, the right arm is the one that works.
+    const arm = id.startsWith('1_arm') ? 'right' : 'left';
+    const stretch = kit.kits.pec_deck.joints[arm].value;
     const low = head(kit.kits.pec_deck).max.y;
     pose(1);
     assert.equal(stretch, 0, `${id} opens on the arm's rest`);
-    assert.ok(kit.kits.pec_deck.joints.left.value > rad(50), `${id} ends swept in`);
+    assert.ok(kit.kits.pec_deck.joints[arm].value > rad(50), `${id} ends swept in`);
     assert.ok(head(kit.kits.pec_deck).max.y > low + 0.05, `${id} raises the stack`);
   }
 });
