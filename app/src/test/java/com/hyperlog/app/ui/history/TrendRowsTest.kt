@@ -65,6 +65,6 @@ class TrendRowsTest {
         val rows = compose.onAllNodes(hasTestTag(TrendRowTag), useUnmergedTree = true).fetchSemanticsNodes()
         assertEquals(2, charts.size)
         val gap = with(compose.density) { (charts[1].boundsInRoot.top - rows[1].boundsInRoot.bottom).toDp() }
-        assertEquals("gap above the second machine", 8f, gap.value, 0.5f)
+        assertEquals("gap above the second machine", 24f, gap.value, 0.5f)
     }
 }

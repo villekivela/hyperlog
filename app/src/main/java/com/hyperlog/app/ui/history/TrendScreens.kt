@@ -117,7 +117,7 @@ fun ExerciseTrendScreen(
             }
             trend.lines.forEachIndexed { n, line ->
                 // The gap sits outside the card, so a machine's card starts clear of the table above it.
-                if (n > 0) item(key = "machine-gap-$n") { Spacer(Modifier.height(8.dp)) }
+                if (n > 0) item(key = "machine-gap-$n") { Spacer(Modifier.height(24.dp)) }
                 item(key = "chart-$n") { Column(Modifier.testTag(TrendChartTag).cardBehind(Tones.card).padding(vertical = 12.dp)) {
                     if (perMachine) {
                         Text(

@@ -1237,7 +1237,7 @@ each planned day with the training day it lands on, and never changes the day:
      set, estimate), newest first; a row opens that session. A tap or drag on the chart reads the
      nearest session above it. Machines and cables get one chart per machine, headed
      `Cable left · Harbour`, the machine used last first, each on its own scale (ADR 0002), and
-     each section set apart from the one above by the usual 8 dp gap between sections.
+     each section set apart from the one above by a 24 dp gap (the owner's call, 2026-11-06).
      - The top set is the session's heaviest work set that counts (a kept weight nothing confirmed
        doesn't), with the most reps at that weight.
      - The estimate after a session is the estimate as suggestions read it then: the last 12
