@@ -25,7 +25,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 3 | [`smith_machine`](smith_machine/ref.md) | 9 | Hammer Strength Smith Machine (7°); built (#182), not yet posed |
 | 4 | [`power_rack`](power_rack/ref.md) | 16 | Rogue Monster Lite Rack (RML-390BT) with the Rogue Crown Pull-up Bar and Monster Lite Matador dip handles as add-ons; built (#189, named the pull-up and dip station in the issue), posed (#196) |
 | 5 | [`ez_bar`](ez_bar/ref.md) | 3 | Rogue Curl Bar; built (#209), not yet posed |
-| 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY); built (#208), not yet posed |
+| 6 | [`pec_deck`](pec_deck/ref.md) | 3 | Hammer Strength Select Pectoral Fly / Rear Deltoid (HS-FLY); built (#208), posed (#241) |
 | 7 | [`lateral_raise_machine`](lateral_raise_machine/ref.md) | 2 | Hammer Strength Select Lateral Raise; built (#212, seated only), seated raise posed (#241) |
 | 8 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction; built (#214), posed (#241) |
 | 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar; built (#219), not yet posed |
@@ -82,8 +82,9 @@ gaps says why):
 - `power_rack`: the bar height (2.30 m) is chosen and the dip handle height is rough, from one
   video. The chin-up video is unavailable.
 - `ez_bar`: the bend angles and grip places are chosen; the zigzag depth is a rough photo estimate.
-- `pec_deck` (built, #208): the seat range, the start position's step and the lever radius stay chosen or rough;
-  no top or straight-front view.
+- `pec_deck` (built, #208; posed, #241): built at 2.0 m to the demo's lifter against the page's 1.8 m; the seat
+  range, the start position's step, the lever radius and the rear beam's reach stay chosen or rough; no top or
+  straight-front view.
 - `lateral_raise_machine` (built, #212; seated raise posed, #241): the seat range is chosen and the pivot spacing is
   rough. The standing exercise's video shows another, standing machine, with no reference model of its own, so it
   stays unposed.

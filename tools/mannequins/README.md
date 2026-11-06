@@ -332,7 +332,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `leg_extension` | Leg Extension | `leg_extension` |
 | `leg_curl` | Lying and Seated Leg Curl | `leg_curl` (`lying` for the lying one) |
 | `glute_ham_raise` | Glute-Ham Raise | `glute_ham_raise` (posed, #230) |
-| `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | `pec_deck` (not posed yet) |
+| `pec_deck` | Pec Deck, Reverse and 1-Arm Reverse Pec Deck | `pec_deck` |
 | `row_machine` | Machine Row, Chest-Supported Machine Row | `row_machine` |
 | `t_bar_row_machine` | Chest-Supported T-Bar Row, T-Bar Row, Machine Kelso Shrug | `t_bar_row_machine` |
 | `pulldown_machine` | Machine Pulldown, Machine Lat Pullover | `pulldown_machine` |
@@ -608,23 +608,26 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `dip_belt` (#196, weighted bodyweight equipment) is a belt round the hips and a 25 lb iron plate on
   its chain. A free body the hips carry, on no joint: the plate hangs plumb in front of the thighs at
   about mid-thigh however the body leans, and the chain runs to it from the belt's sides.
-- `pec_deck` (#208, a machine kind: `MACHINES` in `kit.mjs` maps its 3 exercises, none posed yet, so no
-  clip changes) is a seat and a 300 mm back pad in front of a column, with an overhead unit on it
-  1.80 m up and a weight stack behind. An axle hangs from the unit 0.2 m either side of the centre line,
-  1.62 m up, and a lever arm 0.48 m long swings from each, a pin across its end and a drop arm hanging from
-  it, the two one mitred square tube, with a U handle bent out of the arm as the vertical grip at 1.05 m. Each arm is its own
-  body on a revolute joint (`left`, `right`), 0 to 120° swept in from out at the sides, a little behind
-  the shoulder line; the ref has the arms independent, unverified. The one rest suits the pec fly (the
-  hands meet in front of the chest) and the rear delt fly (the hands sweep out to the shoulders' line).
-  Contacts: `leftGrip` and `rightGrip` (hands) on the arms, `backPad` (back) on the frame. Its one
-  fit rule sets `seat`, `[y, z]`, so the shoulders are level with the grips, 0.40 to 0.56 m up. It stands
-  where its ref puts it, and the studio shows it alone (`npm run studio`, then the list's "pec deck"
-  kit, marked unused). It departs from the ref: the stack stays down,
-  because two arms pull it and a stack is tied to one joint; the back pad is fixed, not laid along the
-  trunk; the sweep is 120°, a little over the ref's 100° ± 15°, so the hands end about 12 cm apart
-  and not touching; it has one start (the ref's knob has five, 15° apart, chosen) and the drop arms
-  are rigid on their pins; the rear delt's straddle (300 mm behind the axes) has no fit rule until
-  it is posed; and the seat, start angle and lever radius are the ref's chosen numbers.
+- `pec_deck` (#208, #241, a machine kind: `MACHINES` in `kit.mjs` maps its 3 exercises, all posed) is a
+  seat and a 300 mm back pad leaning back 7° on one post, in front of a tower narrow across and deep
+  fore and aft, the stack's broad face looking to the side, on a spine with a rear beam out each side. An
+  arch from the tower's back carries an open overhead unit 2.0 m up, built to the ref's lifter and not its
+  published 1.8 m: two flat plates on two axles, 0.2 m either side of the centre line, over the shoulders
+  of a back on the pad, and a rail back to the tower. A lever 0.55 m long swings from each axle 1.8 m up,
+  a pin across its end and a drop arm hanging from it. A vertical grip hangs like a cane 100 mm off the
+  drop arm, square to the lever, its middle at 1.1 m, and a short level grip stands
+  on the other side. Each arm is its own body on a revolute joint (`left`, `right`), its value how far it
+  has swept from its rest. The stack hangs on `left`, as the arms move together. The pec fly rests a
+  little behind the shoulder line and sweeps 0 to 110°, the hands meeting at 104°. With `facing: 'pad'`
+  the kit stands turned round the mannequin, which always faces +z: the rear delt fly rests 45° behind
+  that line, the levers past the tower's sides, and sweeps 0 to 60°, the arms in line with the shoulders
+  at 57°. `hips` sets how far along the seat that lifter sits, and `one` keeps one arm at rest for a one-arm
+  lift. With `facing: 'side'` the lifter sits across the seat, the pad on the left, and the right arm
+  works the right lever and carries the stack, from 10° to 65°. Contacts: the hands on `leftGrip` and `rightGrip`, or `leftShort` and `rightShort`
+  facing the pad, each naming its `hand`, `backPad` on the frame, the back or the chest, and `seatTop`, the thighs. Its one fit
+  rule sets `seat`, `[y, z]`, so the shoulders are level with the grips, 0.44 to 0.62 m up. It departs
+  from the ref: it has one start for each exercise (the ref's knob has five, 15° apart, chosen), the
+  drop arms are rigid on their pins, and the seat range and lever radius are chosen numbers.
 - `captains_chair` (#237, bodyweight equipment; posed by `roman_chair_crunch`, a knee raise on the `chair`
   motion) is a captain's chair from `refs/captains_chair/ref.md`, its parts placed from the photos
   written there. Nothing on it moves: two floor rails 1054 mm long, 640 apart, with a foot brace; in each
