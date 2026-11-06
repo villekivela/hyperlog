@@ -107,3 +107,17 @@ test('the 1-arm lat pull-in kneels on both knees and draws the long arm in and d
   assert.ok(tucked < 0.12, `the elbow ${tucked.toFixed(3)} out at the bottom: in at the side`);
   assert.ok(bottom('upperarm_l').y - bottom('lowerarm_l').y > 0.2, 'the elbow well below the shoulder');
 });
+
+test('the cable lat pull-around reaches across the body and drives the elbow down to the hip', async () => {
+  const { stage, at } = await posed('1_arm_cable_lat_pull_around');
+  assert.deepEqual(failing('1_arm_cable_lat_pull_around', stage), []);
+  const top = at(0);
+  assert.ok(top('calf_r').y < 0.12, `the right knee ${top('calf_r').y.toFixed(3)} up`);
+  assert.ok(top('hand_l').x < 0, `the left hand ${top('hand_l').x.toFixed(3)} at the top: across the body`);
+  assert.ok(top('hand_l').y > top('upperarm_l').y, 'the hand above the shoulder at the top');
+  const bottom = at(1);
+  assert.ok(bottom('upperarm_l').y - bottom('lowerarm_l').y > 0.2, 'the elbow well below the shoulder at the bottom');
+  const hip = bottom('lowerarm_l').distanceTo(bottom('thigh_l'));
+  assert.ok(hip < 0.45, `the elbow ${hip.toFixed(3)} from the hip`);
+  assert.ok(bottom('hand_l').x > 0.1, `the hand back on its own side, ${bottom('hand_l').x.toFixed(3)}`);
+});
