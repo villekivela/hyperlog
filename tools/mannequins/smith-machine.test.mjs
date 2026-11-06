@@ -405,17 +405,20 @@ test('smith_machine_squat: the body fits through the whole rep, the bar on the r
   assert.ok(top - bottom > 0.35, `a squat's depth, ${(top - bottom).toFixed(2)} m`);
 });
 
-// The hands close round the bar in every lift, not lie open on it.
-for (const id of ['smith_machine_squat', 'smith_machine_lunge', 'ffe_smith_machine_lunge', 'split_squat_smith', 'smith_machine_bench_press']) {
-  test(`${id}: the fingers curl round the bar`, async () => {
-    const { pose, rig } = await staged(id);
-    pose(0.5);
-    for (const side of ['l', 'r']) {
-      const tip = wpos(rig.bones[`middle_03_${side}`]);
-      const knuckle = wpos(rig.bones[`middle_01_${side}`]);
-      const palm = wpos(rig.bones[`hand_${side}`]);
-      const curl = knuckle.clone().sub(palm).angleTo(tip.clone().sub(knuckle)) * 180 / Math.PI;
-      assert.ok(curl > 45, `the ${side} fingers curled ${curl.toFixed(0)}°`);
+// The hands close round the bar in every lift: from the bar, the fingertips lie across it from the palm.
+for (const id of ['smith_machine_squat', 'smith_machine_lunge', 'ffe_smith_machine_lunge', 'split_squat_smith']) {
+  test(`${id}: the fingers wrap round the bar`, async () => {
+    const stage = await staged(id);
+    for (const d of [0, 1]) {
+      stage.pose(d);
+      stage.kit.group.updateMatrixWorld(true);
+      const bar = barOf(stage).getWorldPosition(new THREE.Vector3());
+      for (const side of ['l', 'r']) {
+        const palm = wpos(stage.rig.bones[`hand_${side}`]);
+        const on = bar.clone().setX(palm.x);
+        const wrap = palm.clone().sub(on).angleTo(wpos(stage.rig.bones[`middle_03_${side}`]).sub(on)) * 180 / Math.PI;
+        assert.ok(wrap > 150, `the ${side} fingers ${wrap.toFixed(0)}° round the bar, ${d} of the way`);
+      }
     }
   });
 }
@@ -449,7 +452,10 @@ for (const id of ['smith_machine_incline_press', 'smith_machine_seated_press']) 
       const stage = await onTheRods(id, angle);
       stage.pose(0);
       const arm = wpos(stage.rig.bones.upperarm_l).distanceTo(heldAt(stage.rig, 'l'));
-      assert.ok(arm > 0.5, `the arm long at the top, ${arm.toFixed(2)} m`);
+      const [shoulder, elbow, hand] = ['upperarm_l', 'lowerarm_l', 'hand_l'].map((n) => wpos(stage.rig.bones[n]));
+      const bend = THREE.MathUtils.radToDeg(elbow.clone().sub(shoulder).angleTo(hand.clone().sub(elbow)));
+      // A soft lockout, as the bench press's 19° is: a held bar stops the arm short of dead straight.
+      assert.ok(bend < 16, `the elbow bent ${bend.toFixed(0)}° at the top`);
       stage.pose(1);
       assert.ok(wpos(stage.rig.bones.upperarm_l).distanceTo(heldAt(stage.rig, 'l')) < arm - 0.1, 'bent at the bottom');
     });

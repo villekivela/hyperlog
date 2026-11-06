@@ -1353,11 +1353,12 @@ export const POSES = {
     equipment: 'smith_machine',
     motion: 'lunge',
     kit: { smith_machine: { z: 0.1, stops: 5 } },
-    top: { hip: [0.79, 0], trunk: 6, heel: 30 },
-    bottom: { hip: [0.5, 0], trunk: 10, heel: 50 },
+    top: { hip: [0.79, 0], trunk: 6, heel: 30, wrist: [32.8668, 42.4311] },
+    bottom: { hip: [0.5, 0], trunk: 10, heel: 50, wrist: [32.8668, 42.4311] },
     feet: { stance: 0.11, front: 0.36, back: -0.3, toeOut: 6 },
     bar: { up: 0.0693, back: 0.1926 },
-    grip: { width: 0.4, swing: 50, pole: [0.6897, -0.2026, -0.6952] },
+    // Mid-palm, as a squat's: a dumbbell lunge's default is the base of the fingers.
+    grip: { width: 0.4, sits: 'mid', swing: 50, pole: [0.6897, -0.2026, -0.6952] },
     camera: { target: [0, 1.1, 0], halfHeight: 1.3, azimuth: 74, elevation: 8 },
   },
 

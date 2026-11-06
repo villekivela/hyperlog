@@ -214,6 +214,9 @@ function archedShoulders(lean, arch, L) {
 /** The hip centre and the spine's lean of a body placed on a seat or a bench: `body.hip` is [y, z]. */
 const placed = (e, s, L) => ({ hipC: V(0, ...e.body.hip), lean: spineLean(s.trunk ?? e.body.trunk, L) });
 
+/** How much of the arm's length a press on rods locks out at. */
+const LOCKED = 0.9995;
+
 /** How high a kneeling knee's joint sits off the floor. */
 const KNEE_Y = 0.07;
 /** Which way a tucked foot runs from the ankle to the ball and its top faces, in the side-on plane. */
@@ -659,7 +662,8 @@ export const MOTIONS = {
     const { line } = s.linkage;
     const [away, down] = e.bottom.chest;
     const low = sh.clone().addScaledVector(f, away).addScaledVector(u, -down).y;
-    const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
+    // Locked out, nearer straight than a dumbbell press's reach: a bar pressed on rods stops there.
+    const reach = (L.up + L.fore) * LOCKED + depthOf(e, L);
     const room = Math.sqrt(Math.max(0, reach * reach - (e.grip.width - L.shW) ** 2));
     let [lo, hi] = [Math.max(low, sh.y), sh.y + reach];
     for (let i = 0; i < 40; i++) {

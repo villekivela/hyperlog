@@ -43,8 +43,8 @@ const TOOTH = { ahead: 0.035, deep: 0.03 };
 const HOOK = { reach: 0.05, turn: rad(90) };
 const CARRIAGE = 0.12;
 const BLOCK = 0.07;
-// The bar: 2.1 m, its sleeves outside the rods.
-const BAR = { half: 1.05, grip: 0.0125 };
+// The bar: 2.1 m, its sleeves outside the rods, its shaft 28 mm through, a barbell's.
+const BAR = { half: 1.05, grip: 0.014 };
 // The rear uprights rise from near the beams' rear ends, leaning forward, with four horns a side.
 const REAR = { z: -0.62, lean: rad(10), pad: 1.8 };
 // The hood sweeps forward from this height on the rear upright.
