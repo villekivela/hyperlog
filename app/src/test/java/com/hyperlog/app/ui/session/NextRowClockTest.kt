@@ -21,7 +21,16 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
+import com.hyperlog.app.ui.theme.GraphiteDark
+import com.hyperlog.app.ui.theme.GraphiteLight
+import org.junit.Assert.assertTrue
+import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.ui.theme.onTechniqueColor
+import com.hyperlog.app.ui.theme.techniqueColor
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -135,6 +144,45 @@ class RowClockTest {
         val s = session(holdStartedAt = 0, followUp = FollowUp.Hold(20, HoldPosition.Stretch))
         assertEquals(0.5f, rowClock(s, 10_000)!!.fraction, 0.001f)
         assertEquals(ClockKind.HoldReached, rowClock(s, 20_000)!!.kind)
+    }
+
+    @Test
+    fun aReachedHoldStopsItsDigitsAtTheTarget() {
+        val s = session(holdStartedAt = 0, followUp = FollowUp.Hold(20, HoldPosition.Stretch))
+        assertEquals("0:19", rowClock(s, 19_000)!!.time)
+        assertEquals("0:20", rowClock(s, 20_000)!!.time)
+        assertEquals("0:20", rowClock(s, 47_000)!!.time)
+        assertEquals(1f, rowClock(s, 47_000)!!.fraction, 0f)
+    }
+
+    @Test
+    fun breathingTakesTheMyoVioletAndTheHoldTheIsoBlue() {
+        listOf(false, true).forEach { dark ->
+            assertEquals(techniqueColor(TechniqueKind.MyoReps, dark).copy(alpha = ClockTintAlpha), ClockKind.Breath.fill(dark, Color.Red))
+            assertEquals(techniqueColor(TechniqueKind.IsoHold, dark).copy(alpha = ClockTintAlpha), ClockKind.Hold.fill(dark, Color.Red))
+            assertEquals(techniqueColor(TechniqueKind.IsoHold, dark), ClockKind.HoldReached.fill(dark, Color.Red))
+            assertEquals(onTechniqueColor(dark), ClockKind.HoldReached.ink(dark, onSurface = Color.Red, muted = Color.Red))
+        }
+    }
+
+    @Test
+    fun theDigitsStayReadableOnEveryFillOverTheRowsSurface() {
+        listOf(false, true).forEach { dark ->
+            val scheme = if (dark) GraphiteDark else GraphiteLight
+            ClockKind.entries.forEach { kind ->
+                val fill = kind.fill(dark, scheme.primary)
+                val ink = kind.ink(dark, scheme.onSurface, scheme.onSurfaceVariant)
+                listOf(scheme.surfaceContainer, scheme.surface).forEach { row ->
+                    val ratio = contrast(ink, fill.compositeOver(row))
+                    assertTrue("$kind (dark=$dark) digits on $row are $ratio:1", ratio >= 4.5f)
+                }
+            }
+        }
+    }
+
+    private fun contrast(a: Color, b: Color): Float {
+        val (hi, lo) = listOf(a.luminance(), b.luminance()).sortedDescending()
+        return (hi + 0.05f) / (lo + 0.05f)
     }
 
     @Test
