@@ -99,6 +99,23 @@ export const POSES = {
     camera: { target: [0, 1.12, 0.38], halfHeight: 1.18, azimuth: 62, elevation: 8 },
   },
 
+  // Overhand out near the bar's bends, the elbows wide, pulled to the upper chest.
+  lat_pulldown_wide_grip: {
+    like: 'lat_pulldown',
+    grip: { width: 0.52, elbows: 1 },
+    top: { bar: [1.58, 0.02] },
+    bottom: { bar: [1.14, 0.02] },
+  },
+
+  // A close neutral handle, the palms facing: the elbows drive straight down by the sides.
+  neutral_grip_lat_pulldown: {
+    like: 'lat_pulldown',
+    kit: { cable_tower: { attachment: 'v_handle' } },
+    grip: { width: 0.09, rotate: 90, elbows: 0 },
+    top: { bar: [1.7, 0.02], shrug: 9 },
+    bottom: { bar: [1.11, 0.02], shrug: 0 },
+  },
+
   // A narrower grip, pulled to the upper chest rather than as low. The arms hang fully extended at
   // the top with the shoulders let up into the stretch, and the elbows drive straight down by the
   // sides. Underhand: the palms face the lifter.
