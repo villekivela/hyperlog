@@ -158,18 +158,18 @@ const SPOT = [0.02, 0.06, 0.07];
 /** How far in front of the shin's and the thigh's line a bar running past them must stay: their own depth and the bar's. */
 const SHIN_FRONT = 0.075;
 const THIGH_FRONT = 0.11;
-/** How far below the knee the leg's front turns from the shin's line to the thigh's, round the kneecap. */
+/** How far above the knee the leg's front takes to reach the thigh's depth from the shin's. */
 const KNEE = 0.2;
 /** How many degrees either side of where the bar first touches the knees start to give way. */
 const GIVE = 6;
 
-/**
- * A pull's legs with the knees out of the bar's way: where the bar, at its height `s.bar` on its
- * line at `bar.z`, would run into the shins or the thighs, the shins stand back, as far as it takes.
- * The legs' front runs up the shin, round the kneecap and up the thigh with no corner, and the
- * knees start to give a little before the bar reaches them, so they give way smoothly.
- */
-function clearOf(e, s, L) {
+/** The furthest a shin leans in the search for one that clears the bar. */
+const SHIN_MOST = 80;
+/** How many steps of the rep `clearOf` reads for the heights the bar has already passed. */
+const REP_STEPS = 60;
+
+/** The shin that just clears the bar at its height `s.bar` (the room shrinks as the shin leans in), or `Infinity` if any does. */
+function clearShin(e, s, L) {
   const ankleY = (e.feet.y ?? 0) + L.ankleY;
   // How far in front of the legs the bar runs at its height, with the shins at `shin`.
   const room = (shin) => {
@@ -177,23 +177,38 @@ function clearOf(e, s, L) {
     const out = Math.atan(e.feet.kneesOut ?? 0);
     const a = Math.atan2(Math.sin(rad(shin)), Math.cos(rad(shin)) * Math.cos(out));
     const knee = V(0, ankleY + L.shin * STRAIGHT * Math.cos(a), L.shin * STRAIGHT * Math.sin(a) * Math.cos(out));
-    // The shin's line and the thigh's, each run on past the knee, and the kneecap between: the
-    // leg's front turns from one to the other over the stretch below the knee.
-    const shinZ = knee.z * ((s.bar - ankleY) / (knee.y - ankleY));
-    const thighZ = knee.z + ((s.bar - knee.y) / (hip.y - knee.y)) * (hip.z - knee.z);
-    const k = smooth(Math.max(0, Math.min(1, (s.bar - (knee.y - KNEE)) / KNEE)));
-    return e.bar.z - (shinZ + (thighZ - shinZ) * k) - (SHIN_FRONT + (THIGH_FRONT - SHIN_FRONT) * k);
+    // The shin's line below the knee and the thigh's above it, never either run on past the knee:
+    // a flat thigh's line runs far out in front of a shin that is nowhere near the bar. The leg's
+    // depth turns from the shin's to the thigh's over the stretch above the knee: a kneecap is no
+    // deeper than a shin, so the bar passes it with the knee where the rep has it.
+    const legZ = s.bar < knee.y
+      ? knee.z * ((s.bar - ankleY) / (knee.y - ankleY))
+      : knee.z + ((s.bar - knee.y) / (hip.y - knee.y)) * (hip.z - knee.z);
+    const k = smooth(Math.max(0, Math.min(1, (s.bar - knee.y) / KNEE)));
+    return e.bar.z - legZ - (SHIN_FRONT + (THIGH_FRONT - SHIN_FRONT) * k);
   };
-  // The shin that just clears the bar (the room shrinks as the shin leans in), and the traced
-  // shin eased onto it: a smooth minimum, never past it.
-  let [lo, hi] = [-10, 80];
-  if (room(hi) >= 0) return s;
+  let [lo, hi] = [-10, SHIN_MOST];
+  if (room(hi) >= 0) return Infinity;
   for (let i = 0; i < 30; i++) {
     const m = (lo + hi) / 2;
     if (room(m) >= 0) lo = m; else hi = m;
   }
-  const shin = (s.shin + lo - Math.hypot(s.shin - lo, GIVE)) / 2;
-  return { ...s, shin };
+  return lo;
+}
+
+/**
+ * A pull's legs with the knees out of the bar's way: where the bar, at its height `s.bar` on its
+ * line at `bar.z`, would run into the shins or the thighs, the shins stand back, as far as it takes.
+ * Knees that gave way stay back: the limit is the tightest at this height or any the bar has risen
+ * through, so they don't come forward again as the bar passes them. They start to give a little
+ * before the bar reaches them, so they give way smoothly.
+ */
+function clearOf(e, s, L) {
+  const passed = Array.from({ length: REP_STEPS + 1 }, (_, i) => stateAt(e, i / REP_STEPS)).filter((lower) => lower.bar < s.bar);
+  const limit = Math.min(clearShin(e, s, L), ...passed.map((lower) => clearShin(e, lower, L)));
+  if (limit === Infinity) return s;
+  // The traced shin eased onto the limit: a smooth minimum, never past it.
+  return { ...s, shin: (s.shin + limit - Math.hypot(s.shin - limit, GIVE)) / 2 };
 }
 
 /**

@@ -1565,7 +1565,7 @@ gallery (Technique videos).
     0.2–0.3, and the three landmarks lie close. The rope is 28 mm with 60 mm end stops, bending at each
     fist to run through it along the knuckles, its stop against the little finger. The owner's tuned wrist on the barbell squat (#197, 33° of flexion and 42° of radial deviation at the top) stands for the high-bar, low-bar and front squats too, by `like:`. A wrist bends only where
     the pose sets it, and a check fails one bent more than 5° otherwise. No joint jumps between
-    frames: the arms, the fingers and a pull's knees move smoothly through the rep. Tune bends the
+    frames: the arms, the fingers and a pull's knees move smoothly through the rep, and the bar passes a deadlift's knees without a jump: they travel back steadily from the floor, with no sudden step, and don't come forward again as it passes (owner, #127). Tune bends the
     wrists, with each slider named in words ("Wrist tilt: + radial (thumb side) / − ulnar
     (little-finger side)"), turns
     the grip at each end and points a squat's elbows; every cable ends at its handle's
@@ -1685,8 +1685,8 @@ gallery (Technique videos).
       follow the contacts, and the recipe's fit rules set its adjustments (an entry can override
       them, and the studio has a slider for each). The rep runs from one limit of the joint to the
       other unless the entry gives its own range, and every frame is checked for a joint past its
-      limit, a handle off its arc, a hand off its handle and a pad off its limb (#160). A free weight, and a cable's attachment, is a free body on no joint, which the hands
-      carry (#159). A contact can also tie the fixed frame (a seat's handles, a thigh pad), and
+      limit, a handle off its arc, a hand off its handle and a pad off its limb (#160). A free weight, and a cable's attachment, is a free body on no joint, which the body
+      carries: the hands, or the ankle for an ankle cuff (#159). A contact can also tie the fixed frame (a seat's handles, a thigh pad), and
       besides the hands, shins and feet it meets the thighs (a calf raise's or a pulldown's pads),
       the shoulders (a hack squat's pads) or the chest (the T-bar row machine's pad, #176). A weight stack rises by a ratio of a joint's travel: a
       lever's turn on a selectorised machine, and on a cable machine the stack's own joint, the
