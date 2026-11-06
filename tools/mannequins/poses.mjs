@@ -847,7 +847,7 @@ export const POSES = {
     kit: { cable_crossover: { position: 13, faces: true, attachment: 'rope', at: [-1.105, 1.7] } },
     body: { kneel: -1 },
     top: { thigh: 0, trunk: 35, hand: [0.2, 1.17, 0.87], rotate: 90 },
-    bottom: { thigh: 0, trunk: 8, hand: [0.32, 0.42, 0.3], rotate: 90 },
+    bottom: { thigh: 0, trunk: 2, hand: [0.34, 0.5, 0.36], rotate: 90 },
     feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.15 },
     tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
     grip: { arc: true, rotate: 90, pole: [0.3, -1, -0.5] },

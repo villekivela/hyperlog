@@ -2,6 +2,7 @@
 // beyond its kit's first pose is in its own test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as THREE from 'three';
 import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { CHECKS, checkStage } from './checks.mjs';
@@ -124,6 +125,27 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   const finish = at(1);
   const beside = finish('hand_l').x - finish('calf_l').x;
   assert.ok(beside > 0.08, `the hand ${beside.toFixed(3)} outside the front knee at the finish`);
+  // The rope rides over the knee. A stretched strand has vertices only at its ends, so it's sampled
+  // along its centre line and held off the leg's bone.
+  const near = new THREE.Vector3();
+  for (const d of [0.7, 0.8, 0.9, 1]) {
+    const g = at(d);
+    const leg = new THREE.Line3(g('thigh_l').clone(), g('calf_l').clone());
+    stage.kit.group.traverse((m) => {
+      if (!m.isMesh) return;
+      m.geometry.computeBoundingBox();
+      const { min, max } = m.geometry.boundingBox;
+      const size = max.clone().sub(min);
+      const axis = ['x', 'y', 'z'].reduce((a, b) => (size[b] > size[a] ? b : a));
+      for (let t = 0; t <= 1; t += 0.02) {
+        const p = min.clone().add(max).multiplyScalar(0.5);
+        p[axis] = min[axis] + t * size[axis];
+        p.applyMatrix4(m.matrixWorld);
+        const gap = leg.closestPointToPoint(p, true, near).distanceTo(p);
+        assert.ok(gap > 0.075, `${m.name} ${(gap * 100).toFixed(1)} cm from the front thigh's bone at ${d}`);
+      }
+    });
+  }
   const start = at(0);
   assert.ok(start('hand_l').y < start('Head').y + 0.2, `the hand ${start('hand_l').y.toFixed(3)} at the top, the head ${start('Head').y.toFixed(3)}`);
 });
