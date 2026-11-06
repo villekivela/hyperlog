@@ -158,10 +158,10 @@ class RowClockTest {
     @Test
     fun breathingTakesTheMyoVioletAndTheHoldTheIsoBlue() {
         listOf(false, true).forEach { dark ->
-            assertEquals(techniqueColor(TechniqueKind.MyoReps, dark).copy(alpha = ClockTintAlpha), ClockKind.Breath.fill(dark))
-            assertEquals(techniqueColor(TechniqueKind.IsoHold, dark).copy(alpha = ClockTintAlpha), ClockKind.Hold.fill(dark))
-            assertEquals(techniqueColor(TechniqueKind.IsoHold, dark), ClockKind.HoldReached.fill(dark))
-            assertEquals(onTechniqueColor(dark), ClockKind.HoldReached.ink(dark, onSurface = Color.Red))
+            assertEquals(techniqueColor(TechniqueKind.MyoReps, dark).copy(alpha = ClockTintAlpha), ClockKind.Breath.fill(dark, Color.Red))
+            assertEquals(techniqueColor(TechniqueKind.IsoHold, dark).copy(alpha = ClockTintAlpha), ClockKind.Hold.fill(dark, Color.Red))
+            assertEquals(techniqueColor(TechniqueKind.IsoHold, dark), ClockKind.HoldReached.fill(dark, Color.Red))
+            assertEquals(onTechniqueColor(dark), ClockKind.HoldReached.ink(dark, onSurface = Color.Red, muted = Color.Red))
         }
     }
 
@@ -169,7 +169,7 @@ class RowClockTest {
     fun theDigitsStayReadableOnEveryFillOverTheRowsSurface() {
         listOf(false, true).forEach { dark ->
             val scheme = if (dark) GraphiteDark else GraphiteLight
-            ClockKind.values().forEach { kind ->
+            ClockKind.entries.forEach { kind ->
                 val fill = kind.fill(dark, scheme.primary)
                 val ink = kind.ink(dark, scheme.onSurface, scheme.onSurfaceVariant)
                 listOf(scheme.surfaceContainer, scheme.surface).forEach { row ->

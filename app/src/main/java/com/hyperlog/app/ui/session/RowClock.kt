@@ -61,7 +61,7 @@ internal const val ClockTintAlpha = 0.24f
  * and the hold take their technique's colour (myo-reps' violet, iso hold's blue), so the row says
  * which technique is running; a reached hold fills the row solid in the iso hold colour.
  */
-internal fun ClockKind.fill(dark: Boolean, primary: Color = Color.Unspecified): Color = when (this) {
+internal fun ClockKind.fill(dark: Boolean, primary: Color): Color = when (this) {
     ClockKind.Rest -> primary.copy(alpha = ClockTintAlpha)
     ClockKind.Over -> Color.Transparent
     ClockKind.Breath -> techniqueColor(TechniqueKind.MyoReps, dark).copy(alpha = ClockTintAlpha)
@@ -70,7 +70,7 @@ internal fun ClockKind.fill(dark: Boolean, primary: Color = Color.Unspecified): 
 }
 
 /** The colour of what is written on the row: [onSurface], [muted] after rest, a technique fill's own ink once solid. */
-internal fun ClockKind.ink(dark: Boolean, onSurface: Color, muted: Color = onSurface): Color = when (this) {
+internal fun ClockKind.ink(dark: Boolean, onSurface: Color, muted: Color): Color = when (this) {
     ClockKind.Over -> muted
     ClockKind.HoldReached -> onTechniqueColor(dark)
     else -> onSurface

@@ -91,8 +91,8 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | ✓ / → key | primary (dimmed to surfaceContainerHigh when there is nothing to log) |
 | Weight warning | error (cell outline and value, strip text and `warning` symbol) |
 | Next row, resting | the row drains in primary at 24% across its width, name and digits in onSurface so they read on the fill and off it; no fill after rest, the digits in onSurfaceVariant |
-| Next row, breathing | drains in tertiary at 28% |
-| Next row, holding | fills in secondary at 24% toward the target; solid primary, text in onPrimary, once reached |
+| Next row, breathing | drains in the myo-reps violet at 24% |
+| Next row, holding | fills in the iso hold blue at 24% toward the target; solid iso hold blue, digits stopped, text in the technique ink, once reached |
 | Day done strip | primaryContainer, rounded 28 dp at the top; its records in onPrimaryContainer, the set line at 80% |
 | Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
