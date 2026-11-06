@@ -723,7 +723,7 @@ each planned day with the training day it lands on, and never changes the day:
      - The update and time-off banners show only while today is selected, and so does the "Set
        how you train" card until the training style is set (Coaching → Training style). A
        workout from Claude and a running session keep their own layout on today, with their Start
-       or Resume floating.
+       or Resume in its lane under the list.
      - With no program, today keeps the starter offer (or the empty state) under the calendar, and
        a finished program says so and offers an ad-hoc session.
    - A **workout** added from Coach comes first, for the day it was added, as today's main
@@ -1329,6 +1329,12 @@ gallery (Technique videos).
   - **Text that leaves the app keeps `@ N`:** the Claude prompts (`@ N RIR` in the legend), backups,
     the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
+- **The session has a visible way out** (#269): an arrow left of the exercise's name, the same step as
+  system Back. It steps out of a correction or a finished exercise first, and only then asks to
+  leave. A short table sits on the pad, its rows in reach of the thumb, with the spare space under
+  the exercise's name; a long one fills the screen and scrolls.
+- **Today's one action has a lane of its own** (#269): Start and Resume sit under the list, not over
+  it, so they never cover an exercise at any text size.
 - **The set table reads aloud** (#268): every value on a row says which row it belongs to and its
   unit, so TalkBack never reads a bare `50`: `Set 1 weight, 50 kg`, `Set 1 reps, 10`, `Set 1, 2 RIR`,
   `Set 1 last time, 50 kg × 10 + 5`. A warm-up, drop, mini-set or hold names itself the same way
@@ -2705,10 +2711,10 @@ program at all.
   keeps it; Reject, × and Back drop it.
 - **On Today, it's today's main Start** (tester's report, 2026-10-16). It comes first as a card:
   "Workout" over its name, summary and gym line on the secondaryContainer head (decided, owner
-  2026-10-16), with ⋮, then its exercises with their rest. The floating button reads **Start
+  2026-10-16), with ⋮, then its exercises with their rest. The button under the list reads **Start
   workout** and starts it, through the start sheet. The program day follows as the second card,
   its head holding week and block over the day's name with a tonal **Start**, so its heading and
-  its Start show together and the floating button never covers them; then its exercises and the
+  its Start show together; then its exercises and the
   Ad-hoc session row. With no program the card is followed by the Ad-hoc row. While another
   session runs, Today shows that session's day and not the workout. It holds for the day it was
   added and is gone the next day if it wasn't started. Adding another replaces it, asking first

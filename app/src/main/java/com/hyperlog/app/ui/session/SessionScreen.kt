@@ -167,7 +167,7 @@ fun SessionScreen(
     KeepScreenOn()
 
     // Back steps out of a correction, then out of a finished exercise, and only then asks to leave.
-    BackHandler {
+    val goBack = {
         when {
             session.correction != null -> actions.cancelCorrection()
             session.warmupEdit != null -> actions.closeWarmup()
@@ -176,6 +176,7 @@ fun SessionScreen(
             else -> showLeave = true
         }
     }
+    BackHandler(onBack = goBack)
 
     val current = session.current
     /** A finished exercise opened from the list, looked at in place of the current one. */
@@ -248,6 +249,7 @@ fun SessionScreen(
                     Header(
                         exercise = viewing,
                         session = session,
+                        onBack = goBack,
                         onName = { showDetails = true },
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
@@ -272,6 +274,7 @@ fun SessionScreen(
                     Header(
                         exercise = current,
                         session = session,
+                        onBack = goBack,
                         onName = { showDetails = true },
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
@@ -525,6 +528,8 @@ fun SessionScreen(
 private fun Header(
     exercise: SessionExercise,
     session: ActiveSession,
+    /** The on-screen way out, the same step as system Back. */
+    onBack: () -> Unit,
     onName: () -> Unit,
     onAddExercise: () -> Unit,
     onFinish: () -> Unit,
@@ -544,9 +549,11 @@ private fun Header(
     Column(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
     // Name and ⋮ on one row; the clock is on the Next row.
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = Margin, end = 8.dp, top = 8.dp),
+        // The arrow's 48 dp target starts 12 dp out, so its symbol sits on the screen's margin.
+        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = Margin - 12.dp, end = 8.dp, top = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.session_leave), tint = cs.onSurfaceVariant) }
         val details = stringResource(R.string.session_exercise_details)
         ExerciseName(exercise.exercise.name, Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName))
         Box {

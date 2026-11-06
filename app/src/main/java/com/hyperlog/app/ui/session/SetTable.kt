@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -196,7 +197,8 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         withFrameNanos { }
         listState.keepInView(activeIndex)
     }
-    Column(modifier.fillMaxWidth().testTag(SetTableTag)) {
+    // A short table sits on the pad, in reach of the thumb; a long one fills the space and scrolls.
+    Column(modifier.fillMaxWidth().testTag(SetTableTag), verticalArrangement = Arrangement.Bottom) {
         // The heads sit above the rows, so they stay while the rows scroll.
         Box(Modifier.padding(horizontal = TapInset)) {
             ColumnHeads(
@@ -205,7 +207,7 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
             )
         }
         LazyColumn(
-            Modifier.fillMaxWidth().weight(1f).fadingEdges(listState),
+            Modifier.fillMaxWidth().weight(1f, fill = false).fadingEdges(listState),
             state = listState,
             contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
         ) {

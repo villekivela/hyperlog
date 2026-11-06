@@ -86,6 +86,34 @@ class SetTableTest {
         assertEquals("addDrop 2", calls.last())
     }
 
+    /** A short exercise's rows sit on the pad, in reach of the thumb, with no band between them (#269). */
+    @Test
+    fun aShortExercisesRowsSitOnThePad() {
+        show(emptyList(), listOf(top), warmups = false)
+        // The table's last row is Add set, under the set.
+        val row = compose.onNodeWithText("Add set", useUnmergedTree = true).getBoundsInRoot()
+        val next = compose.onNodeWithTag(NextRowTag, useUnmergedTree = true).getBoundsInRoot()
+        assertTrue("${next.top - row.bottom} between the last row and the pad", next.top - row.bottom <= 32.dp)
+    }
+
+    /** The arrow does what system Back does: it asks first, and a tap on Stay keeps the session on screen (#269). */
+    @Test
+    fun theSessionHasAVisibleWayOut() {
+        var left = 0
+        val exercise = SessionExercise(1, bench, emptyList(), emptyList(), DefaultPlates.ladder(), true, prescription = listOf(top), plates = DefaultPlates)
+        val entry = SetEntry("100", "6", "", 1, Field.Reps, partialMode = false, fresh = true)
+        val session = ActiveSession(id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = entry, padVisible = true, restEndsAt = null, restTotalMs = 0)
+        compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench), Recording(calls), onLeave = { left++ }) } }
+
+        compose.onNodeWithContentDescription("Leave session").performClick()
+        compose.onNodeWithText("Leave the session?").assertIsDisplayed()
+        compose.onNodeWithText("Stay").performClick()
+        assertEquals(0, left)
+        compose.onNodeWithContentDescription("Leave session").performClick()
+        compose.onNodeWithText("Leave").performClick()
+        assertEquals(1, left)
+    }
+
     /** Set 1 logged with [technique] and [done] of its drops or mini-sets, the set still open for [followUp]. */
     private fun showOpen(technique: Technique, done: Int, followUp: com.hyperlog.app.session.FollowUp) {
         val kind = if (technique is Technique.Dropset) com.hyperlog.app.domain.Extension.Kind.Drop else com.hyperlog.app.domain.Extension.Kind.MiniSet

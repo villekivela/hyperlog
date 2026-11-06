@@ -8,8 +8,11 @@ import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import org.junit.Assert.assertTrue
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -129,6 +132,20 @@ class ProgramDayTest {
         // Back returns to Program, where the session was opened from.
         compose.onNodeWithContentDescription("Back").performClick()
         compose.waitFor("Main · weeks 1–2")
+    }
+
+    /** The list ends above the button, so however long it is and however large the text, no row runs under it (#269). */
+    @Test
+    fun resumeHasALaneOfItsOwnBelowTheExercises() {
+        importProgram()
+        compose.onNodeWithText("Start session").performClick()
+        compose.waitFor("Reps")
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("Leave").performClick()
+        compose.waitFor("Resume session")
+        val button = compose.onNodeWithText("Resume session").getBoundsInRoot()
+        val list = compose.onNodeWithTag(TodayDayListTag).getBoundsInRoot()
+        assertTrue("The list runs to ${list.bottom}, under Resume at ${button.top}", list.bottom <= button.top)
     }
 
     @Test

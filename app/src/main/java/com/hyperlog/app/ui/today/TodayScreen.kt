@@ -13,6 +13,7 @@ import androidx.compose.ui.text.withStyle
 import com.hyperlog.app.ui.theme.Group
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -332,7 +333,7 @@ fun TodayScreen(
     // A workout or a running session keeps its Start floating; the next day's Start is in its card.
     // Not before the sessions are read: nothing floats over the held day.
     val fab = loaded && isToday && (workoutFirst || (sessionRunning && state.nextDay != null))
-    val bottom = if (fab) 112.dp else 24.dp
+    val bottom = 24.dp
     val banners: @Composable ColumnScope.() -> Unit = {
         update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
         state.easeBack?.let { days -> TimeOffBanner(days, onEaseBack = { onEaseBack(days) }) }
@@ -345,13 +346,16 @@ fun TodayScreen(
         modifier = modifier,
         containerColor = Tones.screen,
         snackbarHost = { SnackbarHost(snackbars) },
-        floatingActionButton = {
+        // A lane of its own under the list rather than floating over it, so it never covers a row.
+        bottomBar = {
             if (fab) {
-                // The expressive medium size: the day's one action, unmistakable. With a workout today, it starts that.
-                MediumExtendedFloatingActionButton(onClick = { start(if (workoutFirst) Kind.Workout else Kind.Day) }) {
-                    SymbolIcon(Symbol.PlayArrow, null, Modifier.size(28.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Text(fabLabel, style = MaterialTheme.typography.titleMedium)
+                Box(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), contentAlignment = Alignment.CenterEnd) {
+                    // The expressive medium size: the day's one action, unmistakable. With a workout today, it starts that.
+                    MediumExtendedFloatingActionButton(onClick = { start(if (workoutFirst) Kind.Workout else Kind.Day) }) {
+                        SymbolIcon(Symbol.PlayArrow, null, Modifier.size(28.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text(fabLabel, style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
         },
@@ -403,7 +407,7 @@ fun TodayScreen(
                     item { AdHocRow(onAdHoc = { start(Kind.AdHoc) }) }
                 }
             }
-            // A running session keeps its day on today, with Resume floating.
+            // A running session keeps its day on today, with Resume under it.
             dayKind == DayKind.Running && day != null -> NextDay(
                 day, exerciseNames, Modifier.weight(1f),
                 banners = banners,
@@ -608,8 +612,7 @@ private fun NextDay(
     isWorkout: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
-    // The bottom padding keeps the last row clear of the floating Start session.
-    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
+    LazyColumn(modifier.fillMaxSize().testTag(TodayDayListTag), contentPadding = PaddingValues(bottom = 24.dp)) {
         item {
             Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
             Column(Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp)) {
