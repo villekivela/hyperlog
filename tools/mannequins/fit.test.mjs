@@ -13,6 +13,7 @@ import { POSES } from './poses.mjs';
 const MACHINES = {
   leg_press: 'sled',
   machine_chest_press: 'levers',
+  machine_shoulder_press: 'yoke',
   leg_extension: 'lever',
   seated_leg_curl: 'lever',
   lying_leg_curl: 'lever',
