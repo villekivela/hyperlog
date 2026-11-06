@@ -290,6 +290,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
+| `standing_levers` | standing, the hands on grips that rise on a machine's levers, the arms long: a machine shrug | the rep's joint, degrees up from level ahead; `shin`, `thigh`, `trunk`, `shrug`; `feet`; `body.look`, `grip.pole` |
 | `chest_pad` | standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips its lever carries: a chest-supported T-bar row, a Kelso shrug | `lever`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`, how far the head tips from the spine toward the chest (negative lifts it); `grip.pole`. The shoulder blades move by `offsets` on the clavicles |
 | `hip_thrust` | seated on a low seat, the upper back on fixed pads, a belt over the hips on a carriage that turns about a pivot behind the body, the feet flat on a tilted platform, the hands on the carriage's handles: a machine hip thrust | `carriage`, degrees up from level ahead; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `body.look`; `grip.pole`. The hips ride the carriage and the spine runs from them along the pads |
 | `hang` | hanging from the rack's bar by the hands, the feet off the floor: a pull-up, a chin-up, a hang, a leg raise | `kit.power_rack.handles`, the pair of grips; `rise`, metres the shoulders lift from straight arms under the grips; `back`, metres behind them; `trunk`, `shrug`; `thigh`, `shin`, `feet.stance`, `feet.point`, `feet.kneesOut` and `body.look`, as for `support`; `grip.pole` |
@@ -341,7 +342,7 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
 | `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
 | `crunch_machine` | Machine Crunch | missing |
-| `shrug_machine` | Machine Shrug | `shrug_machine` |
+| `shrug_machine` | Machine Shrug | `shrug_machine` (posed, #241) |
 
 - `bench` stands at `at` [x, z], where a pose needs it elsewhere: its node moves, so its parts stay
   the ones every clip shares. It is flat, or adjustable with `angle` raising its back pad from flat, to 85° at most; `seat`
@@ -526,16 +527,19 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   height. Options: `shaft`, the shaft's height (1.50 m), and `roll`, the degrees it is rolled forward
   about the shaft (0 as hung in a rack, about 25 as held). Contacts: `grips` (the hands) and `yoke`
   (the shoulders).
-- `shrug_machine` (#223, the machine kind of `machine_shrug`, not yet posed, so no clip changes) stands
-  where its ref puts it, whatever the pose: a rear cross beam and two side beams 1.02 m deep on the
-  floor, a post at each end carrying the levers' axle 600 mm up, a back pad topping out at 1.24 m
-  on a column up the middle, mitred into the beam to the pad, and a seat at 650 mm. The two levers are one body on a revolute joint
-  about that axle, its value the angle up from level ahead of the line to the grips: 7.5° on the
-  stop, the grips 700 mm up and 740 apart, 760 ahead of the pivot, to 26.3° at the top of a shrug,
-  940 mm up. Each lever carries a handle post rising 270 mm with the grip pointing forward, and a
-  plate horn under the post reaching out to 760 mm from the middle. The contact ties the hands to
-  the grips. Its one option is `seat`, the seat's top (0.65 m, the ref's measured height). In the studio it stands alone, three-quarter from the front, and the joint's slider scrubs the
-  levers through their limits.
+- `shrug_machine` (#223, #241, the machine kind of `machine_shrug`, posed standing on the
+  `standing_levers` motion) stands where its ref puts it, whatever the pose, the lifter at the origin,
+  100 mm behind the photos' grip line: a rectangular base of 75 mm tube, 38 mm up on a foot at each
+  corner, with two cross beams; an A-frame on each rail carrying a cross tube 600 mm up; and a column
+  raking back 8.8° from the front cross beam, carrying a back pad topping out at 1.24 m and the seat's
+  sleeve, a brace running from it back to the cross tube. The two levers are one body on a revolute
+  about that tube, its value the angle up from level ahead of the line to the grips: 7.5° on the
+  stop, the grips 700 mm up and 740 apart, 760 ahead of the pivot, to 26.3° at the top of its travel,
+  940 mm up. Each lever is a heavy beam falling 13° toward the front on the stop, a hoop and a strut
+  rising from it to the grip, a second grip running on from its end, and a plate horn near the front
+  reaching out to 760 mm from the middle. The contact ties the hands to the grips. Its one option is
+  `seat`, the seat's top (0.65 m, the ref's measured height); the pose lowers it to 0.45 m, and the
+  legs stand either side of it, as the ref's front photo has them.
 - `power_rack` (#189, bodyweight and weighted bodyweight equipment, not a machine kind;
   `STATIONS` in `kit.mjs` maps its 16 exercises, all posed on it, #196) is a bolt-together
   power rack with a multi-grip pull-up bar and a pair of dip handles as options (`pullupBar`,
@@ -838,7 +842,7 @@ listens on 127.0.0.1 only.
   checks re-run on what it shows. `c` shows the baked clip instead. A kit is shown alone, set up as
   the exercise that gives it the most joints sets it up (an adjustable bench, a twin column), the
   first by id of those. A kit no pose uses yet is shown as its recipe stands alone (`standsAlone`,
-  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the EZ bar, the hip machine, the safety bar, the hyperextension bench, the trap bar and the shrug machine. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
+  `shownAlone` in `kit.mjs`), its joints at rest, where its recipe can: the smith machine, the EZ bar, the hip machine, the safety bar, the hyperextension bench and the trap bar. A change to a recipe, a part or `poses.mjs` on disk reloads the page on the
   same item, its unsaved numbers kept.
 - **A kit's joints** (`studio/joints.mjs`) are its numbers: a row each, with its type and limits.
   `h` `l` move the selected one a degree (a revolute joint) or a centimetre (a prismatic one), `H`

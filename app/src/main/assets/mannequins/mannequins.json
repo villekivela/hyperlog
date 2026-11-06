@@ -2322,6 +2322,30 @@
         "kit_pulldown_machine.bin"
       ]
     },
+    "machine_shrug": {
+      "clip": "machine_shrug.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.85,
+          -0.2
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 60,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.5,
+        "lifting": 1,
+        "top": 1
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_shrug_machine.bin"
+      ]
+    },
     "neutral_grip_pullup": {
       "clip": "neutral_grip_pullup.glb",
       "equipment": "bodyweight",
