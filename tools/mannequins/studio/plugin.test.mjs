@@ -131,10 +131,10 @@ test('an exercise comes with its prepared entry, its checks and its baked clip',
   const shoulder = await get('/api/item/kit/shoulder_press');
   assert.equal(shoulder.uses, 'machine_shoulder_press');
   assert.notEqual(shoulder.entry.alone, true);
-  // The shrug machine, unposed, comes alone too (#223).
+  // The shrug machine comes as its one lift, now it is posed (#241).
   const shrug = await get('/api/item/kit/shrug_machine');
-  assert.equal(shrug.uses, null);
-  assert.equal(shrug.entry.alone, true);
+  assert.equal(shrug.uses, 'machine_shrug');
+  assert.equal(shrug.entry.alone, undefined);
   // The lateral raise machine comes as its seated raise, now it is posed (#241).
   const raise = await get('/api/item/kit/lateral_raise_machine');
   assert.equal(raise.uses, 'machine_lateral_raise');

@@ -25,6 +25,7 @@ const MACHINES = {
   chest_supported_t_bar_row: 'lever',
   t_bar_row: 'lever',
   kelso_shrug: 'lever',
+  machine_shrug: 'levers',
   pec_deck: 'left',
   reverse_pec_deck: 'left',
   '1_arm_reverse_pec_deck': 'right',

@@ -30,7 +30,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 8 | [`hip_machine`](hip_machine/ref.md) | 2 | Hammer Strength Select Hip Abduction and Adduction; built (#214), posed (#241) |
 | 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar; built (#219), not yet posed |
 | 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension; built (#220), posed (#241) |
-| 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug; built (#223), not yet posed |
+| 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug; built (#223), posed (#241) |
 | 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press; built and posed (#225) |
 | 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip; built and posed (#226) |
 | 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive; built and posed (#229) |
@@ -95,7 +95,7 @@ gaps says why):
   exists.
 - `hyperextension_bench` (built, #220; posed, #241): the body line and pad height are chosen (the bench telescopes); all sizes
   come from one spec drawing.
-- `shrug_machine`: the seat range and the bottom of the rep are chosen; no photo shows the bottom.
+- `shrug_machine` (built, #223; posed, #241): the seat range and the bottom of the rep are chosen; no photo shows the bottom.
 - `shoulder_press`: the pivot, yoke length and rotation come from oblique views; the seat range is
   chosen.
 - `dip_machine`: the seat positions, grip spread and carriage pivot stay chosen; no front view of

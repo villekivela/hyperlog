@@ -947,6 +947,25 @@ export const MOTIONS = {
   },
 
   /**
+   * Standing, the hands on grips that rise on the machine's levers, the arms long: a machine shrug.
+   * `shrug` lifts the shoulders with them, and `shin`, `thigh` and `trunk` stand the body as a
+   * barbell shrug does.
+   */
+  standing_levers(e, s, L) {
+    const hipC = standingHips(e, s, L);
+    const u = trunkUp(spineLean(s.trunk, L));
+    const f = forwardOf(u);
+    const { handle, across } = s.linkage;
+    return {
+      hipC, u, shrug: s.shrug,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
+      ...standingFeet(e, L),
+      hand: handle, across,
+      armPole: elbowsTo(e, [0.6, 0, -1]),
+    };
+  },
+
+  /**
    * Seated, the back on the pad, each foot on a plate at the foot of an arm that swings about a
    * vertical axis, so the legs ride the arms and the hips stay put: a hip abduction, an adduction.
    */

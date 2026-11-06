@@ -1355,6 +1355,21 @@ export const POSES = {
     shadow: { size: [1.6, 1.3], at: [0, 0.25] },
   },
 
+  // Standing between the levers, the legs either side of the lowered seat, the arms long and the
+  // hands on the grips: the shoulders shrug straight up and the levers rise with them.
+  machine_shrug: {
+    equipment: 'machine',
+    motion: 'standing_levers',
+    kit: { shrug_machine: { seat: 0.45 } },
+    body: { look: -0.1 },
+    top: { levers: 20.3, shin: 7, thigh: 7, trunk: 2, shrug: 18 },
+    bottom: { levers: 15.5, shin: 7, thigh: 7, trunk: 2, shrug: -4 },
+    feet: { stance: 0.24, toeOut: 8, kneesOut: 0 },
+    grip: {},
+    camera: { target: [0, 0.85, -0.2], halfHeight: 1.05, azimuth: 60, elevation: 8 },
+    shadow: { size: [1.7, 1.5], at: [0, -0.3] },
+  },
+
   // Face down along the 45 degree bench, the thighs on the pads, the calves under the rollers and the
   // arms crossed on the chest: from one straight line down the slope, the trunk hinges at the hips
   // to a little below level.
