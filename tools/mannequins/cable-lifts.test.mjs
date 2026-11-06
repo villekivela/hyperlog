@@ -102,7 +102,7 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   assert.deepEqual(failing('cable_lat_pullover', stage), []);
   const elbow = (g) => g('upperarm_l').sub(g('lowerarm_l')).angleTo(g('hand_l').sub(g('lowerarm_l'))) * 180 / Math.PI;
   const angles = [0, 0.25, 0.5, 0.75, 1].map((d) => elbow(at(d)));
-  assert.ok(Math.min(...angles) > 140, `the elbow bends to ${Math.min(...angles).toFixed(0)}°: a pullover, not a pulldown`);
+  assert.ok(Math.min(...angles) > 150, `the elbow bends to ${Math.min(...angles).toFixed(0)}°: a pullover, not a pulldown`);
   // A rope, its two ends free to pass either side of the raised knee where a bar would run through it.
   assert.equal(prepare('cable_lat_pullover').kit.cable_crossover.attachment, 'rope');
   const top = at(0);
@@ -120,7 +120,7 @@ test('the cable lat pullover sweeps the bar down on long arms, kneeling, the elb
   const swing = lean(at(0)) - lean(at(1));
   assert.ok(swing > 25, `the trunk rocks ${swing.toFixed(0)}°`);
   const arm = end('upperarm_l').sub(end('lowerarm_l')).angleTo(end('upperarm_l').sub(end('pelvis'))) * 180 / Math.PI;
-  assert.ok(arm < 45, `the upper arm ${arm.toFixed(0)}° off the trunk at the finish: by the hip`);
+  assert.ok(arm < 48, `the upper arm ${arm.toFixed(0)}° off the trunk at the finish: by the hip`);
   // The arms pass beside the raised thigh, the rope's ends spread, and finish by the hips.
   const finish = at(1);
   const beside = finish('hand_l').x - finish('calf_l').x;

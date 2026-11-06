@@ -287,7 +287,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `row` | hinged over, pulling a bar straight up and down at `bar.z`: a bent-over row, a Pendlay row | `shin`, `thigh`, `trunk`; `bar`, its height at the top and the bottom; `grip.pole` for the elbows. A drag of the hands sets the end's `bar` and `bar.z` |
 | `bench_press` | lying on a bench, pressing a bar | `bar: [y, z]`; `feet.z`; `grip.elbows`, 0 tucked to 1 flared, a light hint the hand on the bar outweighs; `grip.pole` [out, up, forward] points the elbows firmly instead, the bar slanting across the palm to let them; `body.head`, the head's tilt from the spine to rest it on the pad |
 | `dumbbell_press` | on an adjustable bench at `bench.angle`, pressing dumbbells | `body.sit`, `body.seat`, `body.lean`, `body.head`; `top.over` [out, up] and `bottom.chest` [out, down] from the shoulders in the trunk's frame; `rotate`, `tilt`; `grip.lockout`, `grip.width`, `grip.elbows` |
-| `pulldown` | seated under a thigh pad, pulling a bar down | `trunk`, `bar: [y, z]` |
+| `pulldown` | seated under a thigh pad, pulling a bar down, or two `handles` running front to back, palms facing | `trunk`, `bar: [y, z]` |
 | `pressdown` | standing at a high pulley, elbows still | `shin`, `thigh`, `trunk`, `upperArm`, `forearm` |
 | `leg_press` | seated in a 45° sled, feet on its plate | `sled`, metres above its stops; `feet.down`, how far below the plate's centre the ankles sit |
 | `chest_press` | seated, pressing horizontal handles on hung levers, held like a bar | `levers`, degrees forward of where they rest; `grip.width` |
