@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.formatKg
@@ -247,7 +246,8 @@ private fun ExerciseRow(trend: ExerciseTrend) {
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(trend.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // A primary name wraps rather than truncates, at any text size.
+        Text(trend.exercise.name, Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(16.dp))
         val line = trend.lines.singleOrNull()
         if (line == null) {

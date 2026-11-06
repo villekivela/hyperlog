@@ -1334,6 +1334,14 @@ gallery (Technique videos).
   (`Drop 1 of set 1 weight, 17.5 kg`). An empty cell says so and gives the target
   (`Set 1 reps, empty, target 4–6`), and a target RIR says it's a target. The figure in a set's circle is
   silent, because the circle's own description already names the set.
+- **Large text** (#268): every main screen holds at every system text size up to 200 %, with no
+  clipped label and no word split in two. What can grow, grows: a primary name wraps and is never
+  cut (an exercise on Progress, the Next row, the program's next day), and Next's column on Program
+  widens with its text. What shares a fixed width steps down instead, on one line: the navigation
+  bar's labels, the set table's heads and its Last column. A connected choice stacks its options
+  when their labels no longer fit side by side, so the phase tabs keep `Ramp-in` and `Deload + test`
+  whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip
+  with the F / P toggle.
 - **Scheduling**: with training days (below), the program's days take turns on them, and a missed
   day is skipped (Domain → Training days and the rotation, ADR 0006). Without them the program runs
   as a sequence (next day is whatever comes next, whenever you train). Training days also set the

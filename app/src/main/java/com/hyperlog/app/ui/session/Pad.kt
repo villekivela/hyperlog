@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -144,9 +145,11 @@ internal fun Pad(
                     }
                 } else {
                     val rirLabel = stringResource(R.string.pad_rir)
+                    // Five chips share the strip with the toggle, so past 115 % text they stop growing.
+                    val chipSize = with(LocalDensity.current) { minOf(14.sp.toDp(), PadChipMax).toSp() }
                     (0..4).forEach { v ->
                         StripChip(entry.rir == v, Modifier.weight(1f), "$rirLabel ${if (v == 4) "4+" else v}", onClick = { actions.selectRir(v) }) {
-                            RirChip(v, target = entry.rir != v, fontSize = 14.sp)
+                            RirChip(v, target = entry.rir != v, fontSize = chipSize)
                         }
                     }
                     Spacer(Modifier.width(8.dp))
@@ -359,3 +362,6 @@ private fun FullPartialToggle(partial: Boolean, onChange: (Boolean) -> Unit) {
         }
     }
 }
+
+/** The largest a pad RIR chip's number grows: 14 sp at about 115 % text. */
+private val PadChipMax = 16.dp

@@ -777,7 +777,7 @@ internal fun NextLine(
             Text(it, style = MaterialTheme.typography.labelLarge, color = if (clock != null) ink else cs.primary)
             Spacer(Modifier.width(16.dp))
         }
-        Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, color = if (clock != null) ink else Color.Unspecified, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(name, Modifier.weight(1f).padding(vertical = 4.dp), style = MaterialTheme.typography.bodyLarge, color = if (clock != null) ink else Color.Unspecified)
         if (clock != null) {
             Spacer(Modifier.width(8.dp))
             val rest = clock.kind == ClockKind.Rest || clock.kind == ClockKind.Over

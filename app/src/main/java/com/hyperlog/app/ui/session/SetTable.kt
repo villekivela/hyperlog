@@ -899,13 +899,15 @@ private fun RowScope.LastCell(row: String, last: LoggedSet?) = SubLast(row, last
 @Composable
 private fun RowScope.SubLast(row: String, last: String?) {
     val spoken = last?.let { stringResource(R.string.spoken_last, row, it.replace(" × ", " kg × ")) }
+    val style = MaterialTheme.typography.bodyMedium
     Text(
         last.orEmpty(),
         Modifier.weight(1f).then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),
-        style = MaterialTheme.typography.bodyMedium,
+        style = style,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        // The number is what's read here, so it steps down rather than lose its end.
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
     )
 }
 
@@ -928,10 +930,16 @@ private fun ColumnHeads(showLast: Boolean, split: Boolean = false) {
     val st = MaterialTheme.typography.labelMedium
     Row(Modifier.fillMaxWidth().height(LabelHeight).padding(horizontal = RowPad), verticalAlignment = Alignment.Bottom) {
         Spacer(Modifier.width(ColIndex))
-        Text(if (showLast) stringResource(R.string.col_last) else "", Modifier.weight(1f), style = st, color = c)
-        Text(stringResource(R.string.col_kg), Modifier.width(ColKg), style = st, color = c, textAlign = TextAlign.Center)
-        Text(stringResource(if (split) R.string.col_reps_split else R.string.col_reps), Modifier.width(ColReps), style = st, color = c, textAlign = TextAlign.Center)
-        Text(stringResource(R.string.col_rir), Modifier.width(ColRir), style = st, color = c, textAlign = TextAlign.Center)
+        // The columns stay put at large text, so a head steps down rather than split.
+        @Composable
+        fun Head(text: String, modifier: Modifier, align: TextAlign = TextAlign.Center) = Text(
+            text, modifier, style = st, color = c, textAlign = align, maxLines = 1,
+            autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = st.fontSize),
+        )
+        Head(if (showLast) stringResource(R.string.col_last) else "", Modifier.weight(1f), TextAlign.Start)
+        Head(stringResource(R.string.col_kg), Modifier.width(ColKg))
+        Head(stringResource(if (split) R.string.col_reps_split else R.string.col_reps), Modifier.width(ColReps))
+        Head(stringResource(R.string.col_rir), Modifier.width(ColRir))
         Spacer(Modifier.width(ColCheck))
     }
 }

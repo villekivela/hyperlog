@@ -6,6 +6,7 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.ToggleButtonColors
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -30,6 +31,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.style.TextAlign
@@ -43,7 +45,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ButtonColors
@@ -301,22 +306,52 @@ fun ConnectedChoice(
     /** It sits on the accent card (primaryContainer): the picked one in white (choiceColors). */
     onAccent: Boolean = false,
 ) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
-        labels.forEachIndexed { i, label ->
-            ToggleButton(
-                checked = i == selected,
-                onCheckedChange = { onSelect(i) },
-                // Each button's padding counts as a few characters, so short names still get room.
-                modifier = Modifier.weight(if (fitLabels) label.length + 4f else 1f).semantics { role = Role.RadioButton },
-                shapes = when (i) {
-                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                },
-                colors = connectedChoiceColors(color, onAccent),
-                contentPadding = contentPadding,
-            ) { Text(label, maxLines = 1) }
+    // Each button's padding counts as a few characters, so short names still get room.
+    val weights = labels.map { if (fitLabels) it.length + 4f else 1f }
+    val gap = ButtonGroupDefaults.ConnectedSpaceBetween
+    @Composable
+    fun Option(i: Int, modifier: Modifier, shapes: ToggleButtonShapes) = ToggleButton(
+        checked = i == selected,
+        onCheckedChange = { onSelect(i) },
+        modifier = modifier.semantics { role = Role.RadioButton },
+        shapes = shapes,
+        colors = connectedChoiceColors(color, onAccent),
+        contentPadding = contentPadding,
+    ) { Text(labels[i], maxLines = 1) }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        if (labelsFit(labels, weights, maxWidth - gap * (labels.size - 1), contentPadding)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                labels.indices.forEach { i ->
+                    Option(
+                        i, Modifier.weight(weights[i]),
+                        when (i) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                    )
+                }
+            }
+        } else {
+            // At large text the words matter more than the row: stacked, every label stays whole.
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                labels.indices.forEach { i -> Option(i, Modifier.fillMaxWidth(), ButtonGroupDefaults.connectedMiddleButtonShapes()) }
+            }
         }
+    }
+}
+
+/** Whether every label fits its share of [room], by [weights], inside its button's padding. */
+@Composable
+private fun labelsFit(labels: List<String>, weights: List<Float>, room: Dp, contentPadding: PaddingValues): Boolean {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelLarge
+    val direction = LocalLayoutDirection.current
+    val padding = contentPadding.calculateLeftPadding(direction) + contentPadding.calculateRightPadding(direction)
+    val density = LocalDensity.current
+    return labels.indices.all { i ->
+        val width = with(density) { measurer.measure(labels[i], style, maxLines = 1).size.width.toDp() }
+        width + padding <= room * (weights[i] / weights.sum())
     }
 }
 

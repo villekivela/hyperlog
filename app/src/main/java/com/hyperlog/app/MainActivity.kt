@@ -72,12 +72,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.sp
 import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.update.UpdateViewModel
 import com.hyperlog.app.update.Updates
@@ -154,7 +156,7 @@ private fun AskForNotifications(once: String? = null) {
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach, Mannequins, TrainingStyle }
+internal enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach, Mannequins, TrainingStyle }
 
 /** Where a check-in started outside Coach: the [screen], and the review open over it ([reviewProgram]'s [reviewBlock]; null: its program review). */
 private data class CheckInFrom(val screen: Screen, val reviewProgram: Long? = null, val reviewBlock: String? = null) {
@@ -213,7 +215,7 @@ private val Tabs = listOf(
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
+internal fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
     val cs = MaterialTheme.colorScheme
     ShortNavigationBar(Modifier.testTag(NavigationBarTag), containerColor = Tones.bar) {
         Tabs.forEach { (tab, symbol, filled) ->
@@ -230,7 +232,8 @@ private fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
                 selected = tab == selected,
                 onClick = { onSelect(tab) },
                 icon = { SymbolIcon(if (tab == selected) filled else symbol, null) },
-                label = { Text(label) },
+                // Five items share the width: at large text a label steps down rather than split a word.
+                label = { Text(label, maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = MaterialTheme.typography.labelMedium.fontSize)) },
                 colors = ShortNavigationBarItemDefaults.colors(
                     selectedIndicatorColor = cs.primaryContainer,
                     selectedIconColor = cs.onPrimaryContainer,

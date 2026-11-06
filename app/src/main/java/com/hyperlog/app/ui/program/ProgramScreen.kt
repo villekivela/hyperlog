@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -362,7 +363,7 @@ private fun ProgramWeeks(
 
 /** The program's title and author, then the next day, or "Program finished" with a flag. */
 @Composable
-private fun ProgramHeader(title: String, author: String?, next: String?) {
+internal fun ProgramHeader(title: String, author: String?, next: String?) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.padding(horizontal = CardPadding).padding(top = 16.dp, bottom = 16.dp)) {
         Text(interFigures(title), style = MaterialTheme.typography.headlineSmall)
@@ -372,11 +373,12 @@ private fun ProgramHeader(title: String, author: String?, next: String?) {
             if (next != null) {
                 Text(
                     stringResource(R.string.program_next),
-                    Modifier.width(56.dp).alignByBaseline(),
+                    // Its column grows with the text, so large text never runs it into the day.
+                    Modifier.widthIn(min = 56.dp).padding(end = 8.dp).alignByBaseline(),
                     style = MaterialTheme.typography.labelLarge,
                     color = cs.primary,
                 )
-                Text(next, Modifier.alignByBaseline(), style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(next, Modifier.weight(1f).alignByBaseline(), style = MaterialTheme.typography.bodyLarge)
             } else {
                 // The flag takes Next's column, so the words start where the next day's do.
                 Box(Modifier.width(56.dp)) { SymbolIcon(Symbol.Flag, null, Modifier.size(20.dp), tint = cs.primary) }
