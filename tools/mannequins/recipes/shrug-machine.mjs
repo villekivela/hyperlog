@@ -1,8 +1,9 @@
 // A plate-loaded shrug machine (refs/shrug_machine/ref.md): the lifter stands between two levers, the
 // legs either side of a lowered seat, or sits on the seat at 650 mm. A rectangular base of 75 mm tube
 // stands on a foot at each corner. A column rakes back from a cross beam, carrying the back pad and
-// the seat's sleeve, and a brace runs from it back to a cross tube at the pivot, 600 mm up, on an
-// A-frame each side. Each lever is a heavy beam from the pivot, sloping down toward the front: a hoop
+// the seat's sleeve, and a brace runs from it back to a cross tube at the pivot, 600 mm up. Each side
+// a raked upright runs to the pivot and on as an arm forward and down, on a post, with the lever's
+// stop at its end. Each lever is a heavy beam from the pivot, sloping down toward the front: a hoop
 // rises from it to a grip pointing forward, a second grip runs on from its end, and a plate horn
 // stands out of it near the front.
 //
@@ -34,12 +35,12 @@ const BASE = { out: 0.45, front: 0.09, rear: -0.81, tube: 0.075, clear: 0.038 };
 const RAIL_TOP = BASE.clear + BASE.tube;
 // The cross beams: one under the column, one at the rear.
 const BEAMS_Z = { column: -0.21, rear: BASE.rear + BASE.tube / 2 };
-// The A-frame's feet along the rail, the height its legs meet at, the tip of their mitre ending in
-// the pivot's block, and the storage horn on it.
-const A_FRAME = { front: -0.44, rear: BEAMS_Z.rear, tube: 0.07, meet: 0.5 };
-const STORE = { y: 0.41, z: -0.71, out: 0.25 };
-// The stop each lever rests on, off the A-frame's front leg: how far out and along it stands.
-const STOP_BLOCK = { x: 0.38, z: -0.63, wide: 0.14, tall: 0.06, deep: 0.1 };
+// Each side frame: the upright's foot along the rail, the arm's end forward of the pivot, and the
+// post up to it. The storage horn stands on the upright at `STORE.y`, with a bar between the two.
+const SIDE = { rear: BEAMS_Z.rear, armEnd: [0.45, -0.41], post: -0.52, tube: 0.07 };
+const STORE = { y: 0.41, out: 0.25 };
+// The stop each lever rests on, at the arm's end: how far out and along it stands.
+const STOP_BLOCK = { x: 0.38, z: SIDE.armEnd[1], wide: 0.14, tall: 0.06, deep: 0.1 };
 // The column's rake back from upright and its top, the brace's height on it, and the back pad.
 const RAKE = THREE.MathUtils.degToRad(8.8);
 const COLUMN = { top: 1.09, tube: 0.075, brace: 0.98 };
@@ -93,23 +94,29 @@ export default recipe({
     }
     for (const z of Object.values(BEAMS_Z)) frame.push(role(tube(BASE.tube, V(-BASE.out, railY, z), V(BASE.out, railY, z), M.frame), 'crossBeam'));
 
-    // An A-frame each side up to the cross tube, cut flat on the rail, and a storage horn on it.
+    // Each side a raked upright, cut flat on the rail, mitred at the pivot into an arm reaching forward
+    // and down, a post up to the arm and a stop at its end, the beam lying on it. A tube inside each
+    // length is what the body meets.
     const pivotAt = (s) => V(s * BASE.out, PIVOT[0], PIVOT[1]);
+    const uprightAt = (y) => BEAMS_Z.rear + (y - RAIL_TOP) / (PIVOT[0] - RAIL_TOP) * (PIVOT[1] - BEAMS_Z.rear);
+    const armAt = (z) => PIVOT[0] + (z - PIVOT[1]) / (SIDE.armEnd[1] - PIVOT[1]) * (SIDE.armEnd[0] - PIVOT[0]);
+    const beamUnder = PIVOT[0] - (STOP_BLOCK.z - PIVOT[1]) * Math.tan(BEAM.slope) - BEAM.tall / 2 / Math.cos(BEAM.slope);
     for (const s of sides) {
-      const [front, rear] = [A_FRAME.front, A_FRAME.rear].map((z) => V(s * BASE.out, RAIL_TOP, z));
-      const meet = pivotAt(s).setY(A_FRAME.meet);
+      const foot = V(s * BASE.out, RAIL_TOP, SIDE.rear);
+      const armEnd = V(s * BASE.out, ...SIDE.armEnd);
       frame.push(
-        role(mitered([front, meet, rear], A_FRAME.tube, M.frame, { solid: false, ends: [UP, UP] }), 'aFrame'),
-        proxy(tube(A_FRAME.tube - 0.01, front, meet, M.frame)),
-        proxy(tube(A_FRAME.tube - 0.01, rear, meet, M.frame)),
+        role(mitered([foot, pivotAt(s), armEnd], SIDE.tube, M.frame, { solid: false, ends: [UP, null] }), 'sideFrame'),
+        proxy(tube(SIDE.tube - 0.01, foot, pivotAt(s), M.frame)),
+        proxy(tube(SIDE.tube - 0.01, pivotAt(s), armEnd, M.frame)),
+        role(mitered([V(s * BASE.out, RAIL_TOP, SIDE.post), V(s * BASE.out, armAt(SIDE.post), SIDE.post)], SIDE.tube, M.frame, { solid: false, ends: [UP, null] }), 'post'),
+        proxy(tube(SIDE.tube - 0.01, V(s * BASE.out, RAIL_TOP + 0.01, SIDE.post), V(s * BASE.out, armAt(SIDE.post), SIDE.post), M.frame)),
+        role(pad(STOP_BLOCK.wide, STOP_BLOCK.tall, STOP_BLOCK.deep, M.frame, V(s * STOP_BLOCK.x, beamUnder - STOP_BLOCK.tall / 2, STOP_BLOCK.z), { soft: 0.006 }), 'stop'),
+        pad(0.09, 0.1, 0.12, M.frame, pivotAt(s), { soft: 0.01 }),
       );
-      // The stop, its top where the beam lies on it, out to the front leg.
-      const beamUnder = PIVOT[0] - (STOP_BLOCK.z - PIVOT[1]) * Math.tan(BEAM.slope) - BEAM.tall / 2 / Math.cos(BEAM.slope);
-      frame.push(role(pad(STOP_BLOCK.wide, STOP_BLOCK.tall, STOP_BLOCK.deep, M.frame, V(s * STOP_BLOCK.x, beamUnder - STOP_BLOCK.tall / 2, STOP_BLOCK.z), { soft: 0.006 }), 'stop'));
-      frame.push(pad(0.09, 0.1, 0.12, M.frame, pivotAt(s), { soft: 0.01 }));
-      const [from, to] = [V(s * BASE.out, STORE.y, STORE.z), V(s * (BASE.out + STORE.out), STORE.y, STORE.z)];
+      const [from, to] = [V(s * BASE.out, STORE.y, uprightAt(STORE.y)), V(s * (BASE.out + STORE.out), STORE.y, uprightAt(STORE.y))];
       frame.push(role(rod(0.025, from, to, M.metal), 'storageHorn'), knob(M, to, 0.03, M.pulley));
     }
+    frame.push(role(tube(0.05, V(-BASE.out, STORE.y, uprightAt(STORE.y)), V(BASE.out, STORE.y, uprightAt(STORE.y)), M.frame), 'rearBar'));
     frame.push(role(tube(0.06, pivotAt(-1), pivotAt(1), M.frame), 'crossTube'));
 
     // The column, cut flat on its cross beam, the pad flush on its front, and the brace back from it.

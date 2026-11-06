@@ -1,5 +1,5 @@
 // The shrug machine (#223, #241), from refs/shrug_machine/ref.md: two heavy levers, one a side, each
-// turning about a transverse axis at the top of a rear A-frame, a hoop rising from each with the grip
+// turning about a transverse axis at the top of a raked rear upright, a hoop rising from each with the grip
 // pointing forward and a plate horn near its front end; a raked column carries the back pad and a
 // seat, braced back to the cross tube at the pivot. Its one lift is posed standing, the legs either
 // side of the lowered seat.
@@ -164,27 +164,38 @@ test('a column rakes back 8.8 degrees from a cross beam, the back pad flush on i
   close(cross.max.x - cross.min.x, 0.9, 0.02, 'the cross tube from upright to upright');
 });
 
-test('an A-frame each side carries the pivot, both legs cut flat on the rail, with a storage horn', () => {
+test('each side a raked upright runs to the pivot and mitres into an arm reaching forward and down, a near-vertical post under it, a storage horn on the upright', () => {
   const kit = machine();
-  const frames = roles(kit, 'aFrame');
+  const frames = roles(kit, 'sideFrame');
   assert.equal(frames.length, 2, 'one mitred length a side');
   const pivot = kit.joints.levers.origin;
   for (const m of frames) {
-    assert.notEqual(m.geometry.type, 'ExtrudeGeometry', 'mitred at the top, not two lapped tubes');
+    assert.notEqual(m.geometry.type, 'ExtrudeGeometry', 'mitred at the pivot, not two lapped tubes');
     const b = bounds(m);
     close(b.min.y, 0.113, 0.002, 'cut flat on the rail');
-    assert.ok(b.max.y >= pivot.y - 0.05, 'up into the pivot\'s block');
-    assert.ok(b.max.y <= pivot.y + 0.05, 'the mitre\'s tip ending inside it');
-    assert.ok(pivot.z > b.min.z + 0.05 && pivot.z < b.max.z - 0.05, 'the pivot between its feet');
-    assert.ok(b.max.z - b.min.z > 0.3, 'its feet apart');
+    assert.ok(b.max.y >= pivot.y && b.max.y <= pivot.y + 0.07, 'up to the pivot, the mitre\'s tip in its block');
+    assert.ok(b.max.z > pivot.z + 0.2, 'the arm reaching forward of the pivot');
   }
+  const posts = roles(kit, 'post');
+  assert.equal(posts.length, 2);
+  for (const m of posts) {
+    const b = bounds(m);
+    close(b.min.y, 0.113, 0.002, 'cut flat on the rail');
+    assert.ok(b.max.z - b.min.z < 0.09, 'near vertical');
+    const frame = frames.find((f) => Math.sign(bounds(f).min.x) === Math.sign(b.min.x));
+    const top = extreme(m, (v) => v.y);
+    assert.ok(along(top.clone().setY(0.2).setX(bounds(frame).getCenter(new THREE.Vector3()).x), V(0, 1, 0), frame), 'under the arm');
+    assert.ok(top.y > 0.45, 'up to the arm');
+  }
+  const bar = bounds(one(kit, 'rearBar'));
+  close(bar.max.x - bar.min.x, 0.9, 0.02, 'from upright to upright');
   assert.equal(roles(kit, 'storageHorn').length, 2);
   // The rear cross beam stops flush with the rails' ends.
   const rear = Math.min(...roles(kit, 'rail').map((m) => bounds(m).min.z));
   for (const m of roles(kit, 'crossBeam')) assert.ok(bounds(m).min.z >= rear - 1e-6, 'no beam proud of the rails');
 });
 
-test('each lever rests on a stop on its A-frame', () => {
+test('each lever rests on a stop at the end of the arm', () => {
   const kit = machine();
   const stops = roles(kit, 'stop');
   assert.equal(stops.length, 2);
@@ -195,7 +206,8 @@ test('each lever rests on a stop on its A-frame', () => {
     const hit = along(b.getCenter(new THREE.Vector3()), V(0, 1, 0), beam);
     assert.ok(hit, 'under the beam');
     close(hit.point.y, b.max.y, 0.006, 'the beam down on it');
-    assert.ok(Math.max(Math.abs(b.min.x), Math.abs(b.max.x)) >= 0.415, 'out to the A-frame');
+    assert.ok(Math.max(Math.abs(b.min.x), Math.abs(b.max.x)) >= 0.415, 'out to the arm');
+    assert.ok(b.max.z > kit.joints.levers.origin.z + 0.2, 'well forward of the pivot, as the photo has it');
   }
 });
 

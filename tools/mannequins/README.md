@@ -530,7 +530,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 - `shrug_machine` (#223, #241, the machine kind of `machine_shrug`, posed standing on the
   `standing_levers` motion) stands where its ref puts it, whatever the pose, the lifter at the origin,
   100 mm behind the grips' place on the stop: a rectangular base of 75 mm tube, 38 mm up on a foot at each
-  corner, with two cross beams; an A-frame on each rail carrying a cross tube 600 mm up; and a column
+  corner, with two cross beams; on each rail a raked upright running up to a cross tube 600 mm up and
+  on as an arm forward and down, on a post, the lever's stop at its end; and a column
   raking back 8.8° from the front cross beam, carrying a back pad topping out at 1.24 m and the seat's
   sleeve, a brace running from it back to the cross tube. The two levers are one body on a revolute
   about that tube, its value the angle up from level ahead of the line to the grips: 7.5° on the
