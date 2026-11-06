@@ -7,7 +7,7 @@ import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { stateAt } from './motions.mjs';
 import { POSES } from './poses.mjs';
-import { wpos } from './rig.mjs';
+import { V, wpos } from './rig.mjs';
 
 const failing = (report) => CHECKS.filter((c) => !report.checks[c].ok);
 const poses = (entry) => ({ poses: { ...POSES, shape: entry } });
@@ -53,21 +53,25 @@ test('a body on one knee rests that knee on the floor and stands the other foot 
   assert.ok(frontKnee.y > 0.35, `the left knee ${frontKnee.y.toFixed(3)} up, off the floor`);
 });
 
-test('with grip.restStraight the resting hand stays straight while the working wrist bends', async () => {
+test('with grip.restFlat the resting hand lies open, its palm and fingers set, whatever the working hand does', async () => {
   const entry = {
-    ...STAND, grip: { ...STAND.grip, restStraight: true },
-    top: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [38, 0] },
-    bottom: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [-38, 0] },
+    ...STAND, grip: { ...STAND.grip, restFlat: { palm: [0, 0, -1], fingers: [0, -1, 0] } },
+    top: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [38, 0], rotate: 185 },
+    bottom: { shin: 8, thigh: 14, trunk: 10, ...arms, wrist: [-38, 0], rotate: 170 },
   };
   const at = await staged(entry);
-  const bend = (d, k) => {
+  const off = (a, x, y, z) => (a.angleTo(V(x, y, z)) * 180) / Math.PI;
+  for (const d of [0, 0.5, 1]) {
     const bones = at(d);
-    const fore = wpos(bones[`hand_${k}`]).sub(wpos(bones[`lowerarm_${k}`]));
-    const hand = wpos(bones[`middle_01_${k}`]).sub(wpos(bones[`hand_${k}`]));
-    return (fore.angleTo(hand) * 180) / Math.PI;
-  };
-  assert.ok(bend(0, 'l') > 25, `the working wrist bends ${bend(0, 'l').toFixed(1)}°`);
-  for (const d of [0, 1]) assert.ok(bend(d, 'r') < 12, `the resting wrist bends ${bend(d, 'r').toFixed(1)}° at ${d}`);
+    const fingers = wpos(bones.middle_01_r).sub(wpos(bones.hand_r));
+    // Fingers down and palm back, a right hand's thumb side is toward the left. The knuckles slant
+    // along the fingers, so it's their line square to the fingers.
+    const knuckles = wpos(bones.index_01_r).sub(wpos(bones.pinky_01_r)).projectOnPlane(fingers.clone().normalize());
+    assert.ok(off(fingers, 0, -1, 0) < 1, `the fingers ${off(fingers, 0, -1, 0).toFixed(1)}° off down at ${d}`);
+    assert.ok(off(knuckles, 1, 0, 0) < 1, `the knuckles ${off(knuckles, 1, 0, 0).toFixed(1)}° off across at ${d}`);
+    const tip = wpos(bones.middle_04_leaf_r).sub(wpos(bones.middle_01_r));
+    assert.ok(tip.angleTo(fingers) * 180 / Math.PI < 15, `the fingers curl ${(tip.angleTo(fingers) * 180 / Math.PI).toFixed(1)}° at ${d}`);
+  }
 });
 
 test('a lifted leg swings back from the hip, the other foot still planted, and passes its checks', async () => {

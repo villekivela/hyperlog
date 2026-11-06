@@ -233,8 +233,9 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
 - **`grip.restOn`** closes `grip.one`'s resting hand round a bar of that radius, a tower's post, where
   it would otherwise lie relaxed. **`grip.restPole`** points that arm's elbow, as `grip.pole` does the
   working arm's.
-- **`grip.restStraight`** keeps `grip.one`'s resting hand straight, for a lift that bends the working
-  wrist a long way. Without it the pose's `wrist` bends both hands.
+- **`grip.restFlat`** `{ palm, fingers }` lays `grip.one`'s resting hand open on what it rests on, a
+  thigh, its palm and fingers pointing those ways through the whole rep, whatever `rotate` and `wrist`
+  do to the working hand. Without it the pose's `rotate` and `wrist` turn both hands.
 - **`grip.joined`** (`free_arms`) holds one thing in both hands, that far either side of the point
   `hand` gives, which isn't mirrored. **`grip.via`** [x, y, z] (`free_arms`) curves the hand through
   that point at the middle of the rep, for a hand riding something that swings on an arc.

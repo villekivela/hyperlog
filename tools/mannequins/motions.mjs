@@ -114,8 +114,8 @@ export function frameAt(entry, d, L) {
   if (e.grip?.one) P.resting = -e.grip.one;
   // `grip.restOn` is the radius of what that hand rests on, to close round it.
   if (e.grip?.restOn) P.restOn = e.grip.restOn;
-  // `grip.restStraight` keeps that hand straight where the pose bends the working wrist.
-  if (e.grip?.restStraight) P.restStraight = true;
+  // `grip.restFlat` lays that hand open on what it rests on, `{ palm, fingers }`, the ways they point.
+  if (e.grip?.restFlat) P.restFlat = e.grip.restFlat;
   // An arm traced from footage, or elbows the entry points (`grip.pole`), keep the elbow there.
   if (e.trace?.angles?.upperArm || e.grip?.pole) P.armTraced = true;
   return P;

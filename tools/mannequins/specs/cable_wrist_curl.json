@@ -1,6 +1,7 @@
 {
   "sources": [
     "The owner on #127: one hand, the other knee on the ground, in place of the video's two hands",
+    "The owner on #127: the rest arm's palm on the thigh, flat, not the forearm",
     "technique video S9NEwbiYEBE",
     "exercises.json: smooth, controlled reps",
     "docs/research/grip.md: finger base at the top, mid-fingers at the bottom, the wrist through its own range"
@@ -92,6 +93,14 @@
         "ends"
       ],
       "view": "side"
+    },
+    {
+      "says": "the other hand rests open, its palm flat on the kneeling thigh, not the forearm",
+      "look": "hands",
+      "at": [
+        "ends"
+      ],
+      "view": "front"
     }
   ]
 }
