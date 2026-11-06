@@ -556,6 +556,28 @@ export const MOTIONS = {
   },
 
   /**
+   * Seated against a back pad, pressing two neutral grips on a yoke that pivots behind the pad: the
+   * hands close on grips that run forward along the yoke's own line, palms facing, elbows below
+   * the hands.
+   */
+  shoulder_press(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const f = forwardOf(u);
+    const { pivot, handle, swing, ahead } = s.linkage;
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, 0.3).normalize(),
+      ...seatedFeet(e, L),
+      hand: handle,
+      // The knuckles run along the handle, a bar lying level across the machine, so the palms face forward.
+      across: (side) => X.clone().multiplyScalar(-side),
+      armPole: (side) => V(side * 0.6, -1, 0.05).normalize(),
+      pivot, handle, swing,
+    };
+  },
+
+  /**
    * Seated against a back pad that leans back as the machine's carriage rocks, the feet on its
    * footplates, which rise with it, the hands on the grips of the arms pushed down to the hips: a
    * seated dip. The linkage gives the hips, the pad's lean and where the grips and the footplates are,
@@ -910,13 +932,16 @@ export const MOTIONS = {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
-    const { pivot, handle } = s.linkage;
+    const { pivot, handle, across, elbow } = s.linkage;
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.15).normalize(),
       ...seatedFeet(e, L),
-      hand: handle,
-      armPole: elbowsTo(e, [0.7, -1, -0.5]),
+      hand: handsOf(e, handle),
+      across,
+      // A pad on the upper arm, where a machine has one, says where the elbow goes.
+      armPole: elbow ?? elbowsTo(e, [0.7, -1, -0.5]),
+      ...(elbow ? { armTraced: true } : {}),
       pivot, handle,
     };
   },

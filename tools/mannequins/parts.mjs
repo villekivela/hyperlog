@@ -528,6 +528,14 @@ export function bent(key, points, radius, material, { segments = 16, ...opts } =
   return part(g, material, opts);
 }
 
+/**
+ * A square tube along a smooth path through `points`: `mitered` in short lengths, so its ends are
+ * capped and each can be cut to what it lands on (`ends`), where a `bent` tube stands open.
+ */
+export const curvedTube = (points, w, material, { steps = 20, ...opts } = {}) => mitered(
+  new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.3).getPoints(steps), w, material, { solid: false, ...opts },
+);
+
 /** The ring the cable hooks onto, standing at `y` over an attachment's middle. */
 export function clevis(M, y) {
   const ring = part(shape('clevis', () => soften(new THREE.TorusGeometry(0.016, 0.0045, 8, 18))), M.metal);
@@ -649,15 +657,16 @@ export function ropeParts(M, { reversed = false, hands = [-1, 1] } = {}) {
  * Square tubing `w` across, its corners rounded, swept along the polyline `points`, each bend cut
  * on its bisector so the two lengths meet in a mitre, not a lap. Built in the world, where the
  * points are. `ends` gives the plane's normal each end is cut square to, where a length lands on a
- * face (`[start, end]`), in place of square to its own length.
+ * face (`[start, end]`), in place of square to its own length. `tall` makes the section `w` across by
+ * `tall` along its up (a flat bar), square by default.
  */
-export function mitered(points, w, material, { solid = true, ends = [] } = {}) {
-  const r = w * 0.28;
+export function mitered(points, w, material, { solid = true, ends = [], tall = w } = {}) {
+  const r = Math.min(w, tall) * 0.28;
   const profile = [];
   for (const [cx, cy, from] of [[1, 1, 0], [-1, 1, 90], [-1, -1, 180], [1, -1, 270]]) {
     for (let k = 0; k <= 3; k++) {
       const a = ((from + k * 30) * Math.PI) / 180;
-      profile.push([cx * (w / 2 - r) + r * Math.cos(a), cy * (w / 2 - r) + r * Math.sin(a)]);
+      profile.push([cx * (w / 2 - r) + r * Math.cos(a), cy * (tall / 2 - r) + r * Math.sin(a)]);
     }
   }
   const n = points.length - 1;
