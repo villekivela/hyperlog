@@ -224,9 +224,12 @@ function checkLinkage(kits, { rig, parts, vertices, skinned, started, limbs }, n
         note(p.distanceTo(want) - LIMITS.arc, `${c.point} ${(p.distanceTo(want) * 1000).toFixed(1)} mm off their arc`);
       });
       for (const k of ['l', 'r']) {
+        // A grip a free hand may steady itself on holds no hand to it, nor a bar a lift may have on the
+        // back holds the back to it.
+        if (c.optional) continue;
         if (c.landmark === 'hands') {
-          // A grip a free hand may steady itself on holds no hand to it, and one arm's grip the other hand.
-          if (c.optional || (c.hand && c.hand !== k)) continue;
+          // One arm's grip holds the other hand to nothing.
+          if (c.hand && c.hand !== k) continue;
           const miss = Math.min(...c.at.map((p) => p.distanceTo(heldAt(rig, k))));
           note(miss - LIMITS.grip, `the ${k} hand ${(miss * 100).toFixed(1)} cm off the ${c.point}`);
           continue;

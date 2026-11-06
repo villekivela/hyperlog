@@ -375,13 +375,16 @@ export const MOTIONS = {
       const u = trunkUp(lean);
       return { hipC, u, bar: hipC.clone().addScaledVector(u, L.trunk + e.bar.up).addScaledVector(forwardOf(u), -e.bar.back) };
     };
-    // A loaded bar stays over the middle of the feet, turned out as they are.
+    // A loaded bar stays over the middle of the feet, turned out as they are, or on the line of the
+    // rods it rides.
     const midfoot = L.midfoot * Math.cos(rad(e.feet.toeOut));
+    const line = s.linkage?.line;
     let lo = shaped ? -30 : -0.4;
     let hi = shaped ? 30 : 1.4;
     for (let i = 0; i < 40; i++) {
       const m = (lo + hi) / 2;
-      if (at(m).bar.z > midfoot) hi = m; else lo = m;
+      const { bar } = at(m);
+      if (bar.z > (line ? line(bar.y) : midfoot)) hi = m; else lo = m;
     }
     const { hipC, u, bar } = at((lo + hi) / 2);
     const f = forwardOf(u);
@@ -415,13 +418,15 @@ export const MOTIONS = {
     const hipC = standingHips(e, s.bar === undefined ? s : clearOf(e, s, L), L);
     const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
     const dx = e.grip.width - L.shW;
+    const line = s.linkage?.line;
     // A shrug lifts the shoulders, and the bar with them.
     const lift = L.clavicle * Math.sin(rad(s.shrug ?? 0));
     // How high the bar hangs, the arms straight, with the spine leaning `lean`.
     const hangs = (lean) => {
       const sh = shouldersOf(hipC, trunkUp(lean), L);
-      const dz = sh.z - e.bar.z;
-      return sh.y + lift - Math.sqrt(Math.max(0, reach * reach - dx * dx - dz * dz));
+      const hang = (z) => sh.y + lift - Math.sqrt(Math.max(0, reach * reach - dx * dx - (sh.z - z) ** 2));
+      // On rods the bar's place along them follows its height, so settle the two together.
+      return line ? [0, 1, 2].reduce((y) => hang(line(y)), hang(e.bar.z)) : hang(e.bar.z);
     };
     let lean = spineLean(s.trunk ?? 0, L);
     if (s.bar !== undefined) {
@@ -438,7 +443,7 @@ export const MOTIONS = {
     const f = forwardOf(u);
     return {
       hipC, u, shrug: s.shrug,
-      bar: V(0, hangs(lean), e.bar.z),
+      bar: (() => { const y = hangs(lean); return V(0, y, line ? line(y) : e.bar.z); })(),
       headDir: u.clone().addScaledVector(f, 0.35).add(V(0, 0.25, 0)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
@@ -458,7 +463,8 @@ export const MOTIONS = {
       // An arched back: `body.arch` turns the spine's segments up from the lumbar spine (+), so
       // the lower back lifts off the pad and the chest rises, and back down for the upper back.
       spine: archOf(e.body.arch, lean),
-      bar: V(0, ...s.bar),
+      // On rods the bar's place along the bench is their line's at its height.
+      bar: s.linkage?.line ? V(0, s.bar[0], s.linkage.line(s.bar[0])) : V(0, ...s.bar),
       ...floorFeet(e, L, (side) => V(side * 0.5, 1, 0.4).normalize()),
       grip: e.grip.width,
       // `elbows` turns the elbows out from the sides: 0 tucked to the trunk, 1 out level with the
@@ -634,6 +640,33 @@ export const MOTIONS = {
   },
 
   /**
+   * A bar pressed on rods from an adjustable bench: the body as `dumbbell_press` lays it on the pad,
+   * and the bar along the rods' line, from `bottom.chest` up until the arms are straight. The machine
+   * stands where its line passes that point, an entry's `perAngle` for each angle.
+   */
+  rods_press(e, s, L) {
+    const { hipC, u, shoulders: sh, headDir, ankles, toeOut, kneePole, support } = MOTIONS.dumbbell_press(e, s, L);
+    const f = forwardOf(u);
+    const { line } = s.linkage;
+    const [away, down] = e.bottom.chest;
+    const low = sh.clone().addScaledVector(f, away).addScaledVector(u, -down).y;
+    const reach = (L.up + L.fore) * STRAIGHT + depthOf(e, L);
+    const room = Math.sqrt(Math.max(0, reach * reach - (e.grip.width - L.shW) ** 2));
+    let [lo, hi] = [Math.max(low, sh.y), sh.y + reach];
+    for (let i = 0; i < 40; i++) {
+      const y = (lo + hi) / 2;
+      if (Math.hypot(y - sh.y, line(y) - sh.z) < room) lo = y; else hi = y;
+    }
+    const y = lo + (low - lo) * s.press;
+    return {
+      hipC, u, headDir, ankles, toeOut, kneePole, support,
+      bar: V(0, y, line(y)),
+      grip: e.grip.width,
+      armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
+    };
+  },
+
+  /**
    * The arms swinging side-on, the upper arms and the forearms forward from hanging by `upperArm`
    * and `forearm` degrees: a curl, a preacher curl, an extension overhead. Standing from side-on
    * angles, or seated at `body.hip`. The hands hold a bar, a rope or handles `grip.width` either side
@@ -678,6 +711,11 @@ export const MOTIONS = {
     const lean = spineLean(s.trunk, L);
     const u = trunkUp(lean);
     const f = forwardOf(u);
+    // A bar on the upper back, as a squat's: on rods the hips stand where it meets their line.
+    const onBack = e.bar && V(0, 0, 0).addScaledVector(u, L.trunk + e.bar.up).addScaledVector(f, -e.bar.back);
+    if (onBack && s.linkage?.line) hipC.z = s.linkage.line(hipC.y + onBack.y) - onBack.z;
+    // `feet.step` raises the front foot on a platform.
+    const step = e.feet.step ?? 0;
     const a = rad(s.heel);
     const heading = V(0, -Math.sin(a), Math.cos(a));
     const top = V(0, Math.cos(a), Math.sin(a));
@@ -689,11 +727,11 @@ export const MOTIONS = {
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.2).add(V(0, 0.25, 0)).normalize(),
-      ankles: [ball.clone().addScaledVector(heading, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY), V(e.feet.stance, L.ankleY, e.feet.front)],
+      ankles: [ball.clone().addScaledVector(heading, -L.ballAhead).addScaledVector(top, L.ankleY - L.ballY), V(e.feet.stance, step + L.ankleY, e.feet.front)],
       foot: (side) => (side < 0 ? { heading: heading.clone(), top: top.clone() } : { heading: V(Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) }),
       kneePole: (side) => V(side * (e.feet.kneesOut ?? 0), 0, 1).normalize(),
-      support: (side) => (side < 0 ? { point: ball.clone().addScaledVector(top, -L.ballY), normal: top.clone() } : floor),
-      hand: (side) => V(hipC.x + side * e.grip.width, sh.y - drop, sh.z),
+      support: (side) => (side < 0 ? { point: ball.clone().addScaledVector(top, -L.ballY), normal: top.clone() } : step ? { point: V(0, step, 0), normal: V(0, 1, 0) } : floor),
+      ...(onBack ? { bar: hipC.clone().add(onBack), grip: e.grip.width } : { hand: (side) => V(hipC.x + side * e.grip.width, sh.y - drop, sh.z) }),
       armPole: elbowsTo(e, [0.4, 0, -1]),
       offsets: { ball_r: [-s.heel, 0, 0] },
     };

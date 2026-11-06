@@ -42,6 +42,7 @@ export const MOTION_TEMPOS = {
   bench_row: tempo(2, 0.3, 1, 0.6),
   // Lowered slowly, the eccentric, and pulled back up by the hamstrings.
   glute_ham_raise: tempo(3, 0.5, 2, 0.5),
+  rods_press: tempo(2, 0.3, 1, 0.7),
 };
 
 /** The entry's tempo: its own, otherwise its movement's. */

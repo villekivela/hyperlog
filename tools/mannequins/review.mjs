@@ -46,6 +46,8 @@ export const BATCHES = {
   ],
   // The lateral raise machine's seated raise, posed to prove a body fits it (#241).
   'lateral-raise': ['machine_lateral_raise'],
+  // The smith machine's nine lifts, posed to prove a body fits it (#241).
+  'smith-machine': ['smith_machine_squat', 'smith_machine_rdl', 'smith_machine_bench_press', 'smith_machine_jm_press', 'smith_machine_incline_press', 'smith_machine_seated_press', 'smith_machine_lunge', 'ffe_smith_machine_lunge', 'split_squat_smith'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
   // The hip thrust machine's exercise (#229).

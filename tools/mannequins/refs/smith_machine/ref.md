@@ -68,6 +68,19 @@ Placard text not read. From the videos:
 - Lunge: the bar on the upper back, the front foot under the bar line, the back foot about 0.8 m behind (0:10). ffe_ variant: the front foot on a platform about 100 mm high (10:24).
 - Safety stops: set just below the bottom of the lift; the ffe video shows stops at about shin height (10:24).
 
+## Measured part list (#241)
+Where each main part sits, from the black render, the render in a room and the two used-unit photos, all three-quarter, scaled by the 2357 mm height. Against the lifter: the bar's line passes over the middle of the feet in a squat, the feet a little ahead of it; a lift on a bench stands under it with the machine moved along.
+
+| Part | Where it sits, estimated from the photos | Was in the kit | Now |
+|---|---|---|---|
+| Hood | each rear upright sweeps forward in a round corner over the top into the front upright, a little under its top | a straight tube across, the rear upright carrying on to the top | as measured, one capped curve from about 2030 up |
+| Gussets | a diagonal each side from under the rear crossbar down to the rear upright | none | as measured, from 400 out on the crossbar down to the upright at 1550 |
+| Front uprights, rods, hook plates | as the renders show | as measured | as measured |
+| Rear uprights and pads | leaning with the rods, a pad wrapped round each, four horns a side | as measured | as measured |
+| Floor beams | one a side, no cross beam on the floor | as measured | as measured |
+
+No photo shows a bench under the bar, so where the machine stands for a bench lift is chosen from the rods' line: `z` moves it along by what brings the line over the bar's lowest point, for the mannequin. The incline and seated presses' bar comes down to a point chosen from the chest; at 85 degrees the incline's stands further out, clear of the collarbone.
+
 ## Open gaps
 - No side-on photo of the Hammer Strength model was found, so the 7 degree lean is from the page only, and which way it leans (bar top toward the front or the back) is not settled. Chosen: the bar top 7 degrees toward the back of the frame (the hook plate side), low confidence.
 - Hook heights, pitch, bar travel and rod gap are measured on three-quarter renders and photos with no person in them, scaled by the published overall height: good to about +-10 percent.

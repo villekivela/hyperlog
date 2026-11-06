@@ -2,7 +2,8 @@
 // upright either side, leaning 7° with its top toward the back, carries the rod on its inner face
 // and, behind the rod, a plate of 13 hook notches 152 mm apart, both from the floor beam to a hood
 // at the top; a rear upright either side, leaning with them, wrapped in a pad, carries four plate horns
-// through its outer face. Crossbars join the front uprights at the top and the rear ones at the middle.
+// through its outer face, its top swept forward over into the front upright. Crossbars join the front
+// uprights at the top and the rear ones at the middle, a gusset each side under the rear one.
 // Each carriage is a block round its rod, with the bar through it and a hook lug that rests on a
 // notch; a safety stop lies on the plate, and the bar can't go below it.
 //
@@ -10,11 +11,12 @@
 // along them from 250 mm above the floor. The hooks are fixed on the bar, as its carriages are, at
 // the notch it hangs on: turning them is the wrists' (the ref gives it, about 45°, with no frame
 // of it), and a joint turning about the bar would be left behind by one sliding along the rods.
-// The frame stands where the ref puts it, whatever the pose: `P.bar` is the bar's value, or the
-// bar hangs on its hook where the pose frame gives none.
+// The frame stands where the ref puts it, or `z` along for a lift on a bench: `P.bar` is the bar's
+// place on the rods' line, which the linkage gives a lift to solve against, or its value in a scrub,
+// or the bar hangs on its hook where the pose frame gives none.
 import * as THREE from 'three';
 import { prismatic, recipe } from '../recipe.mjs';
-import { along, floorRail, padGeometry, part, plateGeometry, rod, tube, turnedPart } from '../parts.mjs';
+import { along, curvedTube, floorRail, padGeometry, part, plateGeometry, rod, tube, turnedPart } from '../parts.mjs';
 import { V, rad } from '../rig.mjs';
 
 const LEAN = rad(7);
@@ -39,6 +41,10 @@ const BLOCK = 0.07;
 const BAR = { half: 1.05, grip: 0.0125 };
 // The rear uprights rise from 300 mm behind the machine's middle, leaning with the rods, with four horns a side.
 const REAR = { z: -0.3, pad: 1.8 };
+// The hood sweeps forward from this height on the rear upright.
+const HOOD = { from: 2.03 };
+// The gusset from the crossbar, this far out, down to this height on the rear upright.
+const GUSSET = { x: 0.4, y: 1.55 };
 // The horns stand out of the pad's outer face, 200 mm.
 const HORN = { x: UPRIGHT.x + UPRIGHT.w / 2 + 0.015, length: 0.2 };
 const HORNS = [0.5, 0.93, 1.36, 1.79];
@@ -64,16 +70,17 @@ const leaning = (w, h, d, material, at, { soft = 0.003, solid = false } = {}) =>
 
 export default recipe({
   name: 'smith_machine',
-  // Shown alone in the studio until a pose uses it: three-quarter from the front, as the ref's
-  // photos are.
-  standsAlone: { camera: { target: [0, 1.1, 0], halfHeight: 1.5, azimuth: -40, elevation: 14 } },
   bodies: ({ stops = 0 } = {}) => ({
     bar: prismatic({ axis: UP, limits: [valueAt(notchY(stops)), valueAt(RODS_TOP - 0.25)] }),
   }),
+  // The bar can only ride the rods, so a lift solves its body against their line. `z` moves the whole
+  // machine along, to bring the rods over a lift on a bench.
+  linkage: ({ z = 0 } = {}) => ({ at: () => ({ line: (y) => z + FOOT.z - (y - FOOT.y) * Math.tan(LEAN) }) }),
   // A pose holds the bar in its hands, or on its upper back.
   contacts: [
     { body: 'bar', point: 'grips', landmark: 'hands' },
-    { body: 'bar', point: 'back', landmark: 'shoulders' },
+    // On the upper back, where a lift has it there: a bench press holds it in the hands alone.
+    { body: 'bar', point: 'back', landmark: 'shoulders', optional: true },
   ],
   fit: [
     {
@@ -85,8 +92,9 @@ export default recipe({
       rule: 'the notch just below the bottom of the lift, numbered from the lowest: the bar can go no lower',
     },
   ],
-  // `hook`: the notch the bar hangs on; `stops`: the notch the safety stops lie on.
-  build({ hook = 7, stops = 0 } = {}, M) {
+  // `hook`: the notch the bar hangs on; `stops`: the notch the safety stops lie on; `z`: how far along
+  // the machine stands.
+  build({ hook = 7, stops = 0, z = 0 } = {}, M) {
     const frame = [];
     const sides = [-1, 1];
     const topAt = HEIGHT - 0.035;
@@ -111,11 +119,12 @@ export default recipe({
       }
       // The safety stop on the plate: a block under the carriage, its top a carriage's half height below the bar.
       frame.push(role(leaning(0.03, 0.03, 0.24, M.vinyl, onRod(s * PLATE, valueAt(notchY(stops) - CARRIAGE / 2 - 0.015), -0.07), { soft: 0.006, solid: true }), 'stop'));
-      // The hood from the top of the front upright back to the rear upright.
-      const hoodFrom = onRod(s * UPRIGHT.x, valueAt(topAt), -UPRIGHT.back);
-      frame.push(role(tube(0.07, hoodFrom, V(s * UPRIGHT.x, hoodFrom.y, rearAt(hoodFrom.y)), M.frame), 'hood'));
-      // The rear upright, its pad inside it and four horns outside.
-      frame.push(role(tube(UPRIGHT.w, V(s * UPRIGHT.x, 0.07, REAR.z), V(s * UPRIGHT.x, HEIGHT, rearAt(HEIGHT)), M.frame), 'upright'));
+      // The rear upright, its pad inside it and four horns outside, and the hood: the upright's top
+      // swept forward over into the front upright near its top.
+      const hoodTo = onRod(s * UPRIGHT.x, valueAt(topAt - 0.05), -UPRIGHT.back);
+      const onRear = (y, ahead = 0) => V(s * UPRIGHT.x, y, rearAt(y) + ahead);
+      frame.push(role(tube(UPRIGHT.w, V(s * UPRIGHT.x, 0.07, REAR.z), onRear(HOOD.from), M.frame), 'upright'));
+      frame.push(role(curvedTube([onRear(HOOD.from - 0.05), onRear(HOOD.from + 0.08), onRear(hoodTo.y - 0.07, 0.05), onRear(hoodTo.y - 0.01, 0.16), V(s * UPRIGHT.x, hoodTo.y, hoodTo.z)], UPRIGHT.w, M.frame), 'hood'));
       const middle = 0.18 + REAR.pad / 2;
       frame.push(role(leaning(UPRIGHT.w + 0.03, REAR.pad / Math.cos(LEAN), 0.24, M.vinyl, V(s * UPRIGHT.x, middle, rearAt(middle)), { soft: 0.012, solid: true }), 'cushion'));
       for (const y of HORNS) {
@@ -127,6 +136,10 @@ export default recipe({
     const topFront = onRod(0, valueAt(topAt - 0.03), -UPRIGHT.back);
     frame.push(tube(0.07, topFront.clone().setX(-UPRIGHT.x), topFront.clone().setX(UPRIGHT.x), M.frame));
     frame.push(tube(0.07, V(-UPRIGHT.x, 1.95, rearAt(1.95)), V(UPRIGHT.x, 1.95, rearAt(1.95)), M.frame));
+    // A gusset each side, from the crossbar down to the rear upright.
+    for (const s of sides) {
+      frame.push(role(tube(0.06, V(s * GUSSET.x, 1.95, rearAt(1.95)), V(s * UPRIGHT.x, GUSSET.y, rearAt(GUSSET.y)), M.frame), 'gusset'));
+    }
 
     // The bar and its carriages, in the bar's own frame, about its middle: the shaft between the
     // carriages, a sleeve beyond each, a block round each rod and a lug back to the plate.
@@ -145,14 +158,16 @@ export default recipe({
     return {
       parts: [...frame, bar],
       bodies: { bar: [bar] },
+      stand(g) { g.position.z = z; },
       drive(P) {
-        const value = P.bar ?? hung;
+        // A pose gives the bar's place, on the rods' line; a scrub its value along them.
+        const value = P.bar?.isVector3 ? valueAt(P.bar.y) : P.bar ?? hung;
         bar.position.copy(FOOT).addScaledVector(UP, value);
         bar.updateMatrix();
-        const onBar = (xs) => xs.map((x) => V(x, 0, 0).applyMatrix4(bar.matrix));
+        const onBar = (xs) => xs.map((x) => V(x, 0, z).applyMatrix4(bar.matrix));
         return {
           joints: { bar: { value } },
-          points: { grips: onBar([-0.3, 0.3]), back: onBar([-0.2, 0.2]) },
+          points: { grips: onBar(P.grip ? [-P.grip, P.grip] : [-0.3, 0.3]), back: onBar([-0.2, 0.2]) },
         };
       },
     };
