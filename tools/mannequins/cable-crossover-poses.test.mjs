@@ -486,7 +486,7 @@ for (const id of ['cable_wrist_curl', 'cable_wrist_extension']) {
   });
 }
 
-test('the seated flye sweeps wide and back to together in front of the chest, on the bench', async () => {
+test('the seated flye sweeps wide and back to about shoulder width in front of the chest, on the bench', async () => {
   const entry = prepare('seated_cable_flye');
   assert.ok(entry.kit.bench, 'on the bench');
   const [top, bottom] = await ends('seated_cable_flye', 'hand_l', 'lowerarm_l', 'upperarm_l');
@@ -497,7 +497,7 @@ test('the seated flye sweeps wide and back to together in front of the chest, on
 });
 
 // The owner's verdicts on the cold specs (#127).
-const wristAt = async (id) => {
+const midRep = async (id) => {
   const stage = await buildStage(prepare(id));
   stage.pose(0.5);
   stage.scene.updateMatrixWorld(true);
@@ -505,20 +505,20 @@ const wristAt = async (id) => {
 };
 
 test('the cable wrist curl is one hand, the other knee on the ground', async () => {
-  const at = await wristAt('cable_wrist_curl');
+  const at = await midRep('cable_wrist_curl');
   assert.equal(prepare('cable_wrist_curl').grip.one, 1, 'both hands work');
   assert.ok(at('calf_r').y < 0.12, `the right knee ${at('calf_r').y.toFixed(3)} up`);
   assert.ok(at('calf_l').y > 0.35, `the left knee ${at('calf_l').y.toFixed(3)} up`);
 });
 
 test('the cable wrist extension is a deep squat', async () => {
-  const at = await wristAt('cable_wrist_extension');
+  const at = await midRep('cable_wrist_extension');
   assert.ok(at('pelvis').y < 0.42, `the hips ${at('pelvis').y.toFixed(3)} up`);
 });
 
 /**
- * How far the skin of bones `part` goes into the leg's on side `k`, at the worst frame: negative is
- * the gap left between them. A vertex is inside where it lies behind the nearest triangle's face.
+ * How far the skin of bones `part` goes into the skin of the leg on side `k`, at the worst frame:
+ * negative is the gap left between them. A vertex is inside where it lies behind the nearest triangle's face.
  */
 const skinInto = async (id, k, part) => {
   const stage = await buildStage(prepare(id));
@@ -561,7 +561,12 @@ test('the cable wrist extension keeps its elbows by its knees and out of them, o
     const { depth, frame, bone } = await skinInto('cable_wrist_extension', k, new RegExp(`^(upperarm|lowerarm|hand)_${k}$`));
     const cm = (Math.abs(depth) * 100).toFixed(1);
     assert.ok(depth <= 0, `${bone} ${cm} cm into the ${k} leg at frame ${frame}`);
-    assert.ok(depth > -0.03, `the ${k} arm ${cm} cm off its knee at its closest`);
+    assert.ok(depth > -0.03, `the ${k} arm ${cm} cm off its leg at its closest`);
+  }
+  const at = await midRep('cable_wrist_extension');
+  for (const k of ['l', 'r']) {
+    const gap = at(`lowerarm_${k}`).distanceTo(at(`calf_${k}`));
+    assert.ok(gap < 0.15, `the ${k} elbow ${(gap * 100).toFixed(1)} cm from its knee, joint to joint`);
   }
 });
 
@@ -570,7 +575,12 @@ test('the cable wrist curl rests a flat palm on the kneeling thigh, on every fra
   const mm = (Math.abs(depth) * 1000).toFixed(1);
   assert.ok(depth <= 0.003, `${bone} ${mm} mm into the thigh at frame ${frame}`);
   assert.ok(depth > -0.006, `the palm ${mm} mm off the thigh at frame ${frame}`);
-  const at = await wristAt('cable_wrist_curl');
+  // Flat, not on its edge: both sides of the hand come down to the thigh.
+  for (const digit of ['index', 'pinky']) {
+    const side = await skinInto('cable_wrist_curl', 'r', new RegExp(`^${digit}_.*_r$`));
+    assert.ok(side.depth > -0.04, `the ${digit} ${(Math.abs(side.depth) * 100).toFixed(1)} cm off the thigh at frame ${side.frame}`);
+  }
+  const at = await midRep('cable_wrist_curl');
   const fingers = at('middle_01_r').sub(at('hand_r'));
   const curl = (at('middle_04_leaf_r').sub(at('middle_01_r')).angleTo(fingers) * 180) / Math.PI;
   assert.ok(curl < 15, `the fingers curl ${curl.toFixed(1)}°`);

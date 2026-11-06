@@ -226,7 +226,8 @@ close_grip_lat_pulldown: { like: 'lat_pulldown', grip: { width: 0.24 }, bottom: 
   lift done with a big dumbbell, such as the Kroc row.
 - **`body.kneel`** (`arms`, `free_arms`, `row`) puts the body on its knees at `feet.z`, the shins
   back along the floor and the toes tucked; `thigh` sets the hips over them. A side (1 the left, -1
-  the right) puts that knee down alone, the other foot flat `feet.ahead` in front of it.
+  the right) puts that knee down alone, the other foot flat `feet.ahead` in front of it, its knee
+  opened by `feet.kneesOut`.
 - **`feet.lift`** (standing `arms`, `free_arms`, `row`) takes one foot off the floor (1 the left), and
   `top.leg`, `bottom.leg` set that leg: [back, out, bend] in degrees, the thigh from straight down,
   behind the hip and out to its side, and the knee's bend.
@@ -1060,8 +1061,8 @@ the worker, a doubt goes to the owner, and a clean lift needs only a sample.
 | `place` | `{ "place": "hand_*.at", "from": "shoulder_*.at", "axis": "z", "at": "top", "range": [-0.06, 0.06] }` | a point stands out of its range from another, in metres along x, y or z, at the `top`, the `bottom` or `either` |
 | `look` | `{ "look": "forearms", "at": ["bottom"], "view": "front" }` | never here: it waits for the reviewer's eyes |
 
-`*` stands for each side, and the worse one counts. On a one-sided lift `"works": "ankle"` or
-`"hand"` finds the side that point travels further on, and `{work}` and `{other}` in a line stand
+`*` stands for each side, and the worse one counts. On a one-sided lift `"works"` names a point,
+`"ankle"`, `"hand"` or `"knuckles"`, and finds the side it travels further on, and `{work}` and `{other}` in a line stand
 for it and the other. The top is the clip's first frame and the bottom its last, as the pose calls
 them: a pulldown's top is the arm long, and a row's the arm bent. Whatever a spec can say exactly
 is a line of an exact kind and not a `look`, because `movement.test.mjs` holds every clip to those

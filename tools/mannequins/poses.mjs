@@ -791,7 +791,7 @@ export const POSES = {
   },
 
   // Back on an upright bench between the towers, the pulleys at the seated shoulder: the handles
-  // sweep from wide behind the line of the chest to together in front of it.
+  // sweep from wide behind the line of the chest to about shoulder width in front of it (owner, #127).
   seated_cable_flye: {
     equipment: 'cable',
     motion: 'free_arms',
