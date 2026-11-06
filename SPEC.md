@@ -866,7 +866,10 @@ each planned day with the training day it lands on, and never changes the day:
        (−15, +15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
        is muted and counts up in large digits (`+0:12`) until the next set is logged, and the phone
        still vibrates when rest ends. The myo breathing countdown and the iso hold use the same
-       row; the hold fills toward its target instead of draining. The lock screen notification and
+       row; the hold fills toward its target instead of draining and, at the target, turns the row solid
+       with the digits stopped (owner, 2026-11-06). The breathing countdown is tinted in myo-reps'
+       violet and the hold in iso hold's blue, from the technique colours; the fill's moving edge is
+       rounded. The lock screen notification and
        the rest rules don't change.
    - **Plate calculator** for barbell and plate-loaded exercises.
      - Barbell exercises use the gym's plates; machines whose ladder is plates use the gym's too,

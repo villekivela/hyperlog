@@ -264,8 +264,12 @@ end, so a glance tells how far through the rest you are. The set table stays vis
 shown or hidden. Tapping the digits (48 dp tall at least) opens the rest sheet: −15, the time, +15,
 End rest; tapping the rest of the row goes to the next exercise, as without a clock. After rest the
 row has no fill and counts up (`+0:12`) in onSurfaceVariant until the next set is logged. Before a
-myo mini-set the row is a 15 s breathing countdown, drained in a tertiary tint; the digits can't
-be tapped, and it goes away at zero.
+myo mini-set the row is a 15 s breathing countdown, drained in a tint of the myo-reps violet; the
+digits can't be tapped, and it goes away at zero. An iso hold fills toward its target in a tint of
+the iso hold blue; at the target the row turns solid blue, the digits stop at the target and the
+phone buzzes once, as before. The tints are the technique colours of the set's circles and pills,
+so the ink stays readable on them. The moving edge of every fill is rounded (16 dp, the row's own
+radius); rest keeps its primary tint and the count-up after it keeps its muted look.
 
 **Sheets** (modal bottom sheets, surfaceContainerLow, 28 dp text edge). Their rows sit in
 surfaceContainerHighest groups 12 dp in, with the picked or current row in secondaryContainer
