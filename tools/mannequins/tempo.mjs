@@ -16,6 +16,7 @@ export const MOTION_TEMPOS = {
   dumbbell_press: tempo(2, 0.3, 1, 0.7),
   pulldown: tempo(1, 0.3, 2, 0.5),
   pressdown: tempo(1, 0.2, 2, 0.5),
+  leg_arms: tempo(1, 0.3, 2, 0.5),
   leg_press: tempo(2, 0.3, 1, 0.6),
   chest_press: tempo(2, 0.3, 1, 0.6),
   shoulder_press: tempo(2, 0.3, 1, 0.6),
@@ -46,6 +47,10 @@ export const MOTION_TEMPOS = {
   // Lowered slowly, the eccentric, and pulled back up by the hamstrings.
   glute_ham_raise: tempo(3, 0.5, 2, 0.5),
   rods_press: tempo(2, 0.3, 1, 0.7),
+  // Up quickly, held at the top, and let down under control.
+  standing_levers: tempo(2, 0.5, 1, 1),
+  // Lowered under control, and driven back up by the hips.
+  back_extension: tempo(2, 0.3, 1, 0.7),
 };
 
 /** The entry's tempo: its own, otherwise its movement's. */

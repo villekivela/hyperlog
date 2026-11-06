@@ -1002,6 +1002,45 @@ export const MOTIONS = {
   },
 
   /**
+   * Standing, the hands on grips that rise on the machine's levers, the arms long: a machine shrug.
+   * `shrug` lifts the shoulders with them, and `shin`, `thigh` and `trunk` stand the body as a
+   * barbell shrug does.
+   */
+  standing_levers(e, s, L) {
+    const hipC = standingHips(e, s, L);
+    const u = trunkUp(spineLean(s.trunk, L));
+    const f = forwardOf(u);
+    const { handle, across } = s.linkage;
+    return {
+      hipC, u, shrug: s.shrug,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
+      ...standingFeet(e, L),
+      hand: handle, across,
+      armPole: elbowsTo(e, [0.6, 0, -1]),
+    };
+  },
+
+  /**
+   * Seated, the back on the pad, each foot on a plate at the foot of an arm that swings about a
+   * vertical axis, so the legs ride the arms and the hips stay put: a hip abduction, an adduction.
+   */
+  leg_arms(e, s, L) {
+    const { hipC, lean } = placed(e, s, L);
+    const u = trunkUp(lean);
+    const { ankle, ahead, sole, hand, across } = s.linkage;
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(forwardOf(u), e.body?.look ?? 0.15).normalize(),
+      ankles: [-1, 1].map(ankle),
+      foot: (side) => ({ heading: ahead(side), top: V(0, 1, 0) }),
+      kneePole: (side) => ahead(side).add(V(0, 0.6, 0)).normalize(),
+      support: () => ({ point: sole.clone(), normal: V(0, 1, 0) }),
+      hand, across,
+      armPole: elbowsTo(e, [0.7, -0.6, -0.5]),
+    };
+  },
+
+  /**
    * Standing on a machine's foot plate, the spine along its inclined chest pad, the hands on grips
    * its lever carries: a chest-supported T-bar row, a Kelso shrug.
    */
@@ -1093,6 +1132,33 @@ export const MOTIONS = {
         return shoulder.add(way.setLength(Math.min(way.length(), (L.up + L.fore) * 0.96)));
       },
       armPole: elbowsTo(e, [0.3, 0, -1]),
+    };
+  },
+
+  /**
+   * Face down along a hyperextension bench, the thighs on its pads, the calves under its rollers and
+   * the soles on its plate, where `s.linkage` has them: the legs stay and the trunk hinges at the
+   * hips. `lean` is the trunk's lean from upright forward, in degrees, from the top of the rep, in
+   * line with the legs, to the bottom. The arms are crossed on the chest, the hands open.
+   */
+  back_extension(e, s, L) {
+    const { hip, ankle, sole, soleUp, toes } = s.linkage;
+    const u = trunkUp(spineLean(s.lean, L));
+    const f = forwardOf(u);
+    const sh = shouldersOf(hip, u, L);
+    const across = e.feet?.stance ?? L.hipW;
+    const chest = sh.clone().addScaledVector(u, -0.14).addScaledVector(f, 0.15);
+    return {
+      hipC: hip.clone(), u,
+      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.1).normalize(),
+      ankles: [-1, 1].map((side) => ankle.clone().setX(side * across)),
+      toeOut: 0,
+      foot: () => ({ heading: toes.clone(), top: soleUp.clone() }),
+      kneePole: () => toes.clone(),
+      support: () => ({ point: sole.clone(), normal: soleUp.clone() }),
+      openHands: true,
+      hand: (side) => chest.clone().addScaledVector(X, -side * 0.1).addScaledVector(u, side * 0.03),
+      armPole: elbowsTo(e, [0.35, -1, 0.1]),
     };
   },
 

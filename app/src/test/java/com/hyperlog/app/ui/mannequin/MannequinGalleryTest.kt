@@ -65,7 +65,7 @@ class MannequinGalleryTest {
         }
         // The clips come in the index's order, by exercise id.
         compose.onNodeWithText("1-Arm Cable Press-Around").assertExists()
-        compose.onNodeWithText("1 of 114").assertExists()
+        compose.onNodeWithText("1 of 112").assertExists()
         compose.onNodeWithTag(MannequinStageTag).assertExists()
         compose.waitUntil { loaded.isNotEmpty() }
         val first = Mannequins.fromAssets(context).clips.first()
