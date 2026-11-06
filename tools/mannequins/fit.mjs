@@ -30,7 +30,7 @@ export function fitted(entry, L) {
     options[sets] = solve({ L, options, entry });
     fit[`kit.${name}.${sets}`] = options[sets];
   }
-  // A machine with nothing on it that moves (no `rep`) has one place for the body: its linkage is that, whatever the value.
+  // A machine whose rep no joint drives (no `rep`: nothing moves, or a bar the lift carries) has one place for the body: its linkage is that, whatever the value.
   if (!recipe.rep) {
     const { hip, at } = recipe.linkage(options, L);
     const result = {

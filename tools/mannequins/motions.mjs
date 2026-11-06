@@ -364,7 +364,8 @@ export const MOTIONS = {
   /**
    * A barbell on the back, kept over the middle of the feet. Without a trunk angle, the legs bend
    * as given and the trunk leans until the bar is over midfoot. With one (a traced squat), the
-   * body keeps its shape, knee and hip as given, and turns about the ankles until it is.
+   * body keeps its shape, knee and hip as given, and turns about the ankles until it is. On a smith
+   * machine it does so until the bar is on the rods' `line`, not over midfoot.
    */
   squat(e, s, L) {
     const shaped = s.trunk !== undefined;
@@ -412,7 +413,8 @@ export const MOTIONS = {
 
   /**
    * A hinge with the bar hanging in straight arms (an RDL): the legs and trunk set from their
-   * angles, and the bar hangs below the shoulders `bar.z` in front of the ankles.
+   * angles, and the bar hangs below the shoulders `bar.z` in front of the ankles, or on the rods'
+   * `line` on a smith machine.
    */
   hinge(e, s, L) {
     const hipC = standingHips(e, s.bar === undefined ? s : clearOf(e, s, L), L);
@@ -425,8 +427,11 @@ export const MOTIONS = {
     const hangs = (lean) => {
       const sh = shouldersOf(hipC, trunkUp(lean), L);
       const hang = (z) => sh.y + lift - Math.sqrt(Math.max(0, reach * reach - dx * dx - (sh.z - z) ** 2));
-      // On rods the bar's place along them follows its height, so settle the two together.
-      return line ? [0, 1, 2].reduce((y) => hang(line(y)), hang(e.bar.z)) : hang(e.bar.z);
+      if (!line) return hang(e.bar.z);
+      // On rods the bar's place along them follows its height: a few rounds settle the two together.
+      let y = hang(e.bar.z);
+      for (let i = 0; i < 3; i++) y = hang(line(y));
+      return y;
     };
     let lean = spineLean(s.trunk ?? 0, L);
     if (s.bar !== undefined) {
@@ -441,9 +446,10 @@ export const MOTIONS = {
     }
     const u = trunkUp(lean);
     const f = forwardOf(u);
+    const y = hangs(lean);
     return {
       hipC, u, shrug: s.shrug,
-      bar: (() => { const y = hangs(lean); return V(0, y, line ? line(y) : e.bar.z); })(),
+      bar: V(0, y, line ? line(y) : e.bar.z),
       headDir: u.clone().addScaledVector(f, 0.35).add(V(0, 0.25, 0)).normalize(),
       ...standingFeet(e, L),
       grip: e.grip.width,
@@ -451,7 +457,10 @@ export const MOTIONS = {
     };
   },
 
-  /** Lying on a bench, pressing a bar from over the shoulders down to the chest along `bar` [y, z]. */
+  /**
+   * Lying on a bench, pressing a bar from over the shoulders down to the chest along `bar` [y, z], its
+   * z the rods' `line`'s on a smith machine.
+   */
   bench_press(e, s, L) {
     const { hipC, lean } = placed(e, s, L);
     const u = trunkUp(lean);
@@ -662,7 +671,9 @@ export const MOTIONS = {
       hipC, u, headDir, ankles, toeOut, kneePole, support,
       bar: V(0, y, line(y)),
       grip: e.grip.width,
-      armPole: (side) => V(side * e.grip.elbows, -1, 0.7 * (1 - e.grip.elbows)).normalize(),
+      // Down and out in the room, the elbows under the bar: toward the feet too on a flat bench, as a
+      // bench press's, and less so as it stands up.
+      armPole: (side) => V(side * e.grip.elbows, -1, Math.cos(rad(e.bench.angle))).normalize(),
     };
   },
 
@@ -704,6 +715,8 @@ export const MOTIONS = {
    * right `feet.back` behind (its ball's place), up on its ball with the heel `heel` degrees off the
    * floor, heels up positive, its toes bent back as far so they stay down; `feet.cross` steps it that
    * far across behind the front foot (a curtsy), and `feet.hips` moves the hips and arms that far toward it.
+   * `feet.step` raises the front foot on a platform. With `bar` a bar lies on the upper back, as a
+   * squat's, on a smith machine with the hips where it meets the rods' `line`, in place of `hip`'s z.
    * The hips drop between them along `hip` [y, z], the trunk at `trunk`, and the arms hang straight down `grip.width` either side of the middle.
    */
   lunge(e, s, L) {

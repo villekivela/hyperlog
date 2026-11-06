@@ -196,9 +196,16 @@ test('each guide rod is bracketed at both ends, and the hook plate stands from t
     assert.ok(near(rodBox.min.y + 0.0125), `no bracket at the rod's foot, ${rodBox.min.y.toFixed(2)} m`);
     assert.ok(near(rodBox.max.y - 0.0125), `no bracket at the rod's top, ${rodBox.max.y.toFixed(2)} m`);
   }
-  for (const spine of roleOf(kit, 'spine').map(box)) {
-    assert.ok(spine.min.y < 0.15, `the plate's foot at ${spine.min.y.toFixed(2)} m, off the floor beam's level`);
+  const beams = roleOf(kit, 'beam').map(box);
+  for (const spineMesh of roleOf(kit, 'spine')) {
+    const spine = box(spineMesh);
+    close(spine.min.y, 0.07, 0.006, 'the plate\'s foot, down on the floor beam\'s level');
     assert.ok(spine.max.y > 2.2, 'the plate runs up to the hood');
+    assert.ok(beams.some((b) => b.min.x <= spine.max.x && b.max.x >= spine.min.x), 'the plate over its floor beam');
+    const upright = roleOf(kit, 'uprightCore').filter((o) => Math.sign(o.position.x) === Math.sign(centre(spine).x)).sort((a, c) => c.position.z - a.position.z)[0];
+    const from = spineMesh.getWorldPosition(new THREE.Vector3()).setX(upright.position.x);
+    const hit = new THREE.Raycaster(from, V(0, Math.sin(LEAN), Math.cos(LEAN))).intersectObject(upright, false)[0];
+    assert.ok(hit && hit.distance < 0.03, `the plate ${hit ? (hit.distance * 100).toFixed(1) : 'nowhere'} cm off the upright's rear face`);
   }
 });
 
@@ -211,7 +218,7 @@ test('each hook plate has 13 notches opening toward the bar, 152 mm apart, and t
     // The teeth stand out of the spine toward the bar, so the notches between them open that way.
     const across = V(0, Math.sin(LEAN), Math.cos(LEAN));
     const [spineAt] = roleOf(kit, 'spine').filter(side).map((o) => o.getWorldPosition(new THREE.Vector3()).dot(across));
-    for (const t of teeth) assert.ok(t.getWorldPosition(new THREE.Vector3()).dot(across) > spineAt + 0.01, `a tooth at ${box(t).min.y.toFixed(2)} m stands out the wrong way`);
+    for (const t of teeth) assert.ok(t.getWorldPosition(new THREE.Vector3()).dot(across) < spineAt - 0.01, `a tooth at ${box(t).min.y.toFixed(2)} m stands out the wrong way`);
     const tops = teeth.map((t) => t.getWorldPosition(new THREE.Vector3()).y).sort((a, c) => a - c);
     tops.slice(1).forEach((y, i) => close(y - tops[i], PITCH, 0.001, 'the notches\' pitch'));
     close(tops[0] + 0.05, LOWEST, 0.005, 'the lowest notch');
@@ -258,8 +265,6 @@ test('no brand name appears in the recipe', async () => {
   assert.doesNotMatch(source, /hammer|strength|life ?fitness|\blogo\b|decal/i);
 });
 
-// No pose uses it yet, so the studio shows it alone (#176): the bar on its hook through the rep and
-// scrubbed along the rods through its limits.
 test('the bar scrubs from its stop to the top, and hangs on its hook with no pose', () => {
   const kit = machine();
   const racked = kit.joints.bar.value;
@@ -278,25 +283,79 @@ const parts = (kit, name) => {
 };
 const within = (mesh) => new THREE.Box3().setFromObject(mesh);
 
-test('each rear upright sweeps forward over the top into the front upright in one capped length', () => {
+/** Whether any vertex of `moving` lies in the box of `fixed`, in `fixed`'s own frame. */
+const reaches = (moving, fixed) => {
+  fixed.geometry.computeBoundingBox();
+  const local = fixed.matrixWorld.clone().invert().multiply(moving.matrixWorld);
+  const p = moving.geometry.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) if (fixed.geometry.boundingBox.containsPoint(v.fromBufferAttribute(p, i).applyMatrix4(local))) return true;
+  return false;
+};
+const sideOf = (s) => (o) => Math.sign(new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).x) === s;
+
+test('each rear upright sweeps forward over the top into the front upright in one capped curve', () => {
   const kit = machine();
   const hoods = parts(kit, 'hood');
   assert.equal(hoods.length, 2, 'a sweep a side');
-  for (const m of hoods) {
-    assert.notEqual(m.geometry.type, 'ExtrudeGeometry', 'a curve, not a straight tube');
+  for (const [m, s] of [[hoods.find(sideOf(-1)), -1], [hoods.find(sideOf(1)), 1]]) {
+    assert.ok(m.geometry.attributes.position.count > 150, 'a curve of many lengths, not one straight tube');
     const b = within(m);
     assert.ok(b.max.z - b.min.z > 0.3, 'from the rear upright to the front one');
     assert.ok(b.max.y - b.min.y > 0.2, 'rising as it sweeps');
+    const [front, rear] = parts(kit, 'uprightCore').filter(sideOf(s)).sort((p, q) => q.position.z - p.position.z);
+    assert.ok(reaches(m, front), 'its end in the front upright');
+    assert.ok(reaches(m, rear), 'its foot in the rear upright');
   }
 });
 
-test('a gusset each side runs from the middle crossbar down to the rear upright', () => {
+test('side-on it stands as an A: the front upright a quarter of the way along the beam, then plate, rod and shroud, the rear leaning forward to meet it', () => {
   const kit = machine();
-  const gussets = parts(kit, 'gusset').map(within);
+  const [beam] = roleOf(kit, 'beam').map(box);
+  for (const s of [-1, 1]) {
+    const [front, rear] = parts(kit, 'uprightCore').filter(sideOf(s)).sort((p, q) => q.position.z - p.position.z).map((m) => {
+      const p = m.geometry.attributes.position;
+      const all = Array.from({ length: p.count }, (_, i) => new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld)).sort((c, d) => c.y - d.y);
+      const middle = (vs) => vs.reduce((u, v) => u.add(v), new THREE.Vector3()).multiplyScalar(1 / vs.length);
+      return { foot: middle(all.slice(0, 4)), top: middle(all.slice(-4)) };
+    });
+    close((beam.max.z - front.foot.z) / (beam.max.z - beam.min.z), 0.25, 0.05, 'the front upright along the beam');
+    close((rear.foot.z - beam.min.z) / (beam.max.z - beam.min.z), 0.06, 0.05, 'the rear upright at the beam\'s end');
+    assert.ok(front.top.z < front.foot.z, 'the front upright leaning back');
+    assert.ok(rear.top.z > rear.foot.z + 0.15, 'the rear one leaning forward');
+    const z = (m) => m.getWorldPosition(new THREE.Vector3()).z;
+    const [spine] = parts(kit, 'spine').filter(sideOf(s));
+    const [rod] = parts(kit, 'guide').filter(sideOf(s));
+    const at = (m, y) => z(m) + (m.getWorldPosition(new THREE.Vector3()).y - y) * Math.tan(LEAN);
+    const uprightZ = front.foot.z + (front.top.z - front.foot.z) * (1.2 - front.foot.y) / (front.top.y - front.foot.y);
+    assert.ok(uprightZ > at(spine, 1.2) && at(spine, 1.2) > at(rod, 1.2), 'upright, plate, rod, front to rear');
+  }
+});
+
+test('both uprights stand cut flat on the floor beam', () => {
+  const kit = machine();
+  for (const m of parts(kit, 'upright')) {
+    const p = m.geometry.attributes.position;
+    const v = new THREE.Vector3();
+    const low = [];
+    for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); if (v.y < 0.1) low.push(v.y); }
+    assert.ok(low.length, 'a foot');
+    close(Math.max(...low) - Math.min(...low), 0, 0.001, 'its foot level');
+  }
+});
+
+test('a gusset each side runs from the middle crossbar down to the rear upright, ending in each', () => {
+  const kit = machine();
+  const gussets = parts(kit, 'gusset');
   assert.equal(gussets.length, 2);
-  for (const b of gussets) {
+  const [bar] = parts(kit, 'crossbar');
+  for (const s of [-1, 1]) {
+    const g = gussets.find(sideOf(s));
+    const b = within(g);
     assert.ok(b.max.y > 1.9 && b.min.y < 1.7, 'from the crossbar down');
-    assert.ok(Math.max(Math.abs(b.min.x), Math.abs(b.max.x)) > 0.6, 'out to the upright');
+    assert.ok(reaches(g, bar), 'its top in the crossbar');
+    const rear = parts(kit, 'uprightCore').filter(sideOf(s)).sort((p, q) => p.position.z - q.position.z)[0];
+    assert.ok(reaches(g, rear), 'its foot in the rear upright');
   }
 });
 
@@ -313,10 +372,10 @@ const onTheRods = async (id, angle) => {
     stage.pose(d);
     stage.kit.group.updateMatrixWorld(true);
     const at = barOf(stage).getWorldPosition(new THREE.Vector3());
-    close(at.z, rodZ(at.y) + zero, 0.001, `${id}: the bar on the rods' line, ${d} of the way`);
     for (const k of ['l', 'r']) {
-      if (stage.entry?.grip?.one) continue;
+      // The kit puts the bar on the line whatever the pose: the hands show the body solved to it.
       const hand = heldAt(stage.rig, k);
+      close(hand.z, rodZ(hand.y) + zero, 0.03, `${id}: the ${k} hand on the rods' line, ${d} of the way`);
       close(Math.hypot(hand.y - at.y, hand.z - at.z), 0, 0.03, `${id}: the ${k} hand on the bar, ${d} of the way`);
     }
   }
@@ -332,7 +391,7 @@ test('smith_machine_squat: the body fits through the whole rep, the bar on the r
   assert.deepEqual(await fails('smith_machine_squat'), []);
   await onTheRods('smith_machine_squat');
   const [top, bottom] = await travel('smith_machine_squat');
-  close(top, 1.47, 0.08, 'the bar standing');
+  close(top, 1.53, 0.03, 'the bar standing');
   // Straight forward from the bar, the skin of the upper back close by, at the top and the bottom.
   const { pose, rig, kit } = await staged('smith_machine_squat');
   for (const d of [0, 1]) {
@@ -345,6 +404,21 @@ test('smith_machine_squat: the body fits through the whole rep, the bar on the r
   }
   assert.ok(top - bottom > 0.35, `a squat's depth, ${(top - bottom).toFixed(2)} m`);
 });
+
+// The hands close round the bar in every lift, not lie open on it.
+for (const id of ['smith_machine_squat', 'smith_machine_lunge', 'ffe_smith_machine_lunge', 'split_squat_smith', 'smith_machine_bench_press']) {
+  test(`${id}: the fingers curl round the bar`, async () => {
+    const { pose, rig } = await staged(id);
+    pose(0.5);
+    for (const side of ['l', 'r']) {
+      const tip = wpos(rig.bones[`middle_03_${side}`]);
+      const knuckle = wpos(rig.bones[`middle_01_${side}`]);
+      const palm = wpos(rig.bones[`hand_${side}`]);
+      const curl = knuckle.clone().sub(palm).angleTo(tip.clone().sub(knuckle)) * 180 / Math.PI;
+      assert.ok(curl > 45, `the ${side} fingers curled ${curl.toFixed(0)}°`);
+    }
+  });
+}
 
 test('smith_machine_rdl: the body fits through the whole rep, the bar on the rods, from the thighs down the shins', async () => {
   assert.deepEqual(await fails('smith_machine_rdl'), []);
@@ -406,9 +480,58 @@ for (const [id, step] of [['smith_machine_lunge', 0], ['split_squat_smith', 0], 
       close(sole, step, 0.01, `the front foot on its ${step ? 'step' : 'floor'}, ${d} of the way`);
     }
     pose(1);
-    assert.ok(wpos(rig.bones.calf_r).y < 0.3, `the back knee down, at ${wpos(rig.bones.calf_r).y.toFixed(2)}`);
+    kit.group.updateMatrixWorld(true);
+    const knee = wpos(rig.bones.calf_r).y;
+    assert.ok(knee < (step ? step : 0.2), `the back knee down near the floor${step ? ', below the step' : ''}, at ${knee.toFixed(2)}`);
+    const bar = barOf(stage).getWorldPosition(new THREE.Vector3());
+    const front = wpos(rig.bones.foot_l);
+    assert.ok(Math.abs(front.z - bar.z) < 0.2, `the front foot under the bar, ${(front.z - bar.z).toFixed(2)} m ahead of it`);
+    assert.ok(front.z - wpos(rig.bones.foot_r).z > 0.65, `a long stride, ${(front.z - wpos(rig.bones.foot_r).z).toFixed(2)} m`);
     const [top, bottom] = await travel(id);
     assert.ok(top - bottom > 0.25, `the lunge's drop, ${(top - bottom).toFixed(2)} m`);
+  });
+}
+
+test('the raised front foot takes the bar further down than the plain lunge', async () => {
+  const drop = async (id) => { const [top, bottom] = await travel(id); return top - bottom; };
+  const [raised, plain] = [await drop('ffe_smith_machine_lunge'), await drop('smith_machine_lunge')];
+  assert.ok(raised > plain + 0.05, `${raised.toFixed(2)} against ${plain.toFixed(2)} m`);
+});
+
+const LIFTS = [
+  ...['smith_machine_squat', 'smith_machine_rdl', 'smith_machine_bench_press', 'smith_machine_jm_press', 'smith_machine_lunge', 'ffe_smith_machine_lunge', 'split_squat_smith'].map((id) => [id]),
+  ...['smith_machine_incline_press', 'smith_machine_seated_press'].flatMap((id) => [0, 15, 30, 45, 60, 75, 85].map((angle) => [id, angle])),
+];
+
+for (const [id, angle] of LIFTS) {
+  test(`${id}${angle === undefined ? '' : ` at ${angle}°`}: the stops lie on the notch just below the bottom of the lift, and the hooks stay off the teeth`, async () => {
+    const stage = await staged(id, angle);
+    const k = stage.kit.kits.smith_machine;
+    stage.pose(1);
+    const lowest = k.joints.bar.limits[0];
+    const value = k.joints.bar.value;
+    assert.ok(value >= lowest, 'above the stops');
+    assert.ok((value - lowest) * Math.cos(LEAN) < PITCH, `${((value - lowest) * 100).toFixed(0)} cm above the stops, more than a notch`);
+    stage.kit.group.updateMatrixWorld(true);
+    for (const lug of parts(k, 'lug')) for (const tooth of parts(k, 'tooth')) assert.ok(!reaches(lug, tooth) && !reaches(tooth, lug), 'a hook through a tooth');
+  });
+}
+
+const forearmOff = (rig, side) => THREE.MathUtils.radToDeg(wpos(rig.bones[`hand_${side}`]).sub(wpos(rig.bones[`lowerarm_${side}`])).angleTo(V(0, 1, 0)));
+for (const [id, angle] of LIFTS.filter(([id]) => /bench_press|incline|seated/.test(id))) {
+  test(`${id}${angle === undefined ? '' : ` at ${angle}°`}: at the bottom the forearms stand under the bar and it comes down to the body`, async () => {
+    const { pose, rig, kit } = await staged(id, angle);
+    pose(1);
+    kit.group.updateMatrixWorld(true);
+    for (const side of ['l', 'r']) assert.ok(forearmOff(rig, side) < 25, `the ${side} forearm ${forearmOff(rig, side).toFixed(0)}° off upright`);
+    const bar = kit.kits.smith_machine.bodies.bar[0].getWorldPosition(new THREE.Vector3());
+    // Square back at the trunk from the bar.
+    const up = wpos(rig.bones.upperarm_l).add(wpos(rig.bones.upperarm_r)).multiplyScalar(0.5).sub(wpos(rig.bones.pelvis)).setX(0).normalize();
+    const forward = V(1, 0, 0).cross(up).normalize();
+    // From a little out, as the bar may rest on the skin.
+    const ray = new THREE.Raycaster(bar.clone().addScaledVector(forward, 0.1), forward.clone().negate());
+    const [hit] = rig.meshes.flatMap((m) => { m.computeBoundingSphere?.(); m.computeBoundingBox?.(); return ray.intersectObject(m, false); }).sort((a, b) => a.distance - b.distance);
+    assert.ok(hit && hit.distance - 0.1 < 0.18, `the bar ${hit ? ((hit.distance - 0.1) * 100).toFixed(1) : 'nowhere'} cm off the body`);
   });
 }
 
