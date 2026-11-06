@@ -31,7 +31,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 9 | [`safety_bar`](safety_bar/ref.md) | 2 | Rogue SB-1 Safety Squat Bar; built (#219), not yet posed |
 | 10 | [`hyperextension_bench`](hyperextension_bench/ref.md) | 1 | Bench Fitness REVOLVE 45 Degree Back Extension; built (#220), not yet posed |
 | 11 | [`shrug_machine`](shrug_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Shrug; built (#223), not yet posed |
-| 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press |
+| 12 | [`shoulder_press`](shoulder_press/ref.md) | 1 | Hammer Strength Select Shoulder Press; built and posed (#225) |
 | 13 | [`dip_machine`](dip_machine/ref.md) | 1 | Hoist ROC-IT RS-1101 Seated Dip; built and posed (#226) |
 | 14 | [`hip_thrust_machine`](hip_thrust_machine/ref.md) | 1 | Hammer Strength Plate-Loaded Glute Drive; built and posed (#229) |
 | 15 | [`glute_ham_raise`](glute_ham_raise/ref.md) | 1 | Rogue GH-1 GHD; built and posed (#230) |
@@ -73,7 +73,7 @@ chosen from a fit rule at low confidence. What stays chosen, or rough, per machi
 gaps says why):
 
 - `t_bar_row_machine` (built, #176; posed, #188): the foot plate setting for the mannequin is
-  solved from the fit rule, near photo 07's but not measured on it; the top of the row comes from a three-quarter photo. The recipe runs the neutral grips fore and aft through the
+  solved from the fit rule, near photo 07's but not measured on it; the top of the row comes from a three-quarter photo. The recipe lays one bar grip a side across the machine, held overhand, as the owner asked, where the ref shows neutral grips fore and aft through the
   yoke's top blocks, as photos 05 and 06 show them, where the ref's spec calls them vertical.
 - `cable_crossover`: the pulley heights and hole pitch come from three-quarter photos (about ±50 to
   80 mm); the carriage position per exercise is chosen.

@@ -235,7 +235,7 @@ class SetTableTest {
 /** Inside one of the pad's RIR keys, whose descriptions read "RIR 0" to "RIR 4+". */
 internal val onRirPad = hasAnyAncestor(hasContentDescription("RIR ", substring = true))
 
-private class Recording(val calls: MutableList<String>) : SessionActions {
+internal class Recording(val calls: MutableList<String>) : SessionActions {
     override fun logShown() { calls += "logShown" }
     override fun undo(sessionExerciseId: Long) { calls += "undo $sessionExerciseId" }
     override fun addDrop(setIndex: Int) { calls += "addDrop $setIndex" }

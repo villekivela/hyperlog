@@ -25,6 +25,8 @@ import com.hyperlog.app.ui.session.RirChipKey
 import com.hyperlog.app.ui.session.appendRir
 import com.hyperlog.app.ui.session.rirChipContent
 import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.session.isDarkSurface
+import com.hyperlog.app.ui.theme.techniqueColor
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
 /**
@@ -68,7 +70,7 @@ fun techniqueText(technique: Technique): String = when (technique) {
 
 /**
  * Sets summed up in one line: `1 × 4–6 [1] · ↘ 2 × 6–8 [1]`, each target RIR an outlined chip, a
- * back-off run marked with `south_east` and each technique's symbol after its run, in tertiary.
+ * back-off run marked with `south_east` and each technique's symbol after its run, in the technique's colour.
  */
 @Composable
 fun SetSummary(
@@ -79,6 +81,7 @@ fun SetSummary(
 ) {
     val chunks = planChunks(sets)
     val symbols = mutableMapOf<String, Symbol>()
+    val kinds = mutableMapOf<String, TechniqueKind>()
     val chips = mutableSetOf<RirChipKey>()
     val parts = chunks.map { c ->
         if (c.rir != null) stringResource(R.string.plan_sets_rir, c.count, c.reps.toString(), c.rir)
@@ -96,15 +99,16 @@ fun SetSummary(
             c.techniques.distinct().forEach { t ->
                 val key = t.symbol().name
                 symbols[key] = t.symbol()
+                kinds[key] = t.kind
                 append(" ")
                 appendInlineContent(key, t.symbol().name)
             }
         }
     }
-    val tertiary = MaterialTheme.colorScheme.tertiary
+    val dark = isDarkSurface()
     val inline = symbols.mapValues { (key, symbol) ->
         InlineTextContent(Placeholder(1.2.em, 1.2.em, PlaceholderVerticalAlign.Center)) {
-            SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else tertiary)
+            SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else techniqueColor(kinds.getValue(key), dark))
         }
     } + rirChipContent(chips, style.fontSize)
     Text(text, modifier, style = style, color = color, inlineContent = inline, maxLines = 2, overflow = TextOverflow.Ellipsis)

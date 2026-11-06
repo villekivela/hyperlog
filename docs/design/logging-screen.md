@@ -43,7 +43,7 @@ Spacing is on an 8 dp grid, with 4 dp as the half step.
 | Sub-row | 48 dp | Drops, myo mini-sets, holds, Add set |
 | Label row | 32 dp | Column heads |
 | Columns | 40 · flex · 72 · 80 · 36 · 40 dp | Index, Last, kg, Reps, RIR, ✓ |
-| Index circle | 32 dp; badge 16 dp on its top corner | `W` or the set number; a technique's symbol |
+| Index circle | 32 dp; a technique's symbol 24 dp inside it | `W` or the set number; a technique set shows its symbol alone, no number |
 | Check | 28 dp circle (24 dp on sub-rows), 2 dp ring | Still to do (ring), done (filled) |
 | Cell | 48 dp tall (40 on sub-rows), 12 dp radius, 4 dp inside its column, 1 dp outline (2 dp focused), 8 dp inner padding | Tappable value in the active row; a value or placeholder too wide for the padding (`10–12`) steps its size down to fit |
 | Chip | 32 dp, 8 dp radius, 1 dp outline | Swap or superset, under the name |
@@ -76,8 +76,8 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | Screen and table | surface (the one screen that keeps it, so the pad stands off it); rows flat on it |
 | Active row | no fill: its cells outlined in outline, the index circle primary |
 | Focused cell | surfaceContainerLowest fill, 2 dp primary outline |
-| Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a set through its drops or mini-sets |
-| Technique set | tertiaryContainer circle and tall pill, onTertiaryContainer; the badge tertiary with its symbol in onTertiary |
+| Index circle | surfaceContainerHighest, onSurfaceVariant; primary with a bold onPrimary number in the active row, and on a plain set through its drops or mini-sets; a technique set keeps its colour throughout |
+| Technique set | circle and tall pill in the technique's colour (`techniqueColor`), its symbol in `onTechniqueColor` filling the circle; no number, no badge |
 | Record set | a 16 dp onSurface disc on the index circle's lower corner, ringed 1.5 dp in surface, its 11 dp `trophy` cut out in surface |
 | Record mark in set text | `trophy` at 1.2 em after the RIR chip, in the text's own colour |
 | Check | outlineVariant ring to do, primary ring on the row a tap logs, filled primary with an onPrimary `check` when done |
@@ -90,8 +90,9 @@ Colour comes from Hyperlog's Graphite theme, light and dark:
 | Keys | surfaceContainerHighest |
 | ✓ / → key | primary (dimmed to surfaceContainerHigh when there is nothing to log) |
 | Weight warning | error (cell outline and value, strip text and `warning` symbol) |
-| Rest pill | primaryContainer, time left laid over it in onPrimaryContainer at 16%; surfaceContainerHighest after rest |
-| Breathing pill | tertiaryContainer |
+| Next row, resting | the row drains in primary at 24% across its width, name and digits in onSurface so they read on the fill and off it; no fill after rest, the digits in onSurfaceVariant |
+| Next row, breathing | drains in tertiary at 28% |
+| Next row, holding | fills in secondary at 24% toward the target; solid primary, text in onPrimary, once reached |
 | Day done strip | primaryContainer, rounded 28 dp at the top; its records in onPrimaryContainer, the set line at 80% |
 | Sheet groups | surfaceContainerHighest segments on the surfaceContainerLow sheet; the picked row secondaryContainer |
 
@@ -114,7 +115,7 @@ Two fixed scales sit outside the theme:
 
 ```
  status bar
- Barbell Bench Press              (⏱ 1:42)  ⋮   ← name opens the exercise sheet; pill the rest sheet
+ Barbell Bench Press                        ⋮   ← name opens the exercise sheet
  ╭────────────────────────╮
  │ ⇄ for DB Bench Press   │                      ← outlined chip, only for a swap (or `1a + Leg Curl`)
  ╰────────────────────────╯
@@ -127,7 +128,7 @@ Two fixed scales sit outside the theme:
  (①)     97.5 × 6   │100│  ┃ 6 ┃   ▐1▌     ◯     ← active: no fill; outlined cells, the focused one in
                      └───┘  ┗━━━┛                    primary; the circle filled primary; ◯ logs it as shown
  (2)     87.5 × 8     90    6–8    [1]      ○    ← upcoming: planned weight, target as placeholders
- (3)ᵈ                 25   8–10    [0]      ○    ← technique set: tinted circle, badge ᵈ on its corner,
+  ᵈ                   25   8–10    [0]      ○    ← technique set: coloured circle holding the symbol, no number,
  ┃                  17.5      6    [0]      ○       its drops in one tall pill down the column,
  +                  12.5      6    [0]      ○       `+` at its foot adds a drop
 ░░░░░░░░░░░░░░░░░░░░░░░ fade ░░░░░░░░░░░░░░░░░░   ← the list scrolls as one; fades where it has more
@@ -146,8 +147,8 @@ circles, `○` a check to do, `(✓)` a done check.
 
 ## Components
 
-**Header.** The exercise name (headlineSmall, ellipsized; a tap opens the exercise sheet), the one
-clock (rest, breathing or hold pill) and ⋮ on one row, at least 64 dp. Under it, only when they
+**Header.** The exercise name (headlineSmall, ellipsized; a tap opens the exercise sheet) and ⋮ on
+one row, at least 64 dp, with the whole width for the name: the clock is on the Next row. Under it, only when they
 apply, outlined chips: `swap_horiz` and `for <planned exercise>` for a swapped slot, `1a + <partner>`
 for a superset (both when both apply). They say what the slot is, and a tap acts on it: the swap
 chip opens Swap (while the exercise can still be swapped), the superset chip brings the partner on
@@ -165,11 +166,10 @@ trend symbol, and the old app's set for a machine with no history on it (`histor
 (only once there is history), `kg`, `Reps` (`L / R` for a split set), `RIR`, blank over ✓.
 
 **Index column.** A 32 dp circle: `W` for a warm-up, the set number for a work set
-(surfaceContainerHighest, onSurfaceVariant). In the active row it is filled with primary, with a
-bold onPrimary number, technique or not; a set keeps it primary while its drops, mini-sets or hold
-are done. A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to
-failure) has a tertiaryContainer circle and the technique's Material Symbol as a 16 dp tertiary
-badge on its top corner (`trending_down`, `repeat`, `unfold_less`, `pan_tool`,
+(surfaceContainerHighest, onSurfaceVariant). In the active row a plain set is filled with primary, with a
+bold onPrimary number. A set with a technique (drop set, myo-reps, lengthened partials, iso hold, to
+failure) has no number: its circle is the technique's colour, active or not, with the technique's
+Material Symbol filling it (`trending_down`, `repeat`, `unfold_less`, `pan_tool`,
 `local_fire_department`), described by the technique's name, so it reads without colour. A set with
 drops, mini-sets or a hold grows its circle into one tall pill down the column through those rows;
 `+` at the pill's foot adds a drop to a drop set, before the set or
@@ -257,11 +257,15 @@ Keys: digits, backspace, − and + (one ladder rung for weight, one rep for reps
 `.` (weight only) and ✓. ✓ is one key, the same size as the others, filled primary. On the weight
 field it shows → instead.
 
-**Timer.** A 48 dp pill in the header, primaryContainer, so rest reads from across the gym. It
-drains left to right during rest. After rest it counts
-up (`+0:12`) in a muted container until the next set is logged. Before a myo mini-set it is a
-15 s breathing countdown with an `air` symbol. Tapping it during rest opens the rest sheet:
-−15, the time, +15, End rest.
+**Timer (owner, 2026-11-05).** The Next row at the bottom is the session's only clock, 64 dp tall
+or more with the text size. During rest its whole width drains from full to empty in
+a primary tint, the next exercise's name on it and the time left in headlineMedium digits at the
+end, so a glance tells how far through the rest you are. The set table stays visible, with the pad
+shown or hidden. Tapping the digits (48 dp tall at least) opens the rest sheet: −15, the time, +15,
+End rest; tapping the rest of the row goes to the next exercise, as without a clock. After rest the
+row has no fill and counts up (`+0:12`) in onSurfaceVariant until the next set is logged. Before a
+myo mini-set the row is a 15 s breathing countdown, drained in a tertiary tint; the digits can't
+be tapped, and it goes away at zero.
 
 **Sheets** (modal bottom sheets, surfaceContainerLow, 28 dp text edge). Their rows sit in
 surfaceContainerHighest groups 12 dp in, with the picked or current row in secondaryContainer
@@ -300,7 +304,7 @@ in ink.
   under it.
 - *Set table.* The trophy sits in a 16 dp disc of full ink (onSurface) on the index circle's lower
   corner, ringed 1.5 dp in the row's surface so it stands off the grey circle; the owner asked for
-  full ink because onSurfaceVariant was faint in dark mode (2026-10-24). It is the technique badge's sibling (that one is violet, on the upper corner), so a drop set
+  full ink because onSurfaceVariant was faint in dark mode (2026-10-24). It sits on the circle's lower corner, where the technique's symbol no longer does, so a drop set
   that is also a record carries both. It shows from the moment the set logs; correcting the set
   moves it.
 - *Set text* (Session done, History's past session, the session list): the trophy after the set's
@@ -358,7 +362,7 @@ buttons this way: the way out first, the action last, at the right.
   than `12 + 6` steps down to titleMedium, so `100 + 20` stays inside the 80 dp cell.
 
 **Intensity techniques** (built in ticket #10).
-- Every set's technique is on its index circle (tint and badge), and its drops, mini-sets or
+- Every set's technique is on its index circle (its colour and symbol, no number), and its drops, mini-sets or
   hold follow as 48 dp sub-rows in its tall pill from the start, in the order they'll be done.
   Planned sub-rows are muted prefills (drop weights computed from the set's planned or typed weight,
   live), done ones end in a filled check.
@@ -367,10 +371,10 @@ buttons this way: the way out first, the action last, at the right.
   row shows the target; during it, the done ones and the active one. The weight is muted and can't be tapped.
 - **Iso hold**: one sub-row, its value in seconds (`20 s`); the weight is the set's, muted.
   The strip reads `pan_tool` Hold 20 s, a tonal **Start** / **Stop**, and Finish set. While it
-  runs, the header pill shows `pan_tool` and the time held, filling toward the target, and turns
-  primary when it's reached.
-- **Breathing pill**: `air` and the 15 s countdown, drained like rest; it can't be tapped, and it
-  goes away at zero.
+  runs, the Next row shows the time held, filling toward the target, and turns primary with one
+  buzz when it's reached.
+- **Breathing countdown**: the 15 s countdown on the Next row, drained like rest; its digits can't be tapped,
+  and it goes away at zero.
 - **Set sheet** (tap the index circle of a set still to do): "Set 3", then
   "Intensity technique" with radio rows None and the five techniques (name, its numbers, its
   symbol in tertiary at the end). Picking one applies it and closes. For a unilateral exercise's

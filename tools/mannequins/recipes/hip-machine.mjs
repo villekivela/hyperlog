@@ -213,7 +213,7 @@ export default recipe({
     });
     frame.push(
       pad(UPRIGHT.width, TOWER, UPRIGHT.depth, M.frame, V(0, TOWER / 2, rear), { soft: 0.01 }),
-      role(mitered([V(0, 0, front), ...bend, V(0, TOWER, rear - UPRIGHT.depth / 2)], UPRIGHT.depth, M.frame, { solid: false, wide: UPRIGHT.width, ends: [V(0, 1, 0), null] }), 'towerArch'),
+      role(mitered([V(0, 0, front), ...bend, V(0, TOWER, rear - UPRIGHT.depth / 2)], UPRIGHT.width, M.frame, { solid: false, tall: UPRIGHT.depth, ends: [V(0, 1, 0), null] }), 'towerArch'),
       proxy(pad(UPRIGHT.width, 1.15, UPRIGHT.depth, M.frame, V(0, 0.575, front), { soft: 0.01 })),
       // The panel under the top, where the maker's placard sits.
       pad(UPRIGHT.width, 0.19, front - rear - 0.12, M.frame, V(0, TOWER - 0.1, (front + rear - 0.12) / 2), { soft: 0.02 }),

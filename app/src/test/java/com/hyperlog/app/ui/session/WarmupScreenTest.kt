@@ -4,6 +4,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasScrollToIndexAction
 import com.hyperlog.app.waitForDescription
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
@@ -93,7 +94,7 @@ class WarmupScreenTest {
         compose.onNodeWithContentDescription("Warm-up 1, 40 kg × 8").assertIsOn()
         compose.onNodeWithContentDescription("Warm-up 2, 55 kg × 5").assertIsOff()
         // No rest starts for a warm-up.
-        assertEquals(0, compose.onAllNodesWithContentDescription("Rest").fetchSemanticsNodes().size)
+        assertEquals(0, compose.onAllNodesWithTag(ClockDigitsTag, useUnmergedTree = true).fetchSemanticsNodes().size)
 
         // The work set still logs, and the warm-ups go.
         compose.press("5"); compose.press("Log set")
@@ -132,7 +133,7 @@ class WarmupScreenTest {
         startDay("barbell_bench_press")
         compose.press("9"); compose.press("0"); compose.press("Next"); compose.press("5")
         compose.onNodeWithContentDescription("Log set 1").performClick()
-        compose.waitForDescription("Rest")
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag(ClockDigitsTag, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
         // The set just logged is the one its check takes back.
         compose.onNodeWithContentDescription("Take back set 1").assertIsDisplayed()
     }
