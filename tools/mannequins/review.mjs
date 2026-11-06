@@ -44,10 +44,16 @@ export const BATCHES = {
     'barbell_squat', 'barbell_bench_press', 'barbell_rdl', 'db_incline_press', 'lat_pulldown', 'close_grip_lat_pulldown',
     'triceps_pressdown', 'leg_press', 'machine_chest_press',
   ],
+  // The pec deck's three exercises, posed to prove a body fits it (#241).
+  'pec-deck': ['pec_deck', 'reverse_pec_deck', '1_arm_reverse_pec_deck'],
   // The lateral raise machine's seated raise, posed to prove a body fits it (#241).
   'lateral-raise': ['machine_lateral_raise'],
   // The machine shrug, posed to prove a body fits the shrug machine (#241).
   'shrug-machine': ['machine_shrug'],
+  // The 45 degree hyperextension on its bench, posed to prove a body fits it (#241).
+  'hyperextension-bench': ['45_hyperextension'],
+  // The hip machine's abduction and adduction, posed to prove a body fits it (#241).
+  'hip-machine': ['machine_hip_abduction', 'machine_adduction'],
   // The T-bar row machine's three exercises, machine-first (#188).
   't-bar-row': ['chest_supported_t_bar_row', 't_bar_row', 'kelso_shrug'],
   // The crunch machine's one exercise, a reclined crunch on its inclined seat (#233).

@@ -313,6 +313,48 @@ export const POSES = {
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
+  // Back on the leaning pad, the hands on the vertical grips: from level with the shoulders, the arms
+  // long and a little bent, sweeping together in front of the chest.
+  pec_deck: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: {} },
+    body: { trunk: -7 },
+    bottom: { left: 104 },
+    feet: { stance: 0.17, z: 0.38, toeOut: 12 },
+    grip: { pole: [1, -0.25, -0.3] },
+    camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 40, elevation: 10 },
+    shadow: { size: [1.5, 1.6], at: [0, -0.2] },
+  },
+
+  // Astride the same seat, the chest on the pad, the hands overhand on the short grips: from the arms
+  // reaching ahead of the chest, sweeping out until they are in line with the shoulders.
+  reverse_pec_deck: {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: { facing: 'pad', hips: -0.02 } },
+    body: { trunk: 7, look: 0 },
+    bottom: { left: 57, wrist: [0, -10] },
+    feet: { stance: 0.2, z: 0.2, toeOut: 15, kneesOut: 0.4 },
+    grip: { pole: [0.4, 0.1, -1] },
+    camera: { target: [0, 1.05, 0.05], halfHeight: 1.12, azimuth: 140, elevation: 10 },
+    shadow: { size: [1.5, 1.6], at: [0, 0.2] },
+  },
+
+  // Sat across the seat, side-on to the machine, the pad on the left: the right arm sweeps from the
+  // grip across the chest out toward the side, the left hand on its thigh.
+  '1_arm_reverse_pec_deck': {
+    equipment: 'machine',
+    motion: 'lever_handles',
+    kit: { pec_deck: { facing: 'side', one: true } },
+    body: { trunk: 0, look: 0.1 },
+    bottom: { left: 55 },
+    feet: { stance: 0.17, z: 0.55, toeOut: 12 },
+    grip: { one: -1, rest: [0.14, 0.625, 0.38], pole: [1, -0.3, -0.2], restPole: [0, -1, 0.3] },
+    camera: { target: [0, 1.05, 0.1], halfHeight: 1.12, azimuth: 40, elevation: 10 },
+    shadow: { size: [1.6, 1.5], at: [0.2, 0.1] },
+  },
+
   // Lying back on the crunch machine's seat, the ankles hooked between its rollers and the hands on
   // the handles by the head: from the back on the pad, the arm at rest, the shoulders curl up toward
   // the knees through the arm's 40°.
@@ -349,6 +391,27 @@ export const POSES = {
     feet: { stance: 0.17, z: 0.3, toeOut: 10 },
     grip: {},
     camera: { target: [0, 0.8, 0.1], halfHeight: 1.05, azimuth: 215, elevation: 12 },
+  },
+
+  // Back on the leaning pad, the hands on the side handles, the feet on the plates and the pads on the
+  // outsides of the knees: from the knees together, the legs swinging apart with the arms.
+  machine_hip_abduction: {
+    equipment: 'machine',
+    motion: 'leg_arms',
+    kit: { hip_machine: {} },
+    body: { trunk: -15, look: 0 },
+    bottom: { arm_l: 45 },
+    feet: {},
+    grip: { pole: [0.7, -0.6, -0.5] },
+    camera: { target: [0, 0.75, 0.25], halfHeight: 1.05, azimuth: 40, elevation: 14 },
+  },
+
+  // The same with the pads between the knees: from the legs open, squeezing them together.
+  machine_adduction: {
+    like: 'machine_hip_abduction',
+    kit: { hip_machine: { pads: 'inner' } },
+    top: { arm_l: 50 },
+    bottom: { arm_l: 12 },
   },
 
   // Seated under the thigh rollers: the handles from overhead, the arms long, down to the shoulders.
@@ -1305,5 +1368,18 @@ export const POSES = {
     grip: {},
     camera: { target: [0, 0.85, -0.2], halfHeight: 1.05, azimuth: 60, elevation: 8 },
     shadow: { size: [1.7, 1.5], at: [0, -0.3] },
+  },
+
+  // Face down along the 45 degree bench, the thighs on the pads, the calves under the rollers and the
+  // arms crossed on the chest: from one straight line down the slope, the trunk hinges at the hips
+  // to a little below level.
+  '45_hyperextension': {
+    equipment: 'weighted_bodyweight',
+    motion: 'back_extension',
+    kit: { hyperextension_bench: {} },
+    top: { lean: 45 },
+    bottom: { lean: 100 },
+    camera: { target: [0, 0.75, 0.05], halfHeight: 0.95, azimuth: 80, elevation: 8 },
+    shadow: { size: [1.7, 1.0], at: [0, -0.1] },
   },
 };
