@@ -26,14 +26,16 @@ export default recipe({
   name: 'leg_press',
   bodies: { sled: prismatic({ axis: SLED, limits: [0, 0.45] }) },
   rep: { joint: 'sled', from: 'max' },
-  contacts: [
-    { body: 'sled', point: 'plate', landmark: 'feet' },
+  // With `foot` ('l' or 'r') only that foot is on the plate.
+  contacts: ({ foot }) => [
+    { body: 'sled', point: 'plate', landmark: 'feet', hand: foot },
     { body: 'frame', point: 'handles', landmark: 'hands' },
     { body: 'frame', point: 'backPad', landmark: 'back' },
   ],
   fit: [{ sets: 'pad', rule: 'the back pad at the spine, the hips deep in the seat', solve: ({ L }) => L.back }],
-  linkage: ({ seat = [0.5, 0.04] }) => ({
-    hip: [seat[0] + 0.12, seat[1] - 0.04],
+  // `sits` [y, z]: the hips from the seat's middle, up and forward with a leg down over its front edge.
+  linkage: ({ seat = [0.5, 0.04], sits = [0.12, -0.04] }) => ({
+    hip: [seat[0] + sits[0], seat[1] + sits[1]],
     at: (value) => ({
       plate: V(0, ...PLATE).addScaledVector(SLED, value), sled: SLED, plateUp: PLATE_UP,
       hand: (s) => V(s * HANDLES_OUT, ...HANDLES),

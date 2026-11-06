@@ -137,6 +137,15 @@ export const POSES = {
     shadow: { size: [1.0, 1.6], at: [0, 0.4] },
   },
 
+  // One foot high on the plate, the other flat on the floor under the rail, by the seat: the sled
+  // runs on the one leg.
+  single_leg_leg_press: {
+    like: 'leg_press',
+    kit: { leg_press: { foot: 'l', sits: [0.17, 0.06] } },
+    bottom: { sled: 0.16 },
+    feet: { one: 1, rest: [-0.17, 0.44], stance: 0.12, down: -0.05 },
+  },
+
   machine_chest_press: {
     equipment: 'machine',
     motion: 'chest_press',

@@ -545,6 +545,8 @@ export const MOTIONS = {
   /**
    * Seated in a 45° leg press, the back on its pad and the feet on the sled's plate: the sled rides
    * its rails with the joint, and the ankles sit `feet.down` below the plate's centre, on its face.
+   * With `feet.one` (1 the left) only that foot is on the plate, and the other stands flat on the
+   * floor at `feet.rest` [x, z].
    */
   leg_press(e, s, L) {
     const { hipC, lean } = placed(e, s, L);
@@ -553,16 +555,17 @@ export const MOTIONS = {
     const { plate, sled, plateUp, hand } = s.linkage;
     const ankle = plate.clone().addScaledVector(plateUp, -e.feet.down).addScaledVector(sled, -L.ankleY);
     const toeOut = rad(e.feet.toeOut);
+    const rests = (side) => e.feet.one && side !== e.feet.one;
     return {
       hipC, u,
       headDir: u.clone().addScaledVector(f, 0.55).normalize(),
-      ankles: [-1, 1].map((side) => ankle.clone().addScaledVector(X, side * e.feet.stance)),
-      foot: (side) => ({
+      ankles: [-1, 1].map((side) => (rests(side) ? V(e.feet.rest[0], L.ankleY, e.feet.rest[1]) : ankle.clone().addScaledVector(X, side * e.feet.stance))),
+      foot: (side) => (rests(side) ? { heading: V(side * Math.sin(toeOut), 0, Math.cos(toeOut)), top: V(0, 1, 0) } : {
         heading: plateUp.clone().multiplyScalar(Math.cos(toeOut)).addScaledVector(X, side * Math.sin(toeOut)),
         top: sled.clone().negate(),
       }),
-      kneePole: (side) => plateUp.clone().addScaledVector(X, side * (e.feet.kneesOut ?? 0.35)).normalize(),
-      support: () => ({ point: plate, normal: sled.clone().negate() }),
+      kneePole: (side) => (rests(side) ? V(side * 0.2, 0.3, 1) : plateUp.clone().addScaledVector(X, side * (e.feet.kneesOut ?? 0.35))).normalize(),
+      support: (side) => (rests(side) ? floor : { point: plate, normal: sled.clone().negate() }),
       hand,
       across: () => V(0, 0, 1),
       armPole: (side) => V(side, -0.2, -0.5).normalize(),
