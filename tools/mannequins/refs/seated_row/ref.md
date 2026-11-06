@@ -89,7 +89,7 @@ In the videos the lifter is taken as 1.75 m, sitting 910 mm from seat to crown. 
 |---|---|---|---|---|
 | `seated_cable_row` | on the plates | about 50 at the reach, about 20 at the finish (5:00, 5:02) | about 30 forward at the reach to near upright, about 10 forward, at the finish | V handle, palms in, arms long at the reach; elbows behind the trunk at the finish, hands at the lower ribs, about 520 above the seat |
 | `wide_grip_seated_cable_row` | on the plates | about 25, little change (9:43, 9:46) | upright, no swing (9:43, 9:46) | long bar overhand, hands level at about 900 high, drawn to the lower chest, elbows out and back |
-| `seated_cable_kelso_shrug` | on the plates | about 30 | upright, within about 5 (0:11 to 0:13); 0:05 shows about 20 back, in the set-up | long bar, hands about 550 apart, about 830 high, in front of the lower chest, elbows bent about 90 and out (0:18 to 0:25). A short pull, the blades drawn together, held 1 second, then peeled apart |
+| `seated_cable_kelso_shrug` | on the plates | about 30 | upright, within about 5 (0:11 to 0:13); 0:05 shows about 20 back, in the set-up | long bar, hands about 550 apart, about 830 high, in front of the lower chest, arms long, about 160 side-on (0:08 to 0:13); front-on frames foreshorten them and look bent |
 | `seated_cable_deadlift` | on the plates; one foot on the floor at 0:01 is the set-up | about 60 with the trunk forward, about 15 rocked back (0:05, 0:09) | about 40 forward (0:19) to about 65 back (0:09), through upright (0:12, 0:16) | long bar, arms long throughout, hands about 550 apart, reaching past the shins, then ending at the hips |
 
 Hips aren't fixed on the pad. In the deadlift video they sit at 570 from the plate at 0:05 and 830 at 0:19, and the row's shift about 120 between 5:00 and 5:02. How much is the pelvis rolling and how much a real slide isn't settled.
@@ -129,6 +129,7 @@ No placard text found. Nothing on the machine adjusts.
 - Attachment by lift as in the Handles table. Same cable, no pulley change.
 
 ## Open gaps
+- Built differently from the D124, on purpose: the pad is 220 wide, not the chosen 300, so the shins pass beside it with the plates this low; the tower is an open frame, not shrouded, so the stack shows moving; its wheels are the library's shared 90 mm ones, not the published 152.
 - The cable exit is built at 850, within the 820 to 890 the videos' cables run at, because the lifts are judged against the videos (coordinator, #127). The D124's own reads about 700, from where the handle hangs in one image, a low-confidence estimate. The pulley itself isn't visible. A wheel at foot height, as the brief for this file has it, would sit near 250. Both videos' cables run far higher, at about 820 to 890, near level with the hands. No source I reached shows a pulley at foot height on a machine of this kind, so the file keeps 700 for the owner's eye. The cable's angle to the hands follows from whichever height he picks.
 - The D124 images were read as sampled grids, not looked at by eye, and none is side-on. Lengths along the machine rest on one vanishing point. Heights rest on the published height, at about +-40 mm.
 - No technique video shows a D124. The foot plates in the videos sit higher than the D124's and their benches differ (about 350 and 430). Sizes follow the images. Body angles follow the videos.

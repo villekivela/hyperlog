@@ -816,13 +816,13 @@ export const POSES = {
     grip: { width: 0.36, swing: 0, pole: [1, -0.4, -0.6] },
   },
 
-  // Leaning a little back, a long bar on bent arms at the lower chest: the shoulder blades draw back
-  // and peel apart, the pause at the squeeze a full second.
+  // Upright to a little back, a long bar on long arms: only the shoulder blades draw back and peel
+  // apart, the pause at the squeeze a full second.
   seated_cable_kelso_shrug: {
     like: 'wide_grip_seated_cable_row',
-    top: { trunk: -20, slide: -0.05, bar: [0.84, 0.34], offsets: { clavicle_l: [0, -8, 0], clavicle_r: [0, 8, 0] } },
-    bottom: { trunk: -20, slide: -0.05, bar: [0.86, 0.16], offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
-    grip: { width: 0.25, swing: 0, pole: [1, -0.6, -0.5] },
+    top: { trunk: -14, slide: -0.05, bar: [0.82, 0.47], offsets: { clavicle_l: [0, -8, 0], clavicle_r: [0, 8, 0] } },
+    bottom: { trunk: -14, slide: -0.05, bar: [0.82, 0.37], offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
+    grip: { width: 0.24, swing: 0, pole: [0.5, -1, -0.3] },
     tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
   },
 
@@ -830,7 +830,7 @@ export const POSES = {
   // the hips sliding along the pad with it.
   seated_cable_deadlift: {
     like: 'wide_grip_seated_cable_row',
-    top: { trunk: 34, slide: 0, rise: 0, arm: 12, reach: 0.645 },
+    top: { trunk: 34, slide: 0, rise: 0, arm: 16, reach: 0.65 },
     bottom: { trunk: -72, slide: -0.08, rise: 0.03, arm: 2, reach: 0.62 },
     grip: { width: 0.25, swing: 0, pole: [0.4, -1, -0.3] },
     camera: { target: [0, 0.75, 0.4], halfHeight: 1.05, azimuth: 70, elevation: 10 },

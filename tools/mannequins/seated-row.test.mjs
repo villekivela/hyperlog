@@ -108,7 +108,7 @@ test('the wide-grip seated row stays upright and draws a long bar in, the elbows
   assert.ok(travel > 0.31, `the hands travel ${travel.toFixed(3)}`);
 });
 
-test('the seated Kelso shrug leans back on bent arms, the bar at the lower chest, and only the blades work', async () => {
+test('the seated Kelso shrug holds long arms, the trunk upright to a little back, and only the blades work', async () => {
   const { stage, at } = await posed('seated_cable_kelso_shrug');
   assert.deepEqual(failing('seated_cable_kelso_shrug', stage), []);
   const entry = prepare('seated_cable_kelso_shrug');
@@ -119,13 +119,12 @@ test('the seated Kelso shrug leans back on bent arms, the bar at the lower chest
   assert.ok(Math.abs(leanA - leanOf(b)) < 6, `the trunk moves ${Math.abs(leanA - leanOf(b)).toFixed(0)}°: still`);
   assert.ok(shoulderA.z - b('upperarm_l').z > 0.025, `the shoulders draw ${(shoulderA.z - b('upperarm_l').z).toFixed(3)} back`);
   const travel = handA.z - b('hand_l').z;
-  assert.ok(travel > 0.12 && travel < 0.34, `the hands travel ${travel.toFixed(3)}: a short pull`);
+  // Side-on frames settle this: front-on ones foreshorten the arm and look bent.
+  assert.ok(travel > 0.05 && travel < 0.2, `the hands travel ${travel.toFixed(3)}: only the blades move them`);
   const elbows = [0, 0.5, 1].map((d) => { const g = at(d); return bend(g('upperarm_l'), g('lowerarm_l'), g('hand_l')); });
-  assert.ok(Math.max(...elbows) < 150 && Math.min(...elbows) > 85, `the elbows ${elbows.map((e) => e.toFixed(0)).join('/')}: bent through the rep`);
+  assert.ok(Math.min(...elbows) > 148, `the elbows ${elbows.map((e) => e.toFixed(0)).join('/')}: the arms long, a shrug and not a row`);
   const end = at(1);
-  assert.ok(leanOf(end) < -5, `the trunk ${leanOf(end).toFixed(0)}°: leaning a little back`);
-  const off = end('hand_l').z - end('spine_03').z;
-  assert.ok(off < 0.3, `the hands ${off.toFixed(3)} off the chest: at the lower chest`);
+  assert.ok(leanOf(end) < 3, `the trunk ${leanOf(end).toFixed(0)}°: upright to a little back`);
 });
 
 test('the seated cable deadlift swings the trunk from over the legs to well back, on long arms', async () => {
@@ -142,7 +141,8 @@ test('the seated cable deadlift swings the trunk from over the legs to well back
   }
   assert.ok(leans[0] > 30, `the trunk ${leans[0].toFixed(0)}° forward at the start`);
   assert.ok(leans[4] < -60, `the trunk ${leans[4].toFixed(0)}° at the finish: well back`);
-  assert.ok(Math.min(...elbows) > 140, `the elbows ${elbows.map((e) => e.toFixed(0)).join('/')}: the arms long`);
+  // As long as the arm goes with the hand still closed on the bar, at the reach.
+  assert.ok(Math.min(...elbows) > 145, `the elbows ${elbows.map((e) => e.toFixed(0)).join('/')}: the arms long`);
   assert.ok(hands[0].distanceTo(hands[4]) > 0.6, `the hands travel ${hands[0].distanceTo(hands[4]).toFixed(3)}`);
   const end = at(1);
   const crease = hands[4].z - end('pelvis').z;
