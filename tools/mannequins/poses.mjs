@@ -99,6 +99,23 @@ export const POSES = {
     camera: { target: [0, 1.12, 0.38], halfHeight: 1.18, azimuth: 62, elevation: 8 },
   },
 
+  // Overhand out near the bar's bends, the elbows wide, pulled to the upper chest.
+  lat_pulldown_wide_grip: {
+    like: 'lat_pulldown',
+    grip: { width: 0.425, elbows: 1, thumb: 'thumbless' },
+    top: { bar: [1.66, 0.02], shrug: 12 },
+    bottom: { bar: [1.14, 0.02], shrug: 0 },
+  },
+
+  // Two close handles in front of the face, the palms facing: the elbows drive down by the sides.
+  neutral_grip_lat_pulldown: {
+    like: 'lat_pulldown',
+    kit: { cable_tower: { attachment: 'handles', spread: 0.095, pulley: [2.25, 0.14] } },
+    grip: { width: 0.095, elbows: 0.2, swing: 10, pole: [0.1, -1, 0.3] },
+    top: { bar: [1.62, 0.14], shrug: 9 },
+    bottom: { bar: [1.11, 0.04], shrug: 0 },
+  },
+
   // A narrower grip, pulled to the upper chest rather than as low. The arms hang fully extended at
   // the top with the shoulders let up into the stretch, and the elbows drive straight down by the
   // sides. Underhand: the palms face the lifter.
@@ -790,6 +807,82 @@ export const POSES = {
     feet: { stance: 0.2, toeOut: 16, kneesOut: 0.78 },
     grip: { rotate: 0, thumb: 'wrapped', pole: [0.1, -1, -0.5], via: [0.1545, 0.4985, 0.5562] },
     camera: { target: [0, 0.5, 0.2], halfHeight: 0.9, azimuth: 65, elevation: 8 },
+  },
+
+  // Standing facing the left tower, thumbs up on a rope from the lowest pulley, leaning back a touch:
+  // the elbows held at the sides, the forearms curl up from the thighs.
+  cable_rope_hammer_curl: {
+    equipment: 'cable',
+    motion: 'arms',
+    kit: { cable_crossover: { position: 1, faces: true, attachment: 'rope', reversed: true, at: [-1.105, 0.75] } },
+    top: { shin: 3, thigh: 3, trunk: -3, upperArm: 8, forearm: 130 },
+    bottom: { shin: 3, thigh: 3, trunk: -3, upperArm: 10, forearm: 26 },
+    feet: { stance: 0.13, toeOut: 8, kneesOut: 0.15 },
+    grip: { width: 0.13, rotate: 90 },
+    camera: { target: [0, 1.0, 0.2], halfHeight: 1.1, azimuth: 62, elevation: 8 },
+  },
+
+  // On the left knee facing the left tower, a handle from a high pulley in the left hand: the elbow
+  // drives from the arm long overhead down to the ribs, the hand by the chest, the free hand braced
+  // on the front knee.
+  '1_arm_cable_pulldown': {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 15, faces: true, hands: [1], at: [-0.965, 1.12] } },
+    body: { kneel: 1 },
+    top: { thigh: 0, trunk: 6, hand: [0.24, 1.5, 0.4], rotate: 90 },
+    bottom: { thigh: 0, trunk: 6, hand: [0.27, 0.93, 0.3], rotate: 90 },
+    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
+    tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
+    grip: { rotate: 90, pole: [0.8, -1, -0.5], one: 1, rest: [-0.16, 0.54, 0.34], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
+    camera: { target: [0, 0.8, 0.3], halfHeight: 1.15, azimuth: 65, elevation: 8 },
+  },
+
+  // On the right knee facing the left tower, a rope from a high pulley: from leaning forward, the hands
+  // at head height, the trunk rocks back a little past upright as the long arms sweep down past the
+  // front thigh, the rope's ends spreading to the hips and the elbows hardly changing.
+  cable_lat_pullover: {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 13, faces: true, attachment: 'rope', at: [-1.105, 1.7] } },
+    body: { kneel: -1 },
+    top: { thigh: 0, trunk: 35, hand: [0.2, 1.17, 0.87], rotate: 90 },
+    bottom: { thigh: 0, trunk: -8, hand: [0.34, 0.52, 0.34], rotate: 90 },
+    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.15 },
+    tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
+    grip: { arc: true, rotate: 90, pole: [0.3, -1, -0.5] },
+    camera: { target: [0, 0.85, 0.35], halfHeight: 1.15, azimuth: 65, elevation: 8 },
+  },
+
+  // Kneeling on both knees between the towers, a handle from the left one's high pulley in the left
+  // hand: the long arm draws in and down to the side, the free hand on its thigh.
+  '1_arm_lat_pull_in': {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 13, hands: [1], at: [0, 0.4] } },
+    body: { kneel: true },
+    top: { thigh: 2, trunk: 2, hand: [0.78, 1.22, 0.05], rotate: 9.7559 },
+    bottom: { thigh: 2, trunk: 2, hand: [0.4579, 0.833, 0.1588], rotate: 80.1636 },
+    feet: { stance: 0.14 },
+    tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
+    grip: { arc: true, rotate: 90, pole: [0.2, -1, -0.3], one: 1, rest: [-0.13, 0.42, 0.11], restPole: [0.3, -1, -0.3], restFlat: { palm: [0.6, 0, -1], fingers: [0.3, -1, 0] } },
+    camera: { target: [0, 0.75, 0.1], halfHeight: 1.05, azimuth: 20, elevation: 8 },
+  },
+
+  // On the left knee between the towers, the trunk turned toward the right tower's high pulley and
+  // the left hand reaching past the far shoulder: the trunk comes square as the elbow drives down to
+  // the hip and the hand to the sternum, the free hand braced on the front knee.
+  '1_arm_cable_lat_pull_around': {
+    equipment: 'cable',
+    motion: 'free_arms',
+    kit: { cable_crossover: { position: 13, hands: [1], crossed: true, at: [0, 0.05] } },
+    body: { kneel: 1 },
+    top: { thigh: 0, trunk: 8, hand: [-0.34, 1.12, 0.5], rotate: 90, offsets: { spine_01: [0, -10, 0], spine_02: [0, -10, 0], spine_03: [0, -10, 0] } },
+    bottom: { thigh: 0, trunk: 8, hand: [0.08, 0.92, 0.34], rotate: 90, offsets: { spine_01: [0, 0, 0], spine_02: [0, 0, 0], spine_03: [0, 0, 0] } },
+    feet: { stance: 0.14, ahead: 0.5, kneesOut: 0.2 },
+    tempo: { lowering: 1, bottom: 0.3, lifting: 2, top: 0.6 },
+    grip: { rotate: 90, pole: [0.4, -1, 0.2], one: 1, rest: [-0.16, 0.54, 0.34], restPole: [0.3, -1, -0.3], restFlat: { palm: [0, -1, 0.1], fingers: [0.1, -0.2, 1] } },
+    camera: { target: [0, 0.8, 0.2], halfHeight: 1.1, azimuth: 25, elevation: 8 },
   },
 
   // Back on an upright bench between the towers, the pulleys at the seated shoulder: the handles
