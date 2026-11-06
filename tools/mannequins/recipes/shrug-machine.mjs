@@ -37,10 +37,10 @@ const RAIL_TOP = BASE.clear + BASE.tube;
 const BEAMS_Z = { column: -0.21, rear: BASE.rear + BASE.tube / 2 };
 // Each side frame: the upright's foot along the rail, the arm's end forward of the pivot, and the
 // post up to it. The storage horn stands on the upright at `STORE.y`, with a bar between the two.
-const SIDE = { rear: BEAMS_Z.rear, armEnd: [0.45, -0.41], post: -0.52, tube: 0.07 };
+const SIDE = { rear: BEAMS_Z.rear, armEnd: [0.455, -0.42], post: -0.52, tube: 0.07 };
 const STORE = { y: 0.41, out: 0.25 };
 // The stop each lever rests on, at the arm's end: how far out and along it stands.
-const STOP_BLOCK = { x: 0.38, z: SIDE.armEnd[1], wide: 0.14, tall: 0.06, deep: 0.1 };
+const STOP_BLOCK = { x: 0.41, z: SIDE.armEnd[1], wide: 0.2, tall: 0.11, deep: 0.13 };
 // The column's rake back from upright and its top, the brace's height on it, and the back pad.
 const RAKE = THREE.MathUtils.degToRad(8.8);
 const COLUMN = { top: 1.09, tube: 0.075, brace: 0.98 };
@@ -111,7 +111,7 @@ export default recipe({
         role(mitered([V(s * BASE.out, RAIL_TOP, SIDE.post), V(s * BASE.out, armAt(SIDE.post), SIDE.post)], SIDE.tube, M.frame, { solid: false, ends: [UP, null] }), 'post'),
         proxy(tube(SIDE.tube - 0.01, V(s * BASE.out, RAIL_TOP + 0.01, SIDE.post), V(s * BASE.out, armAt(SIDE.post), SIDE.post), M.frame)),
         role(pad(STOP_BLOCK.wide, STOP_BLOCK.tall, STOP_BLOCK.deep, M.frame, V(s * STOP_BLOCK.x, beamUnder - STOP_BLOCK.tall / 2, STOP_BLOCK.z), { soft: 0.006 }), 'stop'),
-        pad(0.09, 0.1, 0.12, M.frame, pivotAt(s), { soft: 0.01 }),
+        role(pad(0.09, 0.17, 0.16, M.frame, pivotAt(s), { soft: 0.01 }), 'pivotBlock'),
       );
       const [from, to] = [V(s * BASE.out, STORE.y, uprightAt(STORE.y)), V(s * (BASE.out + STORE.out), STORE.y, uprightAt(STORE.y))];
       frame.push(role(rod(0.025, from, to, M.metal), 'storageHorn'), knob(M, to, 0.03, M.pulley));

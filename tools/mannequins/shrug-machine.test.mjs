@@ -173,7 +173,13 @@ test('each side a raked upright runs to the pivot and mitres into an arm reachin
     assert.notEqual(m.geometry.type, 'ExtrudeGeometry', 'mitred at the pivot, not two lapped tubes');
     const b = bounds(m);
     close(b.min.y, 0.113, 0.002, 'cut flat on the rail');
-    assert.ok(b.max.y >= pivot.y && b.max.y <= pivot.y + 0.07, 'up to the pivot, the mitre\'s tip in its block');
+    assert.ok(b.max.y >= pivot.y, 'up to the pivot');
+    const block = roles(kit, 'pivotBlock').map(bounds).find((p) => Math.sign(p.min.x) === Math.sign(b.min.x));
+    assert.ok(b.max.y <= block.max.y, `the mitre's tip inside its block, ${b.max.y.toFixed(3)} against ${block.max.y.toFixed(3)}`);
+    const stop = roles(kit, 'stop').map(bounds).find((p) => Math.sign(p.min.x) === Math.sign(b.min.x));
+    assert.ok(b.max.z <= stop.max.z, 'the arm ending in its stop');
+    const end = extreme(m, (v) => v.z);
+    assert.ok(stop.containsPoint(end), `the arm's end inside the stop, at ${end.toArray().map((n) => n.toFixed(3))}`);
     assert.ok(b.max.z > pivot.z + 0.2, 'the arm reaching forward of the pivot');
   }
   const posts = roles(kit, 'post');
@@ -203,7 +209,7 @@ test('each lever rests on a stop at the end of the arm', () => {
   for (const stop of stops) {
     const b = bounds(stop);
     const beam = beams.find((m) => Math.sign(bounds(m).min.x) === Math.sign(b.min.x));
-    const hit = along(b.getCenter(new THREE.Vector3()), V(0, 1, 0), beam);
+    const hit = along(b.getCenter(new THREE.Vector3()).setX(bounds(beam).getCenter(new THREE.Vector3()).x), V(0, 1, 0), beam);
     assert.ok(hit, 'under the beam');
     close(hit.point.y, b.max.y, 0.006, 'the beam down on it');
     assert.ok(Math.max(Math.abs(b.min.x), Math.abs(b.max.x)) >= 0.415, 'out to the arm');

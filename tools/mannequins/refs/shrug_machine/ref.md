@@ -58,7 +58,7 @@ Where each main part sits, from `PL-SH_27` (side, scaled by the 1240 mm height a
 | Back pad | parallel to the column, 560 long, its top at 1240 | upright, 500 long | as measured, flush on the column |
 | Brace | from the column at about 980 down and back to a cross tube at the pivot | none | as measured |
 | Side frames | a raked upright from the rail's rear up to the pivot, an arm on from it forward and down, a near-vertical post under the arm, a storage horn on the upright and a bar between the two | one post each side | as measured, the upright and arm one mitred length |
-| Stop | a block under each lever at rest, at the end of the arm | none, the lever on nothing | as measured, the beam lying on it at 7.5 degrees |
+| Stop | a chunky block under each lever at rest, at the end of the arm | none, the lever on nothing | as measured, the arm ending in it and the beam lying on it at 7.5 degrees |
 | Levers | a heavy beam about 100 tall and 50 wide, falling about 13 degrees toward the front on the stop, 630 long | a thin tube rising forward | as measured |
 | Handles | a hoop and a flat strut up from the beam to the grip, a second grip running on from the beam's end | a round post, an elbow | hoop, strut and both grips |
 | Plate horn | sideways out of the beam near its front end | under the post | as measured, 585 along the beam |
