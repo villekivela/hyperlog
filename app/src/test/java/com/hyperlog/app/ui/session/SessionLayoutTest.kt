@@ -33,11 +33,9 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.FollowUp
-import com.hyperlog.app.session.LastSession
+import com.hyperlog.app.history.LiftTrend
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
-import java.time.LocalDate
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -46,7 +44,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** The logging screen's column: the cue, the table straight under it, then the last sessions where there's room (#269). */
+/** The logging screen's column: the cue, then the table straight under it (#269). */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w427dp-h950dp-xxhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -55,15 +53,11 @@ class SessionLayoutTest {
     val compose = createComposeRule()
 
     private val bench = Exercise("barbell_bench_press", "Barbell Bench Press", Equipment.Barbell, MovementPattern.HorizontalPush, GripDemand.Low, listOf("Chest"), note = "Shoulder blades back and down.")
-    private val history = listOf(
-        LastSession(LocalDate.of(2026, 11, 2), LoggedSet(97.5, 5, 0, 2)),
-        LastSession(LocalDate.of(2026, 10, 29), LoggedSet(95.0, 5, 0, 1)),
-        LastSession(LocalDate.of(2026, 10, 26), LoggedSet(92.5, 6, 0, 1)),
-    )
+    private val rising: LiftTrend = LiftTrend.Moved(101.0, 105.0)
 
-    private fun exercise(sets: Int = 1, logged: Int = 0, note: String? = bench.note, last: List<LastSession> = history, technique: Technique? = null) = SessionExercise(
+    private fun exercise(sets: Int = 1, logged: Int = 0, note: String? = bench.note, trend: LiftTrend? = rising, technique: Technique? = null) = SessionExercise(
         1, bench.copy(note = note), List(logged) { LoggedSet(100.0, 5, 0, 1, technique = technique) }, emptyList(), DefaultPlates.ladder(), true,
-        prescription = List(sets) { SetPrescription(RepRange(4, 6), 1, 180, technique = technique) }, plates = DefaultPlates, lastSessions = last,
+        prescription = List(sets) { SetPrescription(RepRange(4, 6), 1, 180, technique = technique) }, plates = DefaultPlates, trend = trend,
         setIndices = List(logged) { it },
     )
 
@@ -140,37 +134,10 @@ class SessionLayoutTest {
     /** No warm-ups at the bar's weight, so the table is one row and leaves room. */
     private val light = SetEntry("20", "", "", 1, Field.Reps, partialMode = false, fresh = true)
 
+    /** The lift trend is the sheet's, not the logging screen's (owner): nothing of it under the table. */
     @Test
-    fun withRoomTheLastSessionsShowUnderTheTable() {
+    fun theLoggingScreenLeavesTheTrendToTheSheet() {
         show(session(exercise(), entry = light))
-        compose.onAllNodesWithText("Last sessions").assertCountEquals(1)
-        assertEquals(3, compose.onAllNodesWithTag(LastSessionTag, useUnmergedTree = true).fetchSemanticsNodes().size)
-        compose.onAllNodesWithText("Mon 2 Nov", substring = true).assertCountEquals(1)
-    }
-
-    @Test
-    fun theLastSessionsNeverPushTheTableOrThePad() {
-        show(session(exercise(last = emptyList())))
-        val table = heads(); val pad = compose.onNodeWithTag(PadTag, useUnmergedTree = true).bounds()
-        show(session(exercise()))
-        assertEquals(table, heads())
-        assertEquals(pad, compose.onNodeWithTag(PadTag, useUnmergedTree = true).bounds())
-    }
-
-    @Test
-    fun aLongTableLeavesNoRoomForThem() {
-        show(session(exercise(sets = 8)))
-        compose.onAllNodesWithText("Last sessions").assertCountEquals(0)
-        compose.onAllNodesWithTag(LastSessionTag, useUnmergedTree = true).assertCountEquals(0)
-    }
-
-    @Test
-    fun onlyWholeRowsShow() {
-        listOf(2, 3, 4, 5).forEach { sets ->
-            show(session(exercise(sets = sets)))
-            val rows = compose.onAllNodesWithTag(LastSessionTag, useUnmergedTree = true).fetchSemanticsNodes()
-            val next = compose.onNodeWithTag(NextRowTag, useUnmergedTree = true).bounds().top
-            rows.forEach { assertTrue("A row at $sets sets runs under the pad", with(compose.density) { it.boundsInRoot.bottom.toDp() } <= next) }
-        }
+        compose.onAllNodesWithText("e1RM", substring = true).assertCountEquals(0)
     }
 }

@@ -471,6 +471,7 @@ fun SessionScreen(
                 benchAngle = current.benchAngle,
                 lastBenchAngle = current.lastBenchAngle,
                 set = current.toDo,
+                trend = current.trend?.let { it to current.trendPoints },
             )
         }
     }
@@ -1082,6 +1083,8 @@ internal fun ExerciseSheet(
     lastBenchAngle: Int? = null,
     /** The set being done (0 the first), for an exercise whose grip changes set by set; null outside a session. */
     set: Int? = null,
+    /** How it has moved (GLOSSARY, Lift trend) and the sessions behind it; null with nothing to say. */
+    trend: Pair<com.hyperlog.app.history.LiftTrend, List<com.hyperlog.app.history.TrendPoint>>? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -1154,7 +1157,8 @@ internal fun ExerciseSheet(
                 StartingHintRow(it)
             }
             plan?.let { Prescription(it) }
-            goal?.let { GoalBlock(exercise.name, it) }
+            if (goal != null) GoalBlock(exercise.name, goal, trend?.first)
+            else trend?.let { (moved, points) -> TrendBlock(exercise.name, moved, points) }
             slotNote?.let { note ->
                 Spacer(Modifier.height(24.dp))
                 val label = stringResource(R.string.sheet_program_note)
@@ -1194,11 +1198,44 @@ internal fun ExerciseSheet(
 }
 
 /**
+ * How the lift has moved, where there's no goal to read it against: the e1RM now, the trend in
+ * words (as Progress and the coach line say it), and the e1RM session by session on a time axis.
+ */
+@Composable
+private fun TrendBlock(name: String, trend: com.hyperlog.app.history.LiftTrend, points: List<com.hyperlog.app.history.TrendPoint>) {
+    val cs = MaterialTheme.colorScheme
+    val (direction, words) = trendWords(trend)
+    Spacer(Modifier.height(24.dp))
+    Row {
+        SymbolIcon(direction.symbol, null, Modifier.padding(top = 4.dp).size(20.dp), tint = direction.color)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            points.lastOrNull()?.estimateKg?.let {
+                Text(stringResource(R.string.trend_e1rm, com.hyperlog.app.ui.history.estimateText(it)), style = MaterialTheme.typography.figureLarge)
+            }
+            Text(words, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            TrendChart(
+                dates = points.map { it.date },
+                line = points.map { it.estimateKg },
+                dots = points.map { null },
+                selected = points.size - 1,
+                onSelect = {},
+                height = 64.dp,
+                ticks = false,
+                smooth = true,
+                description = stringResource(R.string.trend_chart, name),
+            )
+        }
+    }
+}
+
+/**
  * The lift goal under the prescription: the flag, the estimate against the goal and how far is
  * left, then the estimate's trend with the goal line, small and without a grid.
  */
 @Composable
-private fun GoalBlock(name: String, progress: GoalProgress) {
+private fun GoalBlock(name: String, progress: GoalProgress, trend: com.hyperlog.app.history.LiftTrend? = null) {
     val cs = MaterialTheme.colorScheme
     val estimate = progress.estimateKg
     Spacer(Modifier.height(24.dp))
@@ -1208,6 +1245,7 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
         Column(Modifier.weight(1f)) {
             GoalFigure(estimate, progress.goal, MaterialTheme.typography.figureLarge)
             Text(goalStatus(estimate, progress.goal), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            trend?.let { Text(trendWords(it).second, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
             val points = progress.points.filter { it.estimateKg != null }
             if (points.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
@@ -1218,10 +1256,10 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
                     selected = points.size - 1,
                     onSelect = {},
                     height = 64.dp,
-                    axis = false,
                     ticks = false,
                     goal = progress.goal.kg,
                     goalLabel = goalLabel(progress.goal),
+                    smooth = true,
                     description = stringResource(R.string.goal_chart, name),
                 )
             }

@@ -304,7 +304,7 @@ How the app shows an RIR, in set text and on its own (the logging screen, its pa
 _Avoid_: RIR badge, RIR pill
 
 **Estimate**:
-The current strength estimate for an exercise (for machines, for one machine), worked out from logged reps and RIR. It drives suggestions.
+The current strength estimate for an exercise (for machines, for one machine), worked out from logged reps and RIR, an e1RM by Epley. It drives suggestions. The lift trend labels it `e1RM` (owner).
 _Avoid_: 1RM, max
 
 **Exercise history**:
@@ -348,9 +348,9 @@ A lift whose estimate moved 1 % or more over about the last 4 weeks, up or down,
 **Cue band**:
 The exercise's cue in words, under its name on the logging screen and before its set table.
 
-**Last sessions**:
-An exercise's three latest sessions on the logging screen, each its date and top set, in the room its set table leaves above the Next bar. Read by the Last column's rules, per machine for machines and cables.
-_Avoid_: History (the tab), Last time (one session)
+**Lift trend**:
+How the exercise has moved, in its sheet: its e1RM up or down over about 4 weeks or steady, as Progress's Moving lifts read it, or not moved in N sessions, as the coach line reads it, with the e1RM drawn session by session.
+_Avoid_: Last sessions, trend line
 
 **Moment**:
 A short, designed beat for a record, a finished session or a finished week. It takes no touches and holds nothing up.

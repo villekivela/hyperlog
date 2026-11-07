@@ -97,13 +97,19 @@ object CoachLines {
             .flatMap { s -> s.exercises.mapNotNull { e -> e.estimateKg?.let { kg -> (e.exercise to e.machine) to Point(s.date, kg) } } }
             .groupBy({ it.first }, { it.second })
             .mapNotNull { (line, points) ->
-                val run = (STALL until points.size).filter { n ->
-                    val before = points[points.size - n - 1].kg
-                    points.takeLast(n).all { it.kg <= before + SAME_KG }
-                }.maxOrNull() ?: return@mapNotNull null
+                val run = stallRun(points.map { it.kg }) ?: return@mapNotNull null
                 CoachLine.Stall(line.first, run, points.last().date)
             }
             .sortedByDescending { it.last }
+
+    /**
+     * How many of the last [estimates] (oldest first, counted sessions only) are no higher than the
+     * one before them all, if 3 or more; null otherwise. The coach line and the lift trend read it.
+     */
+    fun stallRun(estimates: List<Double>): Int? = (STALL until estimates.size).filter { n ->
+        val before = estimates[estimates.size - n - 1]
+        estimates.takeLast(n).all { it <= before + SAME_KG }
+    }.maxOrNull()
 
     /** An estimate after the session on [date]. */
     private data class Point(val date: LocalDate, val kg: Double)

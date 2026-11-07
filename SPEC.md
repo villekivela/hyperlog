@@ -1401,11 +1401,18 @@ gallery (Technique videos).
 - **The table sits under the cue** (#269), or under the name with no cue, whatever the pad is doing:
   up, hidden, resting, under Day done, in a drop or a hold. A long table scrolls in what the cue
   leaves it.
-- **Last sessions** (#269): what the table leaves above the Next bar holds the exercise's last
-  three sessions, newest first, each its date and top set (`Mon 2 Nov · 97.5 × 5 [2]`), under the
-  label `Last sessions`. They are read by the Last column's rules, per machine for machines and
-  cables (ADR 0002). Only whole rows show, fewer when room is short and none with no room, and they
-  never move the table or the pad.
+- **The lift trend** (#269), in the exercise's sheet under its plan: how the lift has moved, led by
+  its trend symbol, the e1RM now (`e1RM 126 kg`), the trend in words (`e1RM up 5% in 4 weeks, to
+  126 kg`, `e1RM steady over 4 weeks, at 100 kg` or `Hasn't moved in 3 sessions`) and the e1RM
+  session by session as a smooth curve on a time axis. It measures nothing of its own: up, down
+  and steady are Progress's Moving (the estimate over about 4 weeks, 1 % or more), the last the
+  coach line's stall, and a lift that moved says so first, so the numbers agree everywhere. It
+  reads the line Progress draws, per machine for machines and cables (ADR 0002), and leaves out a
+  deload, an eased day or an easy week, as the coach line does. Under 2 sessions left, or none in
+  the last 4 weeks, there is none. With a lift goal it joins the goal's block, its chart the goal's
+  one. (Owner: a list of the last sessions repeated the Last column, and a line on the logging
+  screen took the table's room; the sheet already holds the lift's story.)
+
 - **The plate line names the bar** while no weight is typed: `On a 20 kg bar`, `On a 15 kg machine,
   empty`, or with no base `Type a weight to see its plates`, never the drawing alone.
 - **A session's length is its time training** (#273): a gap of more than an hour between sets, or

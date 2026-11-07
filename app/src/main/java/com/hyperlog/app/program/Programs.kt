@@ -33,7 +33,6 @@ import com.hyperlog.app.coach.ChangeDiff
 import com.hyperlog.app.coach.ChangeJson
 import com.hyperlog.app.coach.Changes
 import com.hyperlog.app.coach.ProgramProposal
-import com.hyperlog.app.coach.Scope
 import com.hyperlog.app.coach.exercises
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.ExerciseLibrary
@@ -248,6 +247,9 @@ class Programs(
      * [plannedDay] for stored session [row]: as it was when it finished, or as now while it runs.
      * A workout's session trains the workout's day.
      */
+    /** A session lighter by design: a deload, an eased day or an easy week. The coach line and the lift trend leave it out. */
+    suspend fun eased(row: SessionEntity): Boolean = row.easy || plannedDay(row)?.let { it.deload || it.eased } == true
+
     suspend fun plannedDay(row: SessionEntity): PlannedDay? {
         row.workoutId?.let { return workoutDay(it) }
         if (row.programId == null || row.week == null || row.dayIndex == null) return null

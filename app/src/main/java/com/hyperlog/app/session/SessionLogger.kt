@@ -30,6 +30,8 @@ import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.LadderState
 import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.history.Bodyweights
+import com.hyperlog.app.history.History
+import com.hyperlog.app.history.LiftTrend
 import com.hyperlog.app.legacy.StartingWeights
 import com.hyperlog.app.legacy.suggestion
 import com.hyperlog.app.legacy.text
@@ -91,6 +93,7 @@ class SessionLogger(
     private val corrections = SetCorrections(db)
     private val stored = StoredSessions(db, gyms, programs)
     private val exerciseHistory = ExerciseHistory(db, programs)
+    private val history = History(db, programs)
     private val records = SessionRecords(db, programs)
     /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
     private var correction: Correction? = null
@@ -1139,10 +1142,13 @@ class SessionLogger(
             val indices = rows.map { it.position }
             val before = before(sets, indices, firstUnlogged(indices))
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine && !needsLadder
-            // Read by the same rules as Last, per machine for machines and cables (ADR 0002).
-            val lastSessions = if (!onScreen) emptyList() else {
-                (if (plan != null) past else exerciseHistory.of(exercise, machine?.id, before = row, last = LAST_SESSIONS))
-                    .takeLast(LAST_SESSIONS).reversed().map { LastSession(programs.dateOf(it.startedAt), it.logged.maxWith(Heaviest)) }
+            // How it has moved, from the trend Progress draws, on this machine for machines (ADR 0002).
+            val (trend, trendPoints) = if (!onScreen) null to emptyList() else {
+                history.trend(se.exerciseId).lines.firstOrNull { !perMachine || it.itemId == machine?.id }?.let { line ->
+                    val eased = line.points.map { it.sessionId }.distinct().filter { id -> dao.session(id)?.let { programs.eased(it) } == true }.toSet()
+                    LiftTrend.of(line.points, eased, programs.dateOf(clock())) to
+                        line.points.filter { it.sessionId !in eased && it.estimateKg != null }.takeLast(TREND_SESSIONS)
+                } ?: (null to emptyList())
             }
             // The old app's weight stands in until the exercise (on this machine) has its own history.
             val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
@@ -1169,7 +1175,8 @@ class SessionLogger(
                 exercise = exercise,
                 sets = sets,
                 lastTime = lastTime,
-                lastSessions = lastSessions,
+                trend = trend,
+                trendPoints = trendPoints.takeIf { trend != null }.orEmpty(),
                 comparedWith = comparedWith,
                 ladder = ladder.ladder,
                 ladderKnown = ladder.known,
@@ -1319,8 +1326,8 @@ class SessionLogger(
         /** How many past sessions of an exercise progression reads. */
         const val HISTORY_SESSIONS = 12
 
-        /** How many of an exercise's last sessions the logging screen can show. */
-        const val LAST_SESSIONS = 3
+        /** How many sessions the lift trend's chart draws, as Progress's rows do. */
+        const val TREND_SESSIONS = 12
     }
 }
 

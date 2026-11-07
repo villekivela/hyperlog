@@ -84,6 +84,8 @@ fun TrendChart(
     ticks: Boolean = true,
     goal: Double? = null,
     goalLabel: String? = null,
+    /** A smooth curve through the sessions that never overshoots one (monotone), not straight segments. */
+    smooth: Boolean = false,
     description: String,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -141,7 +143,16 @@ fun TrendChart(
         val joined = line.withIndex().filter { it.value != null }
         if (joined.size >= 2) {
             val path = Path()
-            joined.forEachIndexed { n, (i, v) -> if (n == 0) path.moveTo(x(i), y(v!!)) else path.lineTo(x(i), y(v!!)) }
+            val xs = joined.map { x(it.index) }
+            val ys = joined.map { y(it.value!!) }
+            if (smooth) {
+                val m = monotoneSlopes(xs, ys)
+                path.moveTo(xs[0], ys[0])
+                for (n in 0 until xs.lastIndex) {
+                    val dx = (xs[n + 1] - xs[n]) / 3
+                    path.cubicTo(xs[n] + dx, ys[n] + m[n] * dx, xs[n + 1] - dx, ys[n + 1] - m[n + 1] * dx, xs[n + 1], ys[n + 1])
+                }
+            } else joined.forEachIndexed { n, (i, v) -> if (n == 0) path.moveTo(x(i), y(v!!)) else path.lineTo(x(i), y(v!!)) }
             drawPath(path, cs.primary, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
         // The selected session: the accent dot on the line (or on the dot when it has no line value).
@@ -281,6 +292,21 @@ private data class Scale(val min: Double, val max: Double, val ticks: List<Doubl
             return listOf(1.0, 2.0, 2.5, 5.0, 10.0).first { it * p >= raw - 1e-9 } * p
         }
     }
+}
+
+/** Fritsch–Carlson tangents: a curve through every point that rises and falls only where the points do. */
+internal fun monotoneSlopes(xs: List<Float>, ys: List<Float>): FloatArray {
+    val n = xs.size
+    val d = FloatArray(n - 1) { (ys[it + 1] - ys[it]) / (xs[it + 1] - xs[it]).coerceAtLeast(1e-3f) }
+    val m = FloatArray(n) { i -> when (i) { 0 -> d[0]; n - 1 -> d[n - 2]; else -> if (d[i - 1] * d[i] <= 0f) 0f else (d[i - 1] + d[i]) / 2 } }
+    for (i in 0 until n - 1) {
+        if (d[i] == 0f) { m[i] = 0f; m[i + 1] = 0f; continue }
+        val a = m[i] / d[i]
+        val b = m[i + 1] / d[i]
+        val h = a * a + b * b
+        if (h > 9f) { val t = 3f / kotlin.math.sqrt(h); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i] }
+    }
+    return m
 }
 
 private fun xOf(dates: List<LocalDate>, i: Int, width: Float): Float {

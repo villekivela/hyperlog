@@ -52,6 +52,8 @@ import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.TrendLine
+import com.hyperlog.app.history.TrendPoint
+import com.hyperlog.app.history.LiftTrend
 import com.hyperlog.app.history.WeekSets
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
@@ -75,7 +77,6 @@ import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.FollowUp
-import com.hyperlog.app.session.LastSession
 import com.hyperlog.app.session.LiftChange
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.PickedSet
@@ -611,11 +612,7 @@ class LargeTextTest {
         lastTime = listOf(LoggedSet(97.5, 5, 0, 1), LoggedSet(87.5, 8, 5, 1)), ladder = DefaultPlates.ladder(), ladderKnown = true,
         prescription = List(3) { SetPrescription(RepRange(4, 6), 1, 180) }, plates = DefaultPlates,
         suggestion = Suggestion(97.5, 5, Suggestion.Kind.Deload, "Deload week, last time's weight", "97.5 · deload week, 2 in reserve"),
-        lastSessions = listOf(
-            LastSession(LocalDate.of(2026, 11, 2), LoggedSet(97.5, 5, 0, 2)),
-            LastSession(LocalDate.of(2026, 10, 29), LoggedSet(101.25, 12, 6, 1)),
-            LastSession(LocalDate.of(2026, 10, 26), LoggedSet(122.5, 5, 0, 1, rightReps = 4)),
-        ),
+        trend = LiftTrend.Moved(1012.5, 1222.75),
     )
 
     private fun onWeight(kg: String) = SetEntry(kg, "", "", 1, Field.Weight, partialMode = false, fresh = true)
@@ -766,7 +763,11 @@ class LargeTextTest {
             SetPrescription(RepRange(8, 10), 0, 90, technique = Technique.IsoHold(20, HoldPosition.Stretch)),
         )
         fun find(name: String) = library.exercises.first { it.name == name }
-        val onScreen = sweepExercise.copy(exercise = find("Barbell RDL"), slot = slot, prescription = plan, startingHint = "45 kg × 12 @ 1 RIR, 12 Sep")
+        val rising = listOf(30L, 20L, 9L, 2L).mapIndexed { i, ago -> TrendPoint(i + 1L, LocalDate.now().minusDays(ago), LoggedSet(100.0, 5, 0, 1), 1012.5 + i * 70) }
+        val onScreen = sweepExercise.copy(
+            exercise = find("Barbell RDL"), slot = slot, prescription = plan, startingHint = "45 kg × 12 @ 1 RIR, 12 Sep",
+            trend = LiftTrend.Moved(1012.5, 1222.5), trendPoints = rising,
+        )
         val next = SessionExercise(
             2, find("2-Grip Lat Pulldown"), emptyList(), listOf(LoggedSet(50.0, 10, 0, 1)), DefaultPlates.ladder(), true,
             slot = slot.copy(id = "t", label = "2", exercise = "2_grip_lat_pulldown"), prescription = List(3) { SetPrescription(RepRange(8, 10), 1, 120) },
@@ -796,6 +797,8 @@ class LargeTextTest {
             "finish dialog" to over("Finish the session?", open = menu("Finish session")),
             "leave dialog" to over("Leave") { tap("Leave session") },
             "exercise sheet" to over("Back-off") { tapText("Barbell RDL") },
+            "exercise sheet's lift trend" to over("e1RM up 21% in 4 weeks") { tapText("Barbell RDL") },
+            "exercise sheet, a stalled lift" to over("Hasn't moved in 12 sessions", session.copy(exercises = listOf(session.exercises[0].copy(trend = LiftTrend.Stalled(12))) + session.exercises.drop(1))) { tapText("Barbell RDL") },
             "set sheet" to over("Intensity technique") {
                 compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))).performScrollToNode(hasContentDescription("Set 1 options"))
                 tap("Set 1 options")

@@ -69,14 +69,24 @@ fun trainingGlance(
  * Only one line can be read: two machines' estimates aren't comparable (ADR 0002).
  */
 private fun ExerciseTrend.moving(today: LocalDate): MovingLift? {
-    val points = lines.singleOrNull()?.points.orEmpty().filter { it.estimateKg != null }
-    val latest = points.lastOrNull() ?: return null
+    val (from, to) = movedOver(lines.singleOrNull()?.points.orEmpty(), today) ?: return null
+    return MovingLift(exercise, from, to).takeIf { abs(it.percent) >= MovingPercent }
+}
+
+/**
+ * The estimate about [MovingDays] before the latest of [points] (the first, with less history) and
+ * the latest; null when there's only one, or the latest is from before that window. Progress's
+ * Moving and the exercise sheet's lift trend both read it.
+ */
+internal fun movedOver(points: List<TrendPoint>, today: LocalDate): Pair<Double, Double>? {
+    val estimated = points.filter { it.estimateKg != null }
+    val latest = estimated.lastOrNull() ?: return null
     if (latest.date.isBefore(today.minusDays(MovingDays))) return null
-    val from = points.lastOrNull { !it.date.isAfter(latest.date.minusDays(MovingDays)) } ?: points.first()
+    val from = estimated.lastOrNull { !it.date.isAfter(latest.date.minusDays(MovingDays)) } ?: estimated.first()
     if (from === latest) return null
-    return MovingLift(exercise, from.estimateKg!!, latest.estimateKg!!).takeIf { abs(it.percent) >= MovingPercent }
+    return from.estimateKg!! to latest.estimateKg!!
 }
 
 private const val MovingDays = 28L
-private const val MovingPercent = 1.0
+internal const val MovingPercent = 1.0
 private const val MovingShown = 3

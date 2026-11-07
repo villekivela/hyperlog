@@ -32,7 +32,15 @@
     <string name="session_last_exercise">Last exercise</string>
     <string name="session_leave">Leave session</string>
     <string name="session_list">Session list</string>
-    <string name="last_sessions">Last sessions</string>
+    <string name="trend_up">e1RM up %1$d%% in 4 weeks, to %2$s kg</string>
+    <string name="trend_down">e1RM down %1$d%% in 4 weeks, to %2$s kg</string>
+    <string name="trend_steady">e1RM steady over 4 weeks, at %1$s kg</string>
+    <string name="trend_e1rm">e1RM %1$s kg</string>
+    <string name="trend_chart">%1$s\'s e1RM, session by session</string>
+    <plurals name="trend_stalled">
+        <item quantity="one">Hasn\'t moved in %1$d session</item>
+        <item quantity="other">Hasn\'t moved in %1$d sessions</item>
+    </plurals>
     <string name="session_start_exercise">Start</string>
     <!-- The superset line above the exercise name: its slot label and its partner, "2a with DB French Press". -->
     <string name="session_superset_with">%1$s with %2$s</string>

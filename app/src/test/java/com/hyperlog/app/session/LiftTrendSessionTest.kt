@@ -4,7 +4,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
-import com.hyperlog.app.domain.LoggedSet
+import com.hyperlog.app.history.LiftTrend
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
@@ -18,9 +18,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** The exercise on screen carries its last three sessions, newest first, each with its top set (GLOSSARY, Last sessions). */
+/** The exercise on screen carries how it has moved, as Progress and the coach line read it (GLOSSARY, Lift trend). */
 @RunWith(RobolectricTestRunner::class)
-class LastSessionsTest {
+class LiftTrendSessionTest {
     private lateinit var db: HyperlogDatabase
     private lateinit var programs: Programs
     private var now = 1_000_000L
@@ -66,37 +66,38 @@ class LastSessionsTest {
         finish()
     }
 
+    private val SessionLogger.trend get() = state.value!!.current!!.trend
+
     @Test
-    fun theLatestThreeNewestFirstWithTheirTopSets() = runTest {
+    fun aLiftGoingUpSaysByHowMuch() = runTest {
         val logger = logger()
         logger.trainDay("80" to 5, "72.5" to 7)
-        logger.trainDay("82.5" to 5, "72.5" to 8)
-        logger.trainDay("85" to 4, "75" to 7)
-        logger.trainDay("85" to 5, "75" to 8)
+        logger.trainDay("85" to 5, "75" to 7)
 
         now += 2 * 86_400_000L
         logger.startDay(programs.active.first()!!, gymId = null)
-        val shown = logger.state.value!!.current!!.lastSessions
-        assertEquals(listOf(LoggedSet(85.0, 5, 0, 1), LoggedSet(85.0, 4, 0, 1), LoggedSet(82.5, 5, 0, 1)), shown.map { it.top })
-        assertEquals(shown.sortedByDescending { it.date }, shown)
+        val trend = logger.trend as LiftTrend.Moved
+        assertEquals(true, trend.toKg > trend.fromKg)
     }
 
     @Test
     fun adHocItReadsTheSameSessions() = runTest {
         val logger = logger()
         logger.trainDay("80" to 5, "72.5" to 7)
+        logger.trainDay("85" to 5, "75" to 7)
 
         now += 2 * 86_400_000L
         logger.start()
         logger.addExercise("barbell_bench_press")
-        assertEquals(listOf(LoggedSet(80.0, 5, 0, 1)), logger.state.value!!.current!!.lastSessions.map { it.top })
+        assertEquals(true, logger.trend is LiftTrend.Moved)
     }
 
     @Test
-    fun aFirstSessionHasNone() = runTest {
+    fun oneSessionBeforeIsntEnough() = runTest {
         val logger = logger()
+        logger.trainDay("80" to 5, "72.5" to 7)
         now += 2 * 86_400_000L
         logger.startDay(programs.active.first()!!, gymId = null)
-        assertEquals(emptyList<LastSession>(), logger.state.value!!.current!!.lastSessions)
+        assertEquals(null, logger.trend)
     }
 }
