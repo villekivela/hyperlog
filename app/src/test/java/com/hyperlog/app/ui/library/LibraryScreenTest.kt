@@ -141,7 +141,7 @@ class LibraryScreenTest {
 
         compose.onNodeWithText("Cable Lateral Raise").performClick()
         compose.waitFor("Technique video · 10:53")
-        // The sheet's copy; the rep stage behind it has the same cue.
+        // The sheet's copy; the cue band behind it has the same cue.
         compose.onAllNodesWithText("Raise your arm \"out\", not \"up\". Mind-muscle connection with the middle fibers.").onLast().assertIsDisplayed()
         compose.onNodeWithText("Cable · Side Delts").assertIsDisplayed()
         compose.click("Technique video · 10:53")

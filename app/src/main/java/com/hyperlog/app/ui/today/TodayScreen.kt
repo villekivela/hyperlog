@@ -85,7 +85,6 @@ import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.date
 import com.hyperlog.app.today.DayKind
 import com.hyperlog.app.today.TodayState
-import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.StarterOffer
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
@@ -1051,8 +1050,6 @@ internal fun SlotRows(
                     SetSummary(slot.sets)
                 }
             }
-            Spacer(Modifier.width(12.dp))
-            RepMark(slot.exercise)
         }
     }
 }

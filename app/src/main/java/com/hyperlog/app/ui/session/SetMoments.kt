@@ -8,10 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,7 +19,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -34,10 +30,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.LoggedSet
-import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.progression.Record
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.ui.mannequin.RepPlay
 import com.hyperlog.app.ui.theme.animationsRemoved
 import kotlinx.coroutines.delay
 
@@ -64,8 +58,8 @@ internal fun momentEnter(removed: Boolean): EnterTransition = if (removed) Enter
 
 internal fun momentExit(removed: Boolean): ExitTransition = if (removed) ExitTransition.None else fadeOut()
 
-/** The record to show: which it is, the exercise that made it and the set. */
-private class RecordShown(val record: Record, val exercise: Exercise, val set: LoggedSet)
+/** The record to show: which it is and the set. */
+private class RecordShown(val record: Record, val set: LoggedSet)
 
 /** The record just made, if the set [session] logged last made one. */
 private fun newest(session: ActiveSession): RecordShown? {
@@ -74,7 +68,7 @@ private fun newest(session: ActiveSession): RecordShown? {
     // Sets can be logged out of order, so the last place isn't always the set just logged.
     val at = session.latestSet?.second?.let(exercise.setIndices::indexOf)?.takeIf { it >= 0 } ?: exercise.records.indexOfLast { it != null }
     val record = exercise.records.getOrNull(at) ?: return null
-    return RecordShown(record, exercise.exercise, exercise.sets[at])
+    return RecordShown(record, exercise.sets[at])
 }
 
 /**
@@ -114,17 +108,12 @@ internal fun RecordMoment(session: ActiveSession, modifier: Modifier = Modifier)
     showing?.let { last = it }
     AnimatedVisibility(showing != null, modifier, enter = momentEnter(removed), exit = momentExit(removed)) {
         last?.let { shown ->
-            Row(
-                Modifier.background(cs.surfaceContainerHighest, RoundedCornerShape(24.dp)).padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 8.dp)
+            Column(
+                Modifier.background(cs.surfaceContainerHighest, RoundedCornerShape(24.dp)).padding(horizontal = 20.dp, vertical = 12.dp)
                     .semantics { liveRegion = LiveRegionMode.Polite },
-                verticalAlignment = Alignment.CenterVertically,
             ) {
-                RepPlay(shown.exercise, size = 56.dp, ground = cs.surfaceContainerHighest)
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text(stringResource(R.string.record_new), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
-                    Text(stringResource(R.string.record_detail, shown.record.label(), shown.set.short()), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                }
+                Text(stringResource(R.string.record_new), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
+                Text(stringResource(R.string.record_detail, shown.record.label(), shown.set.short()), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
             }
         }
     }

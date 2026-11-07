@@ -2,7 +2,6 @@ package com.hyperlog.app.ui.session
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,8 +32,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -44,15 +43,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.summary
-import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.Heaviest
 import com.hyperlog.app.session.SessionRating
 import com.hyperlog.app.session.SessionSummary
 import com.hyperlog.app.session.WeekDone
 import com.hyperlog.app.session.sessionMinutes
-import com.hyperlog.app.ui.mannequin.LocalExercises
-import com.hyperlog.app.ui.mannequin.RepMark
-import com.hyperlog.app.ui.mannequin.RepPlay
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.theme.BottomActions
 import com.hyperlog.app.ui.theme.CardPadding
@@ -63,13 +58,13 @@ import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.animationsRemoved
 import java.text.DateFormat
 import java.util.Date
-import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 /**
  * The end of a session: every exercise with its sets, `25 × 10 @ 2`. With [onOpen] an exercise
  * opens to look at or correct (by its place in [summary]).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SessionDoneScreen(summary: SessionSummary, firstShown: Boolean = true, onShown: (Long) -> Unit = {}, onResume: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, onOpen: ((Int) -> Unit)? = null) {
     BackHandler(onBack = onClose)
@@ -84,10 +79,8 @@ fun SessionDoneScreen(summary: SessionSummary, firstShown: Boolean = true, onSho
     Surface(modifier.fillMaxSize(), color = Tones.screen) {
         Column(Modifier.statusBarsPadding()) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) {
-                // The end of a session is worth a flourish: its best lift does the rep, or the shaped check.
-                val lead = (summary.bestLift ?: summary.exercises.firstOrNull())?.exerciseId?.let { LocalExercises.current[it] }
-                if (lead != null) RepPlay(lead, Modifier.padding(horizontal = TextEdge).padding(bottom = 8.dp), size = 128.dp, ground = Tones.screen)
-                else ShapedSymbol(Symbol.CheckCircle, Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp), size = 64.dp)
+                // The end of a session is worth a flourish: the shaped check.
+                ShapedSymbol(Symbol.CheckCircle, Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp).testTag(DoneCheckTag), size = 64.dp)
                 Text(stringResource(R.string.done_title), Modifier.padding(horizontal = TextEdge), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
                 Text(
                     stringResource(
@@ -123,10 +116,6 @@ fun SessionDoneScreen(summary: SessionSummary, firstShown: Boolean = true, onSho
                     )
                     Spacer(Modifier.height(16.dp))
                 }
-                if (summary.exercises.size > 1) {
-                    DoneMarks(summary.exercises)
-                    Spacer(Modifier.height(16.dp))
-                }
                 summary.week?.let {
                     WeekCard(it)
                     Spacer(Modifier.height(16.dp))
@@ -144,49 +133,20 @@ fun SessionDoneScreen(summary: SessionSummary, firstShown: Boolean = true, onSho
                 SummaryRows(summary.exercises, onOpen)
             }
             BottomActions(padding = androidx.compose.foundation.layout.PaddingValues(16.dp)) {
-                Spacer(Modifier.weight(1f))
-                // Finished by mistake: back into the session exactly as it was.
-                TextButton(onClick = onResume) { Text(stringResource(R.string.today_resume_session)) }
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = onClose) { Text(stringResource(R.string.done_close)) }
+                // Done goes under Resume when the two don't fit: never a word in two.
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                    // Finished by mistake: back into the session exactly as it was.
+                    TextButton(onClick = onResume) { Text(stringResource(R.string.today_resume_session)) }
+                    Button(onClick = onClose) { Text(stringResource(R.string.done_close)) }
+                }
             }
         }
     }
 }
 
 internal const val RecordListTag = "record-list"
-internal const val DoneMarkTag = "done-mark"
+internal const val DoneCheckTag = "done-check"
 internal const val WeekDotTag = "week-dot"
-
-/** How many of [count] marks show before the reveal: all of them with the system's animations off. */
-internal fun doneMarksAtFirst(count: Int, removed: Boolean): Int = if (removed) count else 0
-
-/** The session's reps together, coming in one by one. Nothing waits for them. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun DoneMarks(exercises: List<ExerciseSummary>) {
-    val ids = exercises.mapNotNull { it.exerciseId }
-    val removed = animationsRemoved(LocalContext.current)
-    var shown by remember { mutableIntStateOf(doneMarksAtFirst(ids.size, removed)) }
-    LaunchedEffect(Unit) {
-        while (shown < ids.size) {
-            delay(MarkStepMs)
-            shown++
-        }
-    }
-    FlowRow(
-        Modifier.fillMaxWidth().padding(horizontal = TextEdge),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        ids.forEachIndexed { i, id ->
-            val alpha by animateFloatAsState(if (i < shown) 1f else 0f)
-            RepMark(id, Modifier.graphicsLayer { this.alpha = alpha }.testTag(DoneMarkTag))
-        }
-    }
-}
-
-private const val MarkStepMs = 90L
 
 /** A set's parts joined by no-break spaces, so a line never ends on `50 ×`. */
 private fun String.unbroken() = replace(' ', '\u00A0')

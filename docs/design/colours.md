@@ -11,7 +11,7 @@ no hue. Anything with a hue carries information.
 | Surfaces (`surfaceContainer`, `surfaceBright`, `surfaceContainerLowest`) | Nothing: they divide the screen into sections | Screens and cards |
 | `primary` | What you act on, or what is selected | Active set, text buttons, section heads, chart ink |
 | `primaryContainer` | The one thing to do on a screen | Start, Resume, the next action, a picked option |
-| `secondaryContainer` | A place for an exercise or a setting's symbol | Symbol circles, the rep mark's tile |
+| `secondaryContainer` | A place for an exercise or a setting's symbol | Symbol circles |
 | `tertiary` | A departure from the plan as written | Deload, swap, technique text, a superset's label, easing back |
 | `error` | Something is wrong and needs you | Flagged weight, a problem in a file |
 | RIR scale | How hard a set was, or should be | Only on the RIR chip |

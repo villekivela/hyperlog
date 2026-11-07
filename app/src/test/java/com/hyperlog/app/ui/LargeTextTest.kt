@@ -75,10 +75,13 @@ import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.FollowUp
+import com.hyperlog.app.session.LiftChange
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.PickedSet
 import com.hyperlog.app.session.SessionExercise
+import com.hyperlog.app.session.SessionSummary
 import com.hyperlog.app.session.WarmupEdit
+import com.hyperlog.app.session.WeekDone
 import com.hyperlog.app.ui.coach.TileCard
 import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.history.HistoryScreen
@@ -90,6 +93,7 @@ import com.hyperlog.app.ui.session.PastSessionScreen
 import com.hyperlog.app.ui.session.Recording
 import com.hyperlog.app.ui.session.RirChipLoggedTag
 import com.hyperlog.app.ui.session.RirChipTargetTag
+import com.hyperlog.app.ui.session.SessionDoneScreen
 import com.hyperlog.app.ui.session.SessionScreen
 import com.hyperlog.app.ui.session.SetTableTag
 import com.hyperlog.app.ui.symbols.Symbol
@@ -657,8 +661,8 @@ class LargeTextTest {
             put("three-digit reps", sweepSession(entry = SetEntry("102.5", "100", "20", 1, Field.Reps, partialMode = true, fresh = false)))
             put("bench row", sweepSession(sweepExercise.copy(exercise = bench.copy(adjustableBench = true), lastBenchAngle = 30)))
             put("which machine", sweepSession(sweepExercise.copy(needsMachine = true), entry = null).copy(gym = Gym(1, "Hyperlog Fitness Centre", listOf(EquipmentItem(id = 1, gymId = 1, name = "Plate-loaded Chest Press Machine With Long Name", ladder = LadderSpec.DefaultPinStack)))))
-            val cued = bench.copy(id = "2_grip_lat_pulldown", note = "Two grips: wide overhand (1.5× shoulder width) and underhand (shoulder width).")
-            put("rep stage with its cue", sweepSession(sweepExercise.copy(exercise = cued).logged(done, done), onWeight("102.5")))
+            val cued = bench.copy(note = "Two grips: wide overhand (1.5× shoulder width) and underhand (shoulder width).")
+            put("cue band", sweepSession(sweepExercise.copy(exercise = cued).logged(done, done), onWeight("102.5")))
             // The entry narrower than a set to come: every other state typed the widest weight, which hid this.
             val heavy = sweepExercise.copy(lastTime = listOf(LoggedSet(200.0, 5, 0, 1)))
             val backoff = heavy.copy(prescription = listOf(SetPrescription(RepRange(4, 6), 1, 180), SetPrescription(RepRange(4, 6), 1, 180, backoff = Backoff(0, 10))))
@@ -666,6 +670,7 @@ class LargeTextTest {
             put("a wider weight to come", sweepSession(backoff, onReps("210")))
             put("a wider weight to come, under the check", sweepSession(backoff, onReps("210")).copy(weightCheck = WeightCheck("2.2× last time", listOf(100.0, 102.5, 105.0))))
             put("a wider drop to come", sweepSession(dropping, onReps("210")))
+            put("a cue with a short table", sweepSession(sweepExercise.copy(exercise = cued, prescription = sweepExercise.prescription?.take(1)), onWeight("102.5")))
             put("pad hidden", sweepSession().copy(padVisible = false))
             put("rest running", sweepSession(sweepExercise.logged(done)).copy(restEndsAt = System.currentTimeMillis() + 95_000))
             put("superset chips", sweepSession(sweepExercise.copy(slot = slot), more = listOf(partner)))
@@ -847,6 +852,26 @@ class LargeTextTest {
     @Test
     @Config(qualifiers = "w360dp-h2000dp-xxhdpi")
     fun everyRowOfTodayReadsWholeOnASmallPhone() = assertWhole(todayStates())
+
+    /** Session done with and without a lift to name, and with a finished week. */
+    private fun doneStates(): Map<String, Sweep> {
+        val up = ExerciseSummary("Barbell Romanian Deadlift", listOf(LoggedSet(102.5, 8, 0, 1)), exerciseId = "barbell_rdl", change = LiftChange.Up, lastTop = LoggedSet(100.0, 8, 0, 1))
+        val first = ExerciseSummary("2-Grip Lat Pulldown", listOf(LoggedSet(50.0, 10, 0, 1), LoggedSet(50.0, 10, 5, 1)), exerciseId = "2_grip_lat_pulldown")
+        fun done(vararg lifts: ExerciseSummary, week: WeekDone? = null) = Sweep(shows = "Done") { SessionDoneScreen(SessionSummary(1, 0, 3_600_000, lifts.toList(), week), onResume = {}, onClose = {}) }
+        return mapOf(
+            "a first session" to done(first),
+            "a best lift" to done(first, up),
+            "a finished week" to done(first, up, week = WeekDone(8, 4, 42, 3, 3)),
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun sessionDoneReadsWhole() = assertWhole(doneStates())
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    fun sessionDoneReadsWholeOnASmallPhone() = assertWhole(doneStates())
 
     private fun libraryStates() = mapOf(
         "library" to Sweep { LibraryScreen(library.exercises, "", onQuery = {}, onOpen = {}, onNew = {}, onBack = {}) },

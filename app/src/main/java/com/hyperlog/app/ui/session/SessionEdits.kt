@@ -40,7 +40,6 @@ import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.library.SearchField
-import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardMargin
@@ -116,11 +115,9 @@ private fun SectionHead(text: String) {
 @Composable
 private fun PickRow(exercise: Exercise, tag: String?) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding, vertical = 8.dp),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = CardPadding, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RepMark(exercise)
-        Spacer(Modifier.width(12.dp))
         Text(exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         tag?.let {
             Spacer(Modifier.width(16.dp))

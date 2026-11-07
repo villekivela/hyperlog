@@ -1357,13 +1357,8 @@ gallery (Technique videos).
   system Back. It steps out of a correction or a finished exercise first, and only then asks to
   leave. A short table sits on the pad, its rows in reach of the thumb; a long one fills the screen
   and scrolls.
-- **The rep mark is Hyperlog's signature** (#271): an exercise's rep drawn flat, its end in full ink
-  over its start as a ghost and cut out of it by a halo in the tile's colour, on a tonal tile, so a screenshot with the title cropped still reads as
-  Hyperlog and a list shows how each lift moves. It is wherever exercises are listed: Today, Program's days, the exercise library, the session
-  list, the add and swap pickers, Progress and a past session, in the colours of the tile, so it adds no colour of its own. The figures
-  are baked from the mannequin's clips by `tools/exercise-poses/bake.py` into a small table the
-  app draws, so a list scrolls with no 3D view in it. An exercise not yet posed takes its movement
-  pattern's drawing, muted and with no ghost, so it reads as a stand-in.
+- **Exercises are listed by name** (#271): a list's rows are plain, with no drawing of the lift. The
+  3D mannequin in the exercise's sheet is the only figure in the app.
 - **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
   its own. The navigation bar's symbols read without their labels at 24 dp: a calendar, a dumbbell, a
   conversation, a clock and a gear. One symbol, one meaning: the dumbbell is the program and nothing
@@ -1371,13 +1366,10 @@ gallery (Technique videos).
   weights have an inbox, a past program an archive box and time off a crossed-out calendar.
 - **Moments** (#272): a record, a finished session and a finished week each have a moment, and none
   holds anything up.
-  - **The rep plays**: where a moment shows a lift, the rep mark's drawing moves through it once,
-    between the clip's two ends, and rests on the end.
-  - **A record**, as it is logged: a pill over the table, the rep playing beside `New record`
-    and `Rep record · 50 × 30`, in ink like the record's mark. It goes by itself after 3 seconds,
+  - **A record**, as it is logged: a pill over the table, `New record` and `Rep record · 50 × 30`, in
+    ink like the record's mark. It goes by itself after 3 seconds,
     takes no touches and sits clear of the pad. TalkBack reads it politely.
-  - **A finished session**: Session done leads with its best lift doing the rep, then a rating in a
-    word, `Strong session`, `Solid session` or `In the bank`, and the measures behind it: sets of the
+  - **A finished session**: Session done leads with the shaped check, then a rating in a word, `Strong session`, `Solid session` or `In the bank`, and the measures behind it: sets of the
     plan done, sets within 1 RIR of target, and lifts up on last time (a lift being up if its top set
     is heavier, or as heavy for more reps; held counts half). A measure that can't be read doesn't
     count against a session, so a first session is judged on what it has, and a deload or eased day
@@ -1388,8 +1380,8 @@ gallery (Technique videos).
     it is never Strong, however the sets went. An exercise left with nothing logged still counts
     against the plan. All of this is worked out when the session finishes; reading the session
     back refreshes its sets alone, and a corrected set is read against the same last time. Under them come the
-    records, the best lift (`Best lift: Hack Squat, 100 × 6 → 105 × 6`) and, with two or more
-    exercises, the session's rep marks coming in one by one. Done and Resume work from the first frame.
+    records and the best lift (`Best lift: Hack Squat, 100 × 6 → 105 × 6`). Done and Resume work from
+    the first frame.
   - **A finished week**: a session that closes a program week adds `Week 8 done`, a dot filling in for
     each day trained, `4 days · 42 sets`, the change on last week (`3 more than last week`) and, from
     two weeks up, the run (`3 weeks in a row`). A deload week isn't compared with the week before. Run
@@ -1402,12 +1394,10 @@ gallery (Technique videos).
     and a finished week, are felt more strongly. Rest ending buzzes,
     as it did.
   - **The system's animation setting** is followed everywhere: Compose's animations stop with it, a
-    moment just appears and goes, a rep rests on its end, marks and dots are there at once, and
-    the mannequin holds a still.
-- **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
-  with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
-  tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.
-  A cue the band can't hold whole leaves it, and stays in the exercise's sheet.
+    moment just appears and goes, dots are there at once, and the mannequin holds a still.
+- **The cue band** (#271): the space a short exercise leaves above its table holds its cue in words
+  (the slot's note, else the exercise's own), and a tap opens the exercise. With no cue, or one the
+  band can't hold whole, nothing shows there, and the cue stays in the exercise's sheet.
 - **A session's length is its time training** (#273): a gap of more than an hour between sets, or
   after the last one, doesn't count, so a session forgotten for days, or left open and picked up
   again, reads the time it took, not `5192 min`. Every screen rounds it the same way.

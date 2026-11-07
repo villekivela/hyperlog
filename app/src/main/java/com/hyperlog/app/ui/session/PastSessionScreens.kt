@@ -41,7 +41,6 @@ import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.sessionMinutes
-import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardPadding
@@ -57,7 +56,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
-import kotlin.math.roundToInt
 
 // Past sessions (SPEC, Past sessions are editable): the list, a session's summary, and an
 // exercise's table where any logged row can be corrected. History (#19) hosts the list.
@@ -125,10 +123,6 @@ internal fun SummaryRows(exercises: List<ExerciseSummary>, onOpen: ((Int) -> Uni
                 .padding(start = CardPadding, end = 12.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            e.exerciseId?.let {
-                RepMark(it)
-                Spacer(Modifier.width(12.dp))
-            }
             Column(Modifier.weight(1f)) {
                 // An adjustable-bench exercise names the angle it was done at.
                 Text(e.name + (e.benchAngle?.let { " · $it°" } ?: ""), style = MaterialTheme.typography.bodyLarge)

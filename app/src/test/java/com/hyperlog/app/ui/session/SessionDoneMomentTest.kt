@@ -13,17 +13,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.domain.LoggedSet
-import com.hyperlog.app.library.Equipment
-import com.hyperlog.app.library.Exercise
-import com.hyperlog.app.library.GripDemand
-import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.progression.Record
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.LiftChange
 import com.hyperlog.app.session.SessionSummary
 import com.hyperlog.app.session.WeekDone
-import com.hyperlog.app.ui.mannequin.LocalExercises
-import com.hyperlog.app.ui.mannequin.RepPlayTag
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -91,17 +85,11 @@ class SessionDoneMomentTest {
         compose.onNodeWithText("Best lift: Hack Squat, 100\u00A0×\u00A06 → 105\u00A0×\u00A06").assertIsDisplayed()
     }
 
+    /** The rating, stats and best lift stand under the shaped check, with a lift to name or not. */
     @Test
-    fun theLeadLiftPerformsItsRep() {
-        val lead = Exercise("hack_squat", "Hack Squat", Equipment.Machine, MovementPattern.Squat, GripDemand.None, listOf("Quads"))
-        compose.setContent {
-            HyperlogTheme {
-                CompositionLocalProvider(LocalExercises provides mapOf(lead.id to lead)) {
-                    SessionDoneScreen(SessionSummary(1, 0, 3_600_000, session), onResume = {}, onClose = {})
-                }
-            }
-        }
-        compose.onNodeWithTag(RepPlayTag, useUnmergedTree = true).assertExists()
+    fun theShapedCheckLeadsTheEnd() {
+        show()
+        compose.onNodeWithTag(DoneCheckTag, useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -141,19 +129,6 @@ class SessionDoneMomentTest {
         compose.onNodeWithText("1 set").assertIsDisplayed()
         compose.onNodeWithText("lifts up", substring = true).assertDoesNotExist()
         compose.onNodeWithText("record", substring = true).assertDoesNotExist()
-    }
-
-    @Test
-    fun theSessionsRepsComeTogether() {
-        show()
-        assertEquals(4, compose.onAllNodesWithTag(DoneMarkTag, useUnmergedTree = true).fetchSemanticsNodes().size)
-    }
-
-    /** One exercise is already the hero and its own row: a third of it adds nothing. */
-    @Test
-    fun oneExerciseNeedsNoRowOfMarks() {
-        show(listOf(lift("hack_squat", null)))
-        assertEquals(0, compose.onAllNodesWithTag(DoneMarkTag, useUnmergedTree = true).fetchSemanticsNodes().size)
     }
 
     @Test
@@ -198,12 +173,5 @@ class SessionDoneMomentTest {
         compose.mainClock.advanceTimeByFrame()
         compose.onNodeWithText("Done").performClick()
         assertEquals(1, closed)
-    }
-
-    @Test
-    fun withAnimationsOffTheMarksAreAllThereAtOnce() {
-        Settings.Global.putFloat(ApplicationProvider.getApplicationContext<android.app.Application>().contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
-        assertEquals(4, doneMarksAtFirst(4, removed = true))
-        assertEquals(0, doneMarksAtFirst(4, removed = false))
     }
 }

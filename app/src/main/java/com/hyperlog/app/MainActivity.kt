@@ -26,11 +26,9 @@ import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -63,7 +61,6 @@ import com.hyperlog.app.ui.history.HistoryViewModel
 import com.hyperlog.app.ui.library.ExerciseEditor
 import com.hyperlog.app.ui.library.LibraryScreen
 import com.hyperlog.app.ui.library.LibraryViewModel
-import com.hyperlog.app.ui.mannequin.LocalExercises
 import com.hyperlog.app.ui.program.ProgramScreen
 import com.hyperlog.app.ui.program.ProgramView
 import com.hyperlog.app.ui.program.ProgramViewModel
@@ -87,9 +84,7 @@ import com.hyperlog.app.ui.theme.sharedFontSize
 import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.update.UpdateViewModel
 import com.hyperlog.app.update.Updates
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     private val sessions: SessionViewModel by viewModels()
@@ -113,11 +108,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         if (savedInstanceState == null) opened(intent)
         setContent {
-            val exercises by sessions.exercises.collectAsStateWithLifecycle()
-            val byId = remember(exercises) { exercises.associateBy { it.id } }
-            // Off the main thread, so the first list of rep marks doesn't wait for the file.
-            LaunchedEffect(Unit) { withContext(Dispatchers.IO) { com.hyperlog.app.ui.mannequin.Poses.of(this@MainActivity) } }
-            HyperlogTheme { CompositionLocalProvider(LocalExercises provides byId) { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, trainingStyles, openCheckIn) } }
+            HyperlogTheme { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, trainingStyles, openCheckIn) }
         }
     }
 

@@ -38,7 +38,6 @@ import com.hyperlog.app.coach.VolumeStatus
 import com.hyperlog.app.history.MovingLift
 import com.hyperlog.app.history.MuscleWeek
 import com.hyperlog.app.history.TrainingGlance
-import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.session.Direction
 import com.hyperlog.app.ui.session.SessionPreview
 import com.hyperlog.app.ui.session.color
@@ -262,8 +261,6 @@ private fun MovingRow(lift: MovingLift, onOpen: (String) -> Unit) {
             .clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RepMark(lift.exercise, size = 40.dp)
-        Spacer(Modifier.width(12.dp))
         Text(lift.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(8.dp))
         Text(

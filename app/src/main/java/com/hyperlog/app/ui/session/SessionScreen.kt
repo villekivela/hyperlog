@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -96,8 +97,6 @@ import com.hyperlog.app.ui.history.goalLabel
 import com.hyperlog.app.ui.history.goalStatus
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.library.openTechniqueVideo
-import com.hyperlog.app.ui.mannequin.RepMark
-import com.hyperlog.app.ui.mannequin.RepStage
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
@@ -112,6 +111,7 @@ import com.hyperlog.app.ui.theme.cardBehind
 import com.hyperlog.app.ui.theme.figureDisplay
 import com.hyperlog.app.ui.theme.figureLarge
 import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.ui.theme.linesOf
 import kotlinx.coroutines.delay
 
 /**
@@ -312,7 +312,7 @@ fun SessionScreen(
                             onBenchAngle = { benchFor = current.id },
                         )
                         SetTable(table, Modifier.weight(1f)) {
-                            RepStage(current.exercise, current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
+                            CueBand(current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
                         }
                     }
                 }
@@ -626,6 +626,29 @@ private fun HeaderChip(symbol: Symbol?, text: String, modifier: Modifier = Modif
 }
 
 internal const val HeaderChipTag = "header-chip"
+internal const val CueBandTag = "cue-band"
+
+/**
+ * The room a short exercise leaves above its table: its [cue], in words, and a tap opens the
+ * exercise. No cue, or one the room can't hold whole, and nothing shows: the cue stays in the sheet.
+ */
+@Composable
+private fun CueBand(cue: String?, onClick: () -> Unit) {
+    cue ?: return
+    val style = MaterialTheme.typography.bodyMedium
+    val line = with(LocalDensity.current) { style.lineHeight.toDp() }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val needs = maxOf(line * linesOf(cue, style, maxWidth - Margin * 2) + 16.dp, 48.dp)
+        if (needs > maxHeight) return@BoxWithConstraints
+        Text(
+            cue,
+            Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClickLabel = stringResource(R.string.session_exercise_details), onClick = onClick)
+                .padding(horizontal = Margin, vertical = 8.dp).testTag(CueBandTag),
+            style = style,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
 
 /** The text size from which a session list row's action sits under its name. */
 private const val ListActionUnderScale = 1.3f
@@ -886,8 +909,6 @@ internal fun SessionList(
                     if (under) action()
                 }
                 if (!under) action()
-                Spacer(Modifier.width(8.dp))
-                RepMark(e.exercise, size = 40.dp)
                 edits?.let { ExerciseEditMenu(e.exercise.name, it(e, blocks)) }
             }
             }
@@ -1023,11 +1044,9 @@ internal fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (S
             itemsIndexed(found, key = { _, it -> it.id }) { i, e ->
                 com.hyperlog.app.ui.theme.Segment(i, found.size, color = MaterialTheme.colorScheme.surfaceContainerHigh, onClick = { onPick(e.id) }) {
                     Row(
-                        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = com.hyperlog.app.ui.theme.CardPadding, vertical = 8.dp),
+                        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = com.hyperlog.app.ui.theme.CardPadding, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RepMark(e)
-                        Spacer(Modifier.width(12.dp))
                         Text(e.name, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
