@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
@@ -31,9 +33,13 @@ import com.hyperlog.app.AppNavigationBar
 import com.hyperlog.app.Screen
 import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.domain.Field
+import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.SetEntry
+import com.hyperlog.app.domain.WeightLadder
+import com.hyperlog.app.domain.WeightUnit
+import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.TrendLine
@@ -88,8 +94,8 @@ import org.robolectric.annotation.GraphicsMode
 private val Scales = listOf(1.15f, 1.3f, 1.5f, 1.8f, 2f)
 
 /** Last as the table writes them, with no-break spaces inside a set. */
-private const val ShortLast = "50\u00A0×\u00A010"
-private const val LongLast = "50\u00A0×\u00A010 +\u00A05"
+private const val ShortLast = "50 × 10"
+private const val LongLast = "50 × 10 + 5"
 
 /**
  * Screens at the owner's system text size (115 %) on a phone a little narrower than theirs: what
@@ -132,6 +138,14 @@ class LargeTextTest {
      * Ink past the text's box, or an ellipsis. Not `hasVisualOverflow`, which compares the paragraph's
      * width, the widest the text may be, and so calls any short line in a loose box cut short.
      */
+    /** A line ends inside a number: `50 × 1` over `0`. */
+    private fun SemanticsNodeInteraction.splitsAFigure(): Boolean {
+        val layout = layout()
+        val text = layout.layoutInput.text.text
+        fun figure(c: Char) = c.isDigit() || c == '.'
+        return (1 until layout.lineCount).any { figure(text[layout.getLineStart(it) - 1]) && figure(text[layout.getLineStart(it)]) }
+    }
+
     private fun SemanticsNodeInteraction.cutShort(): Boolean {
         val layout = layout()
         return layout.didOverflowHeight || (0 until layout.lineCount).any { layout.isLineEllipsized(it) || layout.getLineRight(it) > layout.size.width + 0.5f }
@@ -216,8 +230,9 @@ class LargeTextTest {
     @Test
     fun lastTimesSetStaysWhole() {
         atEveryScale({ Session() }) { scale ->
-            compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))).performScrollToNode(hasText(LongLast))
-            assertFalse("Last time is cut short at $scale", compose.onNodeWithText(LongLast, useUnmergedTree = true).cutShort())
+            compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))).performScrollToNode(hasLast(LongLast))
+            assertFalse("Last time is cut short at $scale", compose.onNode(hasLast(LongLast), useUnmergedTree = true).cutShort())
+            assertFalse("Last time splits a figure at $scale", compose.onNode(hasLast(LongLast), useUnmergedTree = true).splitsAFigure())
         }
     }
 
@@ -381,16 +396,98 @@ class LargeTextTest {
         }
     }
 
+    /** The logging screen with [kg] logged as set 1 and in the entry box of set 2. */
+    @Composable
+    private fun WeightSession(kg: Double, ladder: WeightLadder) {
+        val shown = formatKg(kg)
+        val exercise = SessionExercise(
+            id = 1, exercise = bench, sets = listOf(LoggedSet(kg, 5, 0, 1)), lastTime = listOf(LoggedSet(kg, 5, 0, 1)), ladder = ladder, ladderKnown = true,
+            prescription = List(2) { SetPrescription(RepRange(4, 6), 1, 180) }, plates = DefaultPlates,
+        )
+        val entry = SetEntry(shown, "5", "", 1, Field.Reps, partialMode = false, fresh = false)
+        val session = ActiveSession(id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = entry, padVisible = true, restEndsAt = null, restTotalMs = 0)
+        SessionScreen(session, listOf(bench), Recording(mutableListOf()), onLeave = {})
+    }
+
+    /** [kg], in both the logged row and the entry box, whole at every size. */
+    private fun assertWeightWhole(kg: Double, ladder: WeightLadder, lastCanGo: Boolean = false) {
+        val shown = formatKg(kg)
+        atEveryScale({ WeightSession(kg, ladder) }) { scale ->
+            val nodes = compose.onAllNodes(hasText(shown) and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)
+            val found = nodes.fetchSemanticsNodes().size
+            assertEquals("$shown logged and in the entry box at $scale", 2, found)
+            (0 until found).forEach {
+                val layout = nodes[it].layout()
+                val read = layout.layoutInput.text.text.substring(0, layout.getLineEnd(0, visibleEnd = true))
+                assertEquals("Row $it reads short at $scale", shown, read)
+                assertTrue("$shown runs past its box at $scale", layout.getLineRight(0) <= layout.size.width + 0.5f)
+            }
+            // The column gives way to the weight, and Last, beside it, still reads whole or not at all.
+            val lasts = compose.onAllNodes(hasText("×", substring = true) and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)
+            if (lasts.fetchSemanticsNodes().isEmpty()) {
+                assertTrue("Last is gone at $scale", lastCanGo)
+                return@atEveryScale
+            }
+            assertFalse("Last splits a figure at $scale", lasts[0].splitsAFigure())
+            val last = lasts[0].layout()
+            val written = last.layoutInput.text.text
+            assertTrue("Last splits $shown at $scale", written.substring(0, last.getLineEnd(0, visibleEnd = true)).startsWith(shown))
+            assertEquals("Last reads short at $scale", written.length, last.getLineEnd(last.lineCount - 1, visibleEnd = true))
+            assertFalse("Last overflows at $scale", last.didOverflowHeight)
+            assertTrue("Last runs past its box at $scale", (0 until last.lineCount).all { last.getLineRight(it) <= last.size.width + 0.5f })
+        }
+    }
+
+    /** Last showing [set], however its spaces are written. */
+    private fun hasLast(set: String) = SemanticsMatcher("Last reads $set") { node ->
+        fun bare(text: String) = text.filterNot { it.isWhitespace() || it == '\u200B' }
+        node.config.getOrNull(SemanticsProperties.Text).orEmpty().any { bare(it.text) == bare(set) }
+    }
+
+    private val stepLadder = LadderSpec.Steps(0.0, 1.25, WeightUnit.Kg, 200).ladder()
+
+    /** Round 5: `87.5` read `87.` at 200 %, in the logged row and the entry box. A weight that reads wrong is worse than a wrap. */
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun aDecimalWeightStaysWholeOnPlates() = assertWeightWhole(87.5, DefaultPlates.ladder())
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun aThreeDigitDecimalStaysWholeOnPlates() {
+        assertWeightWhole(102.5, DefaultPlates.ladder())
+    }
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun theLongestPlateWeightStaysWhole() = assertWeightWhole(122.5, DefaultPlates.ladder())
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun aFineStepWeightStaysWhole() = assertWeightWhole(101.25, stepLadder)
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun aSmallFineStepWeightStaysWhole() = assertWeightWhole(11.25, stepLadder)
+
+    @Test
+    @Config(qualifiers = "w410dp-h914dp-xxhdpi")
+    fun aFineStepWeightStaysWholeOnANarrowerPhone() = assertWeightWhole(101.25, stepLadder, lastCanGo = true)
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    fun theLongestPlateWeightStaysWholeOnTheNarrowestPhone() = assertWeightWhole(122.5, DefaultPlates.ladder(), lastCanGo = true)
+
     /** Round 4: at 200 % `97.5 × 5` almost touched the kg column. */
     @Test
     @Config(qualifiers = "w427dp-h950dp-xxhdpi")
     fun theLastColumnKeepsClearOfTheKgColumn() {
-        val heavy = "97.5\u00A0×\u00A05"
+        val heavy = hasLast("97.5 × 5")
         atEveryScale({ Session(listOf(LoggedSet(97.5, 5, 0, 1)), listOf(LoggedSet(100.0, 5, 0, 1))) }) { scale ->
             val table = hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))
-            compose.onNode(table).performScrollToNode(hasText(heavy))
-            val last = compose.onNodeWithText(heavy, useUnmergedTree = true)
-            val lastInk = last.getBoundsInRoot().left + with(compose.density) { last.layout().getLineRight(0).toDp() }
+            compose.onNode(table).performScrollToNode(heavy)
+            val last = compose.onNode(heavy, useUnmergedTree = true)
+            val lines = 0 until last.layout().lineCount
+            val lastInk = last.getBoundsInRoot().left + with(compose.density) { lines.maxOf { last.layout().getLineRight(it) }.toDp() }
             val kg = compose.onNode(hasText("100") and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)
             val kgInk = kg.getBoundsInRoot().left + with(compose.density) { kg.layout().getLineLeft(0).toDp() }
             assertTrue("Last ends ${kgInk - lastInk} from the 100 at $scale", kgInk - lastInk >= 8.dp)
@@ -477,11 +574,11 @@ class LargeTextTest {
         atEveryScale({ Session(sets) }) { scale ->
             // The first figure's own box: the same glyph, so the same width at the same size.
             val widths = listOf(ShortLast, LongLast).map {
-                compose.onNode(table).performScrollToNode(hasText(it))
-                compose.onNodeWithText(it, useUnmergedTree = true).layout().getBoundingBox(0).width
+                compose.onNode(table).performScrollToNode(hasLast(it))
+                compose.onNode(hasLast(it), useUnmergedTree = true).layout().getBoundingBox(0).width
             }
             assertEquals("Last sizes differ at $scale: $widths", widths[0], widths[1], 0.01f)
-            val long = compose.onNodeWithText(LongLast, useUnmergedTree = true)
+            val long = compose.onNode(hasLast(LongLast), useUnmergedTree = true)
             assertTrue("Last is ${long.layout().layoutInput.style.fontSize} at $scale", long.layout().layoutInput.style.fontSize.value >= 12f)
             assertFalse("Last is cut at $scale", long.cutShort())
         }

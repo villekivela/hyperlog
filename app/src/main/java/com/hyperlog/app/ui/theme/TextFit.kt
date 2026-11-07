@@ -33,3 +33,13 @@ fun sharedFontSize(texts: List<Pair<String, Dp>>, style: TextStyle, floor: TextU
         }
     }
 }
+
+/** The width of the widest of [texts] in [style], on one line. */
+@Composable
+fun widestText(texts: List<String>, style: TextStyle): Dp {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(texts, style, density) {
+        with(density) { (texts.maxOfOrNull { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width } ?: 0).toDp() }
+    }
+}

@@ -1429,8 +1429,12 @@ gallery (Technique videos).
   steps down, and together: labels that sit side by side take one size, the largest at which all of
   them fit, so the navigation bar's five match at every size, and so do the set table's heads
   (down to 11 sp) and its Last column (down to 12 sp, one size for the whole table, then wrapping
-  before its `+`). A connected choice stacks its options when their labels no longer fit side by
-  side. The program's phases go to one row of chips instead, the picked one scrolled into view
+  before its `+`). A weight never loses a digit: the kg column takes one size for the whole table,
+  down to 12 sp, and past that it widens and Last gives way. A set that can't fit a line at Last's
+  floor is written without its spaces (`50×10+5`) and breaks before its `×` or `+`; only a weight
+  too wide for its own line takes Last under the floor, to 8 sp, and one that still can't fit leaves
+  Last empty on screen, while a screen reader still says it. A connected choice stacks its options
+  when their labels no longer fit side by side. The program's phases go to one row of chips instead, the picked one scrolled into view
   and a chip at the edge fading out, so the weeks under them stay on screen. Past its floor a set
   table head runs over its column into the room around it, whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip
   with the F / P toggle. A row's title and supporting text wrap, a session's title in History, an
