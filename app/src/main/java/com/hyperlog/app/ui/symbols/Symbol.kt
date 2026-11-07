@@ -15,6 +15,7 @@ import com.hyperlog.app.R
  * A `Fill` entry is the filled style (`_fill1` in Material Symbols), for a selected navigation item.
  */
 enum class Symbol(@param:DrawableRes val drawable: Int) {
+    AccessibilityNew(R.drawable.symbol_accessibility_new),
     Add(R.drawable.symbol_add),
     AddCircle(R.drawable.symbol_add_circle),
     Air(R.drawable.symbol_air),
@@ -44,7 +45,6 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Delete(R.drawable.symbol_delete),
     Download(R.drawable.symbol_download),
     Edit(R.drawable.symbol_edit),
-    Exercise(R.drawable.symbol_exercise),
     ExpandLess(R.drawable.symbol_expand_less),
     ExpandMore(R.drawable.symbol_expand_more),
     FileOpen(R.drawable.symbol_file_open),
@@ -105,6 +105,7 @@ enum class Symbol(@param:DrawableRes val drawable: Int) {
     Visibility(R.drawable.symbol_visibility),
     VisibilityOff(R.drawable.symbol_visibility_off),
     Warning(R.drawable.symbol_warning),
+    Weight(R.drawable.symbol_weight),
 }
 
 @Composable

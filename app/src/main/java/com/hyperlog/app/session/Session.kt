@@ -306,6 +306,8 @@ data class SessionSummary(
     val exercises: List<ExerciseSummary>,
     /** The program week this session finished; null when there is more of it to come. */
     val week: WeekDone? = null,
+    /** The sets planned on exercises left with nothing logged, which [exercises] leaves out. */
+    val skippedSets: Int = 0,
 ) {
     val workSets: Int get() = exercises.sumOf { it.sets.size }
 
@@ -314,7 +316,10 @@ data class SessionSummary(
     val up: Int get() = exercises.count { it.change == LiftChange.Up }
 
     /** The sets of the plan done, of the sets planned; null when nothing was planned. */
-    val planned: Int? get() = exercises.mapNotNull { it.planned }.takeIf { it.isNotEmpty() }?.sum()
+    val planned: Int? get() = exercises.mapNotNull { it.planned }.takeIf { it.isNotEmpty() }?.sum()?.plus(skippedSets)
+
+    /** The sets of the plan done: sets added on top of it don't count towards it. */
+    val plannedDone: Int get() = exercises.sumOf { e -> e.planned?.let { minOf(e.sets.size, it) } ?: 0 }
 
     /** The sets within 1 RIR of their target, of the sets that had one. */
     val aimed: Int get() = exercises.sumOf { it.aimed }
@@ -324,7 +329,7 @@ data class SessionSummary(
     val rating: SessionRating
         get() {
             val measures = listOfNotNull(
-                planned?.takeIf { it > 0 }?.let { p -> exercises.sumOf { e -> e.planned?.let { minOf(e.sets.size, it) } ?: 0 }.toDouble() / p },
+                planned?.takeIf { it > 0 }?.let { plannedDone.toDouble() / it },
                 aimed.takeIf { it > 0 }?.let { onEffort.toDouble() / it },
                 // A lift held counts half: it is good training, and not yet progress.
                 compared.takeIf { it > 0 }?.let { (up + exercises.count { e -> e.change == LiftChange.Same } * 0.5) / it },
@@ -340,7 +345,8 @@ data class SessionSummary(
     /** The lift that gained most on last time, by its top set's weight, then its reps. */
     val bestLift: ExerciseSummary?
         get() = exercises.filter { it.change == LiftChange.Up && it.lastTop != null }.maxWithOrNull(
-            compareBy<ExerciseSummary>({ it.top.weightKg / it.lastTop!!.weightKg }, { it.top.fullReps - it.lastTop!!.fullReps }),
+            // A lift with no weight has no gain to compare, so its reps alone decide it.
+            compareBy<ExerciseSummary>({ e -> e.lastTop!!.weightKg.takeIf { it > 0 }?.let { e.top.weightKg / it } ?: 1.0 }, { it.top.fullReps - it.lastTop!!.fullReps }),
         )
 
     private val ExerciseSummary.top: LoggedSet get() = sets.maxWith(Heaviest)

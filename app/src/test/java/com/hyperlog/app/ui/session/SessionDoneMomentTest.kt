@@ -119,6 +119,22 @@ class SessionDoneMomentTest {
         assertEquals(listOf(HapticFeedbackType.Confirm, HapticFeedbackType.LongPress), felt)
     }
 
+    /** Review: coming back from an exercise's table isn't finishing again. */
+    @Test
+    fun comingBackToSessionDoneIsNotFelt() {
+        val felt = mutableListOf<HapticFeedbackType>()
+        val haptics = object : HapticFeedback {
+            override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) { felt += hapticFeedbackType }
+        }
+        compose.setContent {
+            CompositionLocalProvider(LocalHapticFeedback provides haptics) {
+                HyperlogTheme { SessionDoneScreen(SessionSummary(1, 0, 3_600_000, session), firstShown = false, onResume = {}, onClose = {}) }
+            }
+        }
+        compose.waitForIdle()
+        assertEquals(emptyList<HapticFeedbackType>(), felt)
+    }
+
     @Test
     fun aFirstSessionHasNothingToCompareSoSaysNothing() {
         show(listOf(lift("pec_deck", null, sets = 1)))

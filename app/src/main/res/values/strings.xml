@@ -897,7 +897,6 @@
     <string name="history_moving">Moving</string>
     <string name="history_moving_period">Estimate, last 4 weeks</string>
     <string name="history_moving_none">Lifts that are moving show here after a few sessions.</string>
-    <string name="history_moving_value">%1$s kg</string>
     <string name="history_moving_description">%1$s, estimate %2$s to %3$s kg, %4$s</string>
     <string name="history_week_earlier">Earlier week</string>
     <string name="history_week_later">Later week</string>

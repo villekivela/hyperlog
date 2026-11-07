@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -55,14 +54,14 @@ internal const val RepPlayTag = "rep-play"
 private const val Inset = 0.14f
 
 /** The poses, read once however many rows draw one. */
-private object Poses {
-    private var loaded: ExercisePoses? = null
+internal object Poses {
+    @Volatile private var loaded: ExercisePoses? = null
 
     fun of(context: Context): ExercisePoses = loaded ?: ExercisePoses.fromAssets(context).also { loaded = it }
 }
 
 /** A pose's joints as index pairs, worked out once, so drawing a row is a few lines and nothing else. */
-private class RepFigure(val pose: RepPose) {
+private class RepDrawing(val pose: RepPose) {
     val start = pose.start
     val end = pose.end
     private val at = pose.joints.withIndex().associate { (i, name) -> name to i }
@@ -81,18 +80,21 @@ private class RepFigure(val pose: RepPose) {
 }
 
 @Composable
-private fun rememberFigure(exercise: Exercise?): Pair<RepFigure, Boolean>? {
+private fun rememberRep(exercise: Exercise?): ShownRep? {
     val context = LocalContext.current
     return remember(exercise) {
-        exercise?.let { Poses.of(context).poseFor(it) }?.let { shown: PoseShown -> RepFigure(shown.pose) to shown.exact }
+        exercise?.let { Poses.of(context).poseFor(it) }?.let { shown: PoseShown -> ShownRep(RepDrawing(shown.pose), shown.exact) }
     }
 }
 
+/** A [drawing] to show, and whether it is the exercise's own ([exact]) or its pattern's. */
+private class ShownRep(val drawing: RepDrawing, val exact: Boolean)
+
 /**
- * [figure] on the canvas: its [points] in [ink], the far side fainter and the torso heavier, each
+ * [drawing] on the canvas: its [points] in [ink], the far side fainter and the torso heavier, each
  * limb [grow] wider. With [solid] the far side keeps its ink, for a halo.
  */
-private fun DrawScope.drawPoints(figure: RepFigure, points: List<Int>, ink: Color, grow: Float = 0f, solid: Boolean = false) {
+private fun DrawScope.drawPoints(drawing: RepDrawing, points: List<Int>, ink: Color, grow: Float = 0f, solid: Boolean = false) {
     val box = size.minDimension
     val inner = box * (1 - 2 * Inset)
     val left = (size.width - inner) / 2
@@ -102,39 +104,39 @@ private fun DrawScope.drawPoints(figure: RepFigure, points: List<Int>, ink: Colo
     fun bones(pairs: IntArray, color: Color, width: Float) {
         for (i in pairs.indices step 2) drawLine(color, joint(pairs[i]), joint(pairs[i + 1]), strokeWidth = width, cap = StrokeCap.Round)
     }
-    bones(figure.far, if (solid) ink else ink.copy(alpha = ink.alpha * 0.45f), stroke + grow)
-    bones(figure.torso, ink, stroke * 1.5f + grow)
-    bones(figure.near, ink, stroke + grow)
-    drawCircle(ink, radius = stroke * 1.35f + grow / 2, center = joint(figure.head))
+    bones(drawing.far, if (solid) ink else ink.copy(alpha = ink.alpha * 0.45f), stroke + grow)
+    bones(drawing.torso, ink, stroke * 1.5f + grow)
+    bones(drawing.near, ink, stroke + grow)
+    drawCircle(ink, radius = stroke * 1.35f + grow / 2, center = joint(drawing.head))
 }
 
 /**
  * The rep: its end in full ink over its start as a ghost, so the mark shows how the lift moves. A
  * halo in the [ground]'s colour cuts the end pose out of the ghost, or at list size the two muddy.
  */
-private fun DrawScope.drawRep(figure: RepFigure, ink: Color, ghost: Boolean, ground: Color, at: List<Int> = figure.end) {
+private fun DrawScope.drawRep(drawing: RepDrawing, ink: Color, ghost: Boolean, ground: Color, at: List<Int> = drawing.end) {
     if (ghost) {
-        drawPoints(figure, figure.start, ink.copy(alpha = 0.2f))
-        drawPoints(figure, at, ground, grow = size.minDimension * 0.05f, solid = true)
+        drawPoints(drawing, drawing.start, ink.copy(alpha = 0.2f))
+        drawPoints(drawing, at, ground, grow = size.minDimension * 0.05f, solid = true)
     }
-    drawPoints(figure, at, ink)
+    drawPoints(drawing, at, ink)
 }
 
 /**
  * Hyperlog's signature (GLOSSARY, Rep mark): [exercise]'s rep on a tonal tile. One not yet posed
- * has its movement pattern's figure, muted and with no ghost, so it reads as a stand-in.
+ * has its movement pattern's rep, muted and with no ghost, so it reads as a stand-in.
  */
 @Composable
 internal fun RepMark(exercise: Exercise?, modifier: Modifier = Modifier, size: Dp = 48.dp) {
     val cs = MaterialTheme.colorScheme
-    val figure = rememberFigure(exercise)
-    val exact = figure?.second == true
+    val shown = rememberRep(exercise)
+    val exact = shown?.exact == true
     val ink = if (exact) cs.onSecondaryContainer else cs.onSurfaceVariant.copy(alpha = 0.6f)
     Canvas(
         // Its own layer: the mark is recorded once, and a list scrolling only moves it.
-        modifier.size(size).graphicsLayer().clip(RoundedCornerShape(size * 0.3f)).background(cs.secondaryContainer)
+        modifier.size(size).graphicsLayer().clip(RoundedCornerShape(12.dp)).background(cs.secondaryContainer)
             .testTag(if (exact) RepMarkTag else RepMarkFallbackTag),
-    ) { figure?.let { drawRep(it.first, ink, ghost = exact, ground = cs.secondaryContainer) } }
+    ) { shown?.let { drawRep(it.drawing, ink, ghost = exact, ground = cs.secondaryContainer) } }
 }
 
 /** [RepMark] for the exercise with this [id] in the library. */
@@ -142,12 +144,12 @@ internal fun RepMark(exercise: Exercise?, modifier: Modifier = Modifier, size: D
 internal fun RepMark(id: String, modifier: Modifier = Modifier, size: Dp = 48.dp) = RepMark(LocalExercises.current[id], modifier, size)
 
 /**
- * The figure does the rep, once: down, up, and down again to rest on the rep's end, where the mark
+ * The rep played, once: down, up, and down again to rest on the rep's end, where the mark
  * has it. With the system's animations off it is simply there. Nothing waits for it.
  */
 @Composable
 internal fun RepPlay(exercise: Exercise?, modifier: Modifier = Modifier, size: Dp = 48.dp, ground: Color = MaterialTheme.colorScheme.surface) {
-    val figure = rememberFigure(exercise) ?: return
+    val shown = rememberRep(exercise) ?: return
     val context = LocalContext.current
     val moved = remember(exercise) { Animatable(if (animationsRemoved(context)) 1f else 0f) }
     LaunchedEffect(exercise) {
@@ -157,9 +159,9 @@ internal fun RepPlay(exercise: Exercise?, modifier: Modifier = Modifier, size: D
         moved.animateTo(0f, stroke)
         moved.animateTo(1f, stroke)
     }
-    val ink = if (figure.second) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+    val ink = if (shown.exact) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
     Canvas(modifier.size(size).testTag(RepPlayTag)) {
-        drawRep(figure.first, ink, ghost = figure.second, ground = ground, at = figure.first.pose.at(moved.value))
+        drawRep(shown.drawing, ink, ghost = shown.exact, ground = ground, at = shown.drawing.pose.at(moved.value))
     }
 }
 
@@ -172,18 +174,18 @@ private const val RepStrokeMs = 600
  */
 @Composable
 internal fun RepStage(exercise: Exercise, cue: String?, onClick: () -> Unit) {
-    val figure = rememberFigure(exercise) ?: return
+    val shown = rememberRep(exercise) ?: return
     val cs = MaterialTheme.colorScheme
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxHeight < StageMinimum) return@BoxWithConstraints
-        val figureSize = min(maxHeight - 16.dp, 200.dp)
+        val drawingSize = min(maxHeight - 16.dp, 200.dp)
         val details = stringResource(R.string.session_exercise_details)
         Row(
             Modifier.fillMaxSize().clickable(onClickLabel = details, onClick = onClick).padding(horizontal = 24.dp, vertical = 8.dp).testTag(RepStageTag),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val ink = if (figure.second) cs.onSurface else cs.onSurfaceVariant.copy(alpha = 0.6f)
-            Canvas(Modifier.size(figureSize)) { drawRep(figure.first, ink, ghost = figure.second, ground = cs.surface) }
+            val ink = if (shown.exact) cs.onSurface else cs.onSurfaceVariant.copy(alpha = 0.6f)
+            Canvas(Modifier.size(drawingSize)) { drawRep(shown.drawing, ink, ghost = shown.exact, ground = cs.surface) }
             if (cue != null) {
                 Spacer(Modifier.width(16.dp))
                 Text(cue, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)

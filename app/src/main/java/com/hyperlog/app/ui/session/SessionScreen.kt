@@ -1,12 +1,11 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.hyperlog.app.ui.theme.accentButtonColors
 import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.ui.theme.figureLarge
 import com.hyperlog.app.ui.theme.figureDisplay
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.scrollBy
 import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.domain.LadderSpec
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,10 +20,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,12 +54,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,22 +71,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.domain.Field
-import com.hyperlog.app.domain.LoggedSet
-import com.hyperlog.app.domain.SetEntry
-import com.hyperlog.app.domain.WarmupSet
-import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.gym.EquipmentItem
@@ -101,11 +87,8 @@ import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.TechniqueVideo
 import com.hyperlog.app.library.search
 import com.hyperlog.app.program.SetPrescription
-import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.session.Correction
-import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.session.SessionOrder
 import com.hyperlog.app.session.keptEdits
@@ -326,15 +309,14 @@ fun SessionScreen(
                             openIndex = session.openIndex,
                             onBenchAngle = { benchFor = current.id },
                         )
-                        Box(Modifier.weight(1f)) {
-                            SetTable(table, Modifier.fillMaxSize()) {
-                                RepStage(current.exercise, current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
-                            }
-                            RecordMoment(session, Modifier.align(Alignment.TopCenter).padding(top = 8.dp))
+                        SetTable(table, Modifier.weight(1f)) {
+                            RepStage(current.exercise, current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
                         }
                     }
                 }
             }
+            // Over whatever is on screen: the next exercise can open its machine or ladder at once.
+            RecordMoment(session, Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 72.dp))
           }
             // Next is the pad's top row, and stays at the bottom as the same row when the pad is hidden or gone.
             val clock = rowClock(session, now)
@@ -868,7 +850,7 @@ internal fun SessionList(
                     }
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(e.exercise.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(e.exercise.name, style = MaterialTheme.typography.bodyLarge)
                     if (e.sets.isNotEmpty()) {
                         RirText(
                             e.sets.joinToString("   ") { it.setText() },

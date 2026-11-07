@@ -1,11 +1,12 @@
 package com.hyperlog.app.ui.gym
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.hyperlog.app.ui.theme.accentButtonColors
 import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.compose.material3.ListItemDefaults
-import com.hyperlog.app.ui.theme.Group
 import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.GroupHead
 import androidx.compose.foundation.layout.height
@@ -27,7 +28,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -37,10 +37,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -240,7 +238,7 @@ fun GymScreen(
             val platesTitle = stringResource(R.string.gym_plates)
             val plates = gym.plates.ifEmpty { null }?.let(::platesLine) ?: stringResource(R.string.gym_plates_none)
             SegmentedList {
-                row(dumbbellsTitle, dumbbells, Symbol.Exercise, onClick = onDumbbells, trailing = chevron)
+                row(dumbbellsTitle, dumbbells, Symbol.Weight, onClick = onDumbbells, trailing = chevron)
                 // Every plate, wrapping: the smallest are the ones a lifter checks.
                 row(platesTitle, plates, Symbol.Toll, onClick = { plating = true }, supportingLines = 3, trailing = chevron)
                 row(pinsTitle, pins, Symbol.PushPin, onClick = { pinning = true }, trailing = chevron)

@@ -345,12 +345,15 @@ What Progress opens on: a week's weekly sets per muscle against their ranges, th
 **Moving lift**:
 A lift whose estimate moved 1 % or more over about the last 4 weeks, up or down, and which was done in that time. Progress shows the three that moved most.
 
+**Moment**:
+A short, designed beat for a record, a finished session or a finished week. It takes no touches and holds nothing up.
+
 **Rep mark**:
-Hyperlog's signature: an exercise's rep drawn flat, its end in full ink over its start as a ghost, on a tonal tile. An exercise not yet posed takes its movement pattern's figure, muted.
+Hyperlog's signature: an exercise's rep drawn flat, its end in full ink over its start as a ghost, on a tonal tile. An exercise not yet posed takes its movement pattern's drawing, muted.
 _Avoid_: Thumbnail, exercise image
 
 **Rep stage**:
-The rep mark's figure, large, with the set's cue, in the space a short exercise leaves above its set table.
+The rep mark's drawing, large, with the set's cue, in the space a short exercise leaves above its set table.
 
 **Session rating**:
 What a finished session came to, in a word: Strong session, Solid session or In the bank, from the sets of the plan done, the sets within 1 RIR of target and the lifts up on last time, each as far as it can be read.

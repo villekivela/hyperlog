@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.program
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -32,11 +34,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -334,11 +334,10 @@ private fun ProgramWeeks(
             val count = active.inForce.size
             val changes = if (count == 0) stringResource(R.string.program_changes_none) else pluralStringResource(R.plurals.program_changes_in_force, count, count)
             val chevron = cs.onSurfaceVariant
-            val nextDay = next?.let { stringResource(R.string.program_week_day, it.position.week, it.day.name) }
             // The next day comes first: nothing else here is as worth doing.
             nextAction?.let { NextCard(it, Modifier.padding(top = 8.dp)) }
             SegmentedList(Modifier.padding(top = 8.dp)) {
-                item { ProgramHeader(program.title, program.author, finished = nextDay == null) }
+                item { ProgramHeader(program.title, program.author, finished = next == null) }
                 row(
                     title = weekdayPlanLine,
                     supporting = weekdayPlanTurns,

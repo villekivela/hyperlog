@@ -1260,7 +1260,7 @@ each planned day with the training day it lands on, and never changes the day:
        Front Delts · +5 more`). Being short shows in tone and never in error colour, because midweek
        most muscles are. A week with no sets shows the latest that has them
        (`Sets last week`), and with none in 8 weeks it says what to aim for.
-     - **Weekly sets**: the work sets of each of the last 8 weeks as bars from zero, each set counted
+     - **Work sets by week**: the work sets of each of the last 8 weeks as bars from zero, each set counted
        once, with zero and the top on one axis and the first and last weeks on the other. The head
        reads the week picked (`12 sets, week of 2 Nov`), marked on the axis even with no bar. A tap
        or drag reads a week, the muscles above follow it, and chevrons step the same weeks for a screen reader, which also
@@ -1363,33 +1363,37 @@ gallery (Technique videos).
   list, the add and swap pickers, Progress and a past session, in the colours of the tile, so it adds no colour of its own. The figures
   are baked from the mannequin's clips by `tools/exercise-poses/bake.py` into a small table the
   app draws, so a list scrolls with no 3D view in it. An exercise not yet posed takes its movement
-  pattern's figure, muted and with no ghost, so it reads as a stand-in.
+  pattern's drawing, muted and with no ghost, so it reads as a stand-in.
 - **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
   its own. The navigation bar's symbols read without their labels at 24 dp: a calendar, a dumbbell, a
   conversation, a clock and a gear. One symbol, one meaning: the dumbbell is the program and nothing
-  else, a bolt is a workout from Claude, and a storefront is a gym.
+  else, a bolt is a workout from Claude, and a storefront is Gyms and equipment.
 - **Moments** (#272): a record, a finished session and a finished week each have a moment, and none
   holds anything up.
-  - **The figure does the rep**: where a moment shows a lift, the rep mark's figure moves through it
-    once, between the clip's two ends, and rests on the end.
-  - **A record**, as it is logged: a pill over the table, the figure doing the rep beside `New record`
+  - **The rep plays**: where a moment shows a lift, the rep mark's drawing moves through it once,
+    between the clip's two ends, and rests on the end.
+  - **A record**, as it is logged: a pill over the table, the rep playing beside `New record`
     and `Rep record · 50 × 30`, in ink like the record's mark. It goes by itself after 3 seconds,
     takes no touches and sits clear of the pad. TalkBack reads it politely.
   - **A finished session**: Session done leads with its best lift doing the rep, then a rating in a
     word, `Strong session`, `Solid session` or `In the bank`, and the measures behind it: sets of the
     plan done, sets within 1 RIR of target, and lifts up on last time (a lift being up if its top set
     is heavier, or as heavy for more reps; held counts half). A measure that can't be read doesn't
-    count against a session, so a first session is judged on what it has. Under them come the
+    count against a session, so a first session is judged on what it has, and a deload or eased day
+    isn't compared with last time at all. The measures are averaged: 85 % is Strong, 55 % Solid. An
+    exercise left with nothing logged still counts against the plan. Under them come the
     records, the best lift (`Best lift: Hack Squat, 100 × 6 → 105 × 6`) and, with two or more
     exercises, the session's rep marks coming in one by one. Done and Resume work from the first frame.
   - **A finished week**: a session that closes a program week adds `Week 8 done`, a dot filling in for
     each day trained, `4 days · 42 sets`, the change on last week (`3 more than last week`) and, from
-    two weeks up, the run (`3 weeks in a row`).
-  - **Feel**: logging a set is a confirm, by the pad or the check, and opening a session or taking a
-    set back is nothing. A record, and a finished week, are felt more strongly. Rest ending buzzes,
+    two weeks up, the run (`3 weeks in a row`), which a gap of more than a fortnight ends. A deload week
+    isn't compared with the week before.
+  - **Feel**: logging a set, a drop, a mini-set or a hold is a confirm, by the pad or the check, and
+    opening a session or taking a set back is nothing. Session done is a confirm too, once. A record,
+    and a finished week, are felt more strongly. Rest ending buzzes,
     as it did.
   - **The system's animation setting** is followed everywhere: Compose's animations stop with it, a
-    moment just appears and goes, a figure rests on its end, marks and dots are there at once, and
+    moment just appears and goes, a rep rests on its end, marks and dots are there at once, and
     the mannequin holds a still.
 - **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
   with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
@@ -1421,7 +1425,7 @@ gallery (Technique videos).
   and a chip at the edge fading out, so the weeks under them stay on screen. Past its floor a set
   table head runs over its column into the room around it, whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip
   with the F / P toggle. A row's title and supporting text wrap, a session's title in History, an
-  exercise on Today and a Coach tile too, and a planned set's parts are joined by no-break spaces
+  exercise on Today and a Coach tile too, and a set prescription's parts are joined by no-break spaces
   as a logged set's are, so a line never ends on `1 ×`. A session in History has one line of
   preview, whole names ending in a count (`Kalliokoski · Barbell RDL · +3 more`), and its date on
   its title's first line.

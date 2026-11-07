@@ -195,7 +195,7 @@ private fun MuscleRow(week: MuscleWeek, most: Double, figure: Dp, name: Dp) {
     val sets = pluralStringResource(R.plurals.history_sets, if (week.sets == 1.0) 1 else 2, formatSets(week.sets))
     val spoken = stringResource(R.string.history_muscle_description, week.muscle, sets, week.range.low, week.range.high, status)
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 26.dp).padding(horizontal = TextEdge).clearAndSetSemantics { contentDescription = spoken },
+        Modifier.fillMaxWidth().heightIn(min = 24.dp).padding(horizontal = TextEdge).clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(week.muscle, Modifier.width(name), style = MaterialTheme.typography.bodyMedium)
@@ -233,7 +233,7 @@ internal fun TrendCard(glance: TrainingGlance, onPick: (LocalDate) -> Unit) {
         }
     }
     val sets = weeks.map { it.workSets }
-    WeeklySetsChart(
+    WorkSetsChart(
         weeks, selected, onSelect = { onPick(weeks[it].start) },
         description = stringResource(R.string.history_weekly_chart, weeks.size, sets.min(), sets.max(), sets.last()),
         modifier = Modifier.padding(horizontal = TextEdge),
@@ -267,7 +267,7 @@ private fun MovingRow(lift: MovingLift, onOpen: (String) -> Unit) {
         Text(lift.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(8.dp))
         Text(
-            stringResource(R.string.history_moving_value, to),
+            stringResource(R.string.weight_kg, to),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

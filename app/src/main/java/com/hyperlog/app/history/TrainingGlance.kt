@@ -2,6 +2,7 @@ package com.hyperlog.app.history
 
 import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.coach.VolumeStatus
+import com.hyperlog.app.coach.statusOf
 import com.hyperlog.app.library.Exercise
 import java.time.LocalDate
 import kotlin.math.abs
@@ -79,9 +80,3 @@ private fun ExerciseTrend.moving(today: LocalDate): MovingLift? {
 private const val MovingDays = 28L
 private const val MovingPercent = 1.0
 private const val MovingShown = 3
-
-private fun NumberRange.statusOf(sets: Double) = when {
-    sets < low -> VolumeStatus.Under
-    sets > high -> VolumeStatus.Over
-    else -> VolumeStatus.Within
-}

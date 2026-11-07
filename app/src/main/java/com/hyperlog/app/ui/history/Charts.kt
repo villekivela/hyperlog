@@ -1,26 +1,15 @@
 package com.hyperlog.app.ui.history
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -53,7 +42,6 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
-import com.hyperlog.app.ui.theme.TextEdge
 
 // Charts (docs/design/history.md): thin marks on hairline grids, one accent (primary), ink for
 // everything else. Each chart has its table in the rows under it, so nothing is read by touch alone.
@@ -190,71 +178,10 @@ fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * A week's sets per muscle, one [SetsBar] each. The names' column fits the longest name and a gap (at least
- * 128 dp, on the 8 dp grid), so every bar starts from the same baseline; past half the width a
- * name wraps rather than being cut off. The values' column fits the widest value ("12.5"), so the
- * longest bar ends at the same place whatever its value.
- */
-@Composable
-fun WeekSets(sets: Map<String, Double>) {
-    val most = sets.values.maxOrNull() ?: return
-    val style = MaterialTheme.typography.bodyMedium
-    val valueStyle = MaterialTheme.typography.labelLarge
-    val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val longest = sets.keys.maxOf { measurer.measure(it, style, maxLines = 1).size.width }
-        // 8 dp between the longest name and its bar.
-        val fit = with(density) { longest.toDp() } + 8.dp
-        val column = (ceil(fit.value / 8f) * 8f).dp.coerceIn(128.dp, (maxWidth - TextEdge * 2) / 2)
-        val widest = sets.values.maxOf { measurer.measure(formatSets(it), valueStyle, maxLines = 1).size.width }
-        val values = with(density) { widest.toDp() }
-        Column { sets.forEach { (muscle, count) -> SetsBar(muscle, count, most, labelWidth = column, valueWidth = values) } }
-    }
-}
-
 /** Sets as counted: whole sets plain ("7"), a half with its decimal ("7.5"). */
 fun formatSets(sets: Double): String {
     val halves = Math.round(sets * 2)
     return if (halves % 2 == 0L) "${halves / 2}" else "${halves / 2}.5"
-}
-
-/** One muscle's sets as an 8 dp bar from a shared baseline, its value after the tip. */
-@Composable
-fun SetsBar(
-    muscle: String,
-    sets: Double,
-    most: Double,
-    modifier: Modifier = Modifier,
-    labelWidth: Dp = 128.dp,
-    valueWidth: Dp = 24.dp,
-) {
-    val cs = MaterialTheme.colorScheme
-    Row(
-        modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = TextEdge),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(muscle, Modifier.width(labelWidth), style = MaterialTheme.typography.bodyMedium)
-        BoxWithConstraints(Modifier.weight(1f)) {
-            // Leave room after the longest bar for the gap and the widest value.
-            val full = (maxWidth - 8.dp - valueWidth).coerceAtLeast(0.dp)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.width(full * (sets / most.coerceAtLeast(1.0)).toFloat()).height(8.dp)
-                        .background(cs.primary, RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    formatSets(sets),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = cs.onSurfaceVariant,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-            }
-        }
-    }
 }
 
 /**
@@ -262,7 +189,7 @@ fun SetsBar(
  * first and last week under them. Tap or drag selects the nearest week; [selected] is in full ink.
  */
 @Composable
-fun WeeklySetsChart(
+fun WorkSetsChart(
     weeks: List<WeekTotal>,
     selected: Int,
     onSelect: (Int) -> Unit,
@@ -279,13 +206,18 @@ fun WeeklySetsChart(
         Scale.of(0.0, weeks.maxOf { it.workSets }.toDouble().coerceAtLeast(1.0)).let { s -> s.copy(min = 0.0, ticks = listOf(0.0, s.max)) }
     }
     fun nearestWeek(px: Float, width: Float) = (px / (width / weeks.size)).toInt().coerceIn(0, weeks.lastIndex)
+    // Room for the labels, which grow with the system's text size.
+    val labels = measurer.measure(unit, tick)
+    val density = LocalDensity.current
+    val column = maxOf(TickColumn, with(density) { labels.size.width.toDp() + 8.dp })
+    val axis = maxOf(DateAxis, with(density) { labels.size.height.toDp() + 12.dp })
     Canvas(
-        modifier.fillMaxWidth().height(height + DateAxis)
+        modifier.fillMaxWidth().height(height + axis)
             .semantics { contentDescription = description }
-            .pointerInput(weeks) { detectTapGestures { onSelect(nearestWeek(it.x, size.width - TickColumn.toPx())) } }
-            .pointerInput(weeks) { detectHorizontalDragGestures { change, _ -> onSelect(nearestWeek(change.position.x, size.width - TickColumn.toPx())) } },
+            .pointerInput(weeks, column) { detectTapGestures { onSelect(nearestWeek(it.x, size.width - column.toPx())) } }
+            .pointerInput(weeks, column) { detectHorizontalDragGestures { change, _ -> onSelect(nearestWeek(change.position.x, size.width - column.toPx())) } },
     ) {
-        val plotW = size.width - TickColumn.toPx()
+        val plotW = size.width - column.toPx()
         val plotH = height.toPx()
         fun y(v: Double) = (plotH * (1 - (v - scale.min) / (scale.max - scale.min))).toFloat()
         scale.ticks.forEach { t ->
@@ -303,7 +235,7 @@ fun WeeklySetsChart(
             )
         }
         // The week read, on the axis, so an empty one is marked too.
-        drawCircle(cs.primary, radius = 3.dp.toPx(), center = Offset(slot * selected + slot / 2, plotH + 4.dp.toPx()))
+        drawCircle(cs.primary, radius = 4.dp.toPx(), center = Offset(slot * selected + slot / 2, plotH + 4.dp.toPx()))
         val ay = plotH + 8.dp.toPx()
         label(measurer, short(weeks.first().start), tick, Offset(0f, ay))
         if (weeks.size > 1) label(measurer, short(weeks.last().start), tick, Offset(plotW, ay), alignEnd = true)
@@ -320,7 +252,7 @@ fun TargetBar(sets: Double, low: Int, high: Int, most: Double, modifier: Modifie
     val cs = MaterialTheme.colorScheme
     Canvas(modifier.height(12.dp)) {
         fun x(v: Double) = (size.width * (v / most.coerceAtLeast(1.0))).toFloat()
-        val bar = 6.dp.toPx()
+        val bar = 8.dp.toPx()
         val line = (size.height - bar) / 2
         // One track from zero, the band a raised stretch of it, and the sets along the same line.
         drawRoundRect(cs.surfaceContainerHighest, topLeft = Offset(0f, line), size = Size(size.width, bar), cornerRadius = CornerRadius(bar / 2))

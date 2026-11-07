@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.lazy.itemsIndexed
 import com.hyperlog.app.ui.theme.Segment
@@ -7,7 +10,6 @@ import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.figureLarge
 import com.hyperlog.app.ui.theme.cardBehind
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,8 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -33,11 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -121,10 +119,12 @@ private fun SectionHead(text: String) {
 @Composable
 private fun PickRow(exercise: Exercise, tag: String?) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = CardPadding, vertical = 16.dp),
+        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = CardPadding, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        RepMark(exercise)
+        Spacer(Modifier.width(12.dp))
+        Text(exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         tag?.let {
             Spacer(Modifier.width(16.dp))
             Text(it, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)

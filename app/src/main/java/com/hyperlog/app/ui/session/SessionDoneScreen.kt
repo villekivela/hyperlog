@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.hyperlog.app.ui.mannequin.RepPlay
 import com.hyperlog.app.ui.mannequin.LocalExercises
 import com.hyperlog.app.session.SessionRating
@@ -18,10 +20,8 @@ import com.hyperlog.app.session.ExerciseSummary
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.FlowRow
@@ -38,7 +38,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -61,8 +60,6 @@ import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.ShapedSymbol
 import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.cardBehind
-import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import java.text.DateFormat
 import java.util.Date
 import kotlin.math.roundToInt
@@ -73,13 +70,15 @@ import com.hyperlog.app.ui.theme.TextEdge
  * opens to look at or correct (by its place in [summary]).
  */
 @Composable
-fun SessionDoneScreen(summary: SessionSummary, onResume: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, onOpen: ((Int) -> Unit)? = null) {
+fun SessionDoneScreen(summary: SessionSummary, firstShown: Boolean = true, onShown: (Long) -> Unit = {}, onResume: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, onOpen: ((Int) -> Unit)? = null) {
     BackHandler(onBack = onClose)
     val cs = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
     LaunchedEffect(summary.sessionId) {
+        if (!firstShown) return@LaunchedEffect
         haptics.performHapticFeedback(HapticFeedbackType.Confirm)
         if (summary.week != null) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+        onShown(summary.sessionId)
     }
     Surface(modifier.fillMaxSize(), color = Tones.screen) {
         Column(Modifier.statusBarsPadding()) {
@@ -202,7 +201,7 @@ private fun DoneStats(summary: SessionSummary, records: Int) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         val stats = listOfNotNull(
-            summary.planned?.let { pluralStringResource(R.plurals.done_sets_of, it, summary.workSets, it) } ?: pluralStringResource(R.plurals.done_sets, summary.workSets, summary.workSets),
+            summary.planned?.let { pluralStringResource(R.plurals.done_sets_of, it, summary.plannedDone, it) } ?: pluralStringResource(R.plurals.done_sets, summary.workSets, summary.workSets),
             summary.aimed.takeIf { it > 0 }?.let { stringResource(R.string.done_on_effort, summary.onEffort, it) },
             summary.compared.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.done_lifts_up, it, summary.up, it) },
             records.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.done_records, it, it) },

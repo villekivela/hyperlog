@@ -44,11 +44,14 @@ import kotlinx.coroutines.delay
 /** How long a record's moment stays: long enough for the rep and a read, gone by the next set. */
 private const val RecordMomentMs = 3_000L
 
+/** Everything logged so far: sets, and the drops, mini-sets and holds that extend them. */
+private fun ActiveSession.logged() = exercises.sumOf { e -> e.sets.size + e.sets.sumOf { it.extensions.size } }
+
 /** A set logged is felt, by the pad or the check. Opening a session or taking a set back is not. */
 @Composable
 internal fun SetLoggedHaptic(session: ActiveSession) {
     val haptics = LocalHapticFeedback.current
-    val logged = session.exercises.sumOf { it.sets.size }
+    val logged = session.logged()
     var seen by remember(session.id) { mutableIntStateOf(logged) }
     LaunchedEffect(logged) {
         if (logged > seen) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -67,8 +70,11 @@ private class RecordShown(val record: Record, val exercise: Exercise, val set: L
 /** The record just made, if the set [session] logged last made one. */
 private fun newest(session: ActiveSession): RecordShown? {
     val exercise = session.exercises.firstOrNull { it.id == session.latestSet?.first } ?: session.exercises.lastOrNull { e -> e.records.any { it != null } }
-    val at = exercise?.records?.indexOfLast { it != null }?.takeIf { it >= 0 } ?: return null
-    return RecordShown(exercise.records[at]!!, exercise.exercise, exercise.sets[at])
+    exercise ?: return null
+    // Sets can be logged out of order, so the last place isn't always the set just logged.
+    val at = session.latestSet?.second?.let(exercise.setIndices::indexOf)?.takeIf { it >= 0 } ?: exercise.records.indexOfLast { it != null }
+    val record = exercise.records.getOrNull(at) ?: return null
+    return RecordShown(record, exercise.exercise, exercise.sets[at])
 }
 
 /**
@@ -79,15 +85,24 @@ private fun newest(session: ActiveSession): RecordShown? {
 @Composable
 internal fun RecordMoment(session: ActiveSession, modifier: Modifier = Modifier) {
     val count = session.exercises.sumOf { e -> e.records.count { it != null } }
+    val logged = session.logged()
     var seen by remember(session.id) { mutableIntStateOf(count) }
+    var seenLogged by remember(session.id) { mutableIntStateOf(logged) }
     var showing by remember(session.id) { mutableStateOf<RecordShown?>(null) }
     val haptics = LocalHapticFeedback.current
-    LaunchedEffect(count) {
-        val fresh = count > seen
+    LaunchedEffect(count, logged) {
+        // A correction can make a record too, but logs nothing, and a set taken back takes it away.
+        val fresh = count > seen && logged > seenLogged
+        if (count < seen) showing = null
         seen = count
+        seenLogged = logged
         if (fresh) {
             showing = newest(session)
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+    LaunchedEffect(showing) {
+        if (showing != null) {
             delay(RecordMomentMs)
             showing = null
         }

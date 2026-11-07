@@ -1,10 +1,11 @@
 package com.hyperlog.app.ui.program
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.clickable
 import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.session.RirText
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import com.hyperlog.app.ui.theme.connectedChoiceFits
 import com.hyperlog.app.ui.theme.fadingSides
@@ -27,17 +28,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -51,7 +49,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.SlotDiff
-import com.hyperlog.app.domain.summary
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Block
 import com.hyperlog.app.program.BlockReviews
@@ -390,7 +387,7 @@ private fun DoneDay(session: PastSessionItem) {
             session.exercises.forEach { e ->
                 val top = e.sets.maxWithOrNull(compareBy({ it.weightKg }, { it.fullReps })) ?: return@forEach
                 Row {
-                    Text(e.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(e.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     Spacer(Modifier.width(16.dp))
                     RirText(top.copy(extensions = emptyList()).setText(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }

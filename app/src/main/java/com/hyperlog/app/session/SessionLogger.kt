@@ -38,7 +38,6 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.ActiveProgram
-import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
@@ -209,8 +208,15 @@ class SessionLogger(
         val programId = dao.session(sessionId)?.programId ?: return null
         val byWeek = dao.finishedSessions().filter { it.programId == programId && it.week != null }.groupBy { it.week!! }
         suspend fun sets(w: Int) = byWeek[w]?.flatMap { dao.sessionExercises(it.id) }?.filterNot { it.removed }?.sumOf { dao.sets(it.id).size }
-        val streak = generateSequence(week) { it - 1 }.takeWhile { it in byWeek }.count()
-        return WeekDone(week, byWeek[week].orEmpty().mapNotNull { it.dayIndex }.distinct().size, sets(week) ?: 0, sets(week - 1), streak)
+        // A run of weeks is one with no long break in it, however far the program has come.
+        var streak = 1
+        while (true) {
+            val earlier = byWeek[week - streak] ?: break
+            val after = byWeek.getValue(week - streak + 1)
+            if (after.minOf { it.startedAt } - earlier.maxOf { it.startedAt } > LongestRunGapMs) break
+            streak++
+        }
+        return WeekDone(week, byWeek[week].orEmpty().size, sets(week) ?: 0, sets(week - 1), streak)
     }
 
     /** Adds [exerciseId] after the others and makes it the one on screen. */
@@ -1012,7 +1018,11 @@ class SessionLogger(
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
         val week = session.day?.let { weekDone(session.id, it.position.week) }
         _state.value = null
-        SessionSummary(session.id, session.startedAt, ended, logged.map { it.summary }, week)
+        // A deload is lighter by design: nothing in it is a lift down on last time.
+        val easy = session.day?.let { it.deload || it.eased } == true
+        val summaries = logged.map { e -> e.summary.let { if (easy) it.copy(change = null, lastTop = null) else it } }
+        val skipped = session.exercises.filter { it.sets.isEmpty() }.sumOf { it.prescription?.size ?: 0 }
+        SessionSummary(session.id, session.startedAt, ended, summaries, week?.takeUnless { easy } ?: week?.copy(lastWeekSets = null), skipped)
     }
 
     /**
@@ -1314,3 +1324,6 @@ internal fun SetExtensionEntity.toExtension() = Extension(Extension.Kind.valueOf
 private fun SetEntry.toColumns() = EntryColumns(weight, full, partial, rir, field.name, partialMode, fresh, right)
 
 private fun EntryColumns.toEntry() = SetEntry(weight, full, partial, rir, Field.valueOf(field), partialMode, fresh, right)
+
+/** The longest gap between sessions that keeps a run of weeks going: a fortnight. */
+private const val LongestRunGapMs = 14 * 24 * 3_600_000L

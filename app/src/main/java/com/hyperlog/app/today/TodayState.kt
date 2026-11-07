@@ -14,12 +14,6 @@ import java.time.LocalDate
 /** The kinds of day Today shows for the date picked, each with its own list. */
 enum class DayKind { Running, Done, Planned, Missed, RestDay }
 
-/**
- * What Today shows for [selected] (SPEC, Today): the day's kind and the day shown, whether Start is
- * offered, the time-off line, the again notice and the calendar's marks. [sessions] are every
- * session finished; [workout] is a workout from Claude waiting today; while [sessionRunning], its
- * day is [runningDay] (null for one ad hoc or a workout).
- */
 /** What the next action can do now. */
 sealed interface NextOffer {
     /** A session is running. */
@@ -32,6 +26,12 @@ sealed interface NextOffer {
     data class On(val date: LocalDate) : NextOffer
 }
 
+/**
+ * What Today shows for [selected] (SPEC, Today): the day's kind and the day shown, whether Start is
+ * offered, the time-off line, the again notice and the calendar's marks. [sessions] are every
+ * session finished; [workout] is a workout from Claude waiting today; while [sessionRunning], its
+ * day is [runningDay] (null for one ad hoc or a workout).
+ */
 class TodayState(
     private val program: ActiveProgram?,
     sessions: List<PastSessionItem>,

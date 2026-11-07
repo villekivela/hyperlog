@@ -1,5 +1,7 @@
 package com.hyperlog.app.ui.settings
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.SegmentedRow
@@ -7,10 +9,8 @@ import com.hyperlog.app.ui.theme.GroupGap
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.ui.graphics.Color
-import com.hyperlog.app.ui.theme.Group
 import com.hyperlog.app.ui.theme.GroupHead
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,11 +37,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.hyperlog.app.coach.CoachCost
@@ -270,7 +267,7 @@ fun SettingsScreen(
                 GroupHead(stringResource(R.string.settings_debug))
                 val galleryTitle = stringResource(R.string.mannequin_gallery)
                 val galleryLine = stringResource(R.string.settings_mannequin_gallery_body)
-                SegmentedList { row(galleryTitle, galleryLine, Symbol.Exercise, onClick = open, trailing = chevron) }
+                SegmentedList { row(galleryTitle, galleryLine, Symbol.AccessibilityNew, onClick = open, trailing = chevron) }
             }
             if (version != null) {
                 Text(

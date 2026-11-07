@@ -60,6 +60,7 @@ import com.hyperlog.app.today.RestDay
 import com.hyperlog.app.session.date
 import com.hyperlog.app.week.DayFit
 import com.hyperlog.app.week.FitAsk
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.session.RirText
 import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.symbols.Symbol
@@ -624,8 +625,12 @@ internal fun DoneRow(number: Int, exercise: ExerciseSummary) {
     ) {
         Text("$number", Modifier.width(40.dp), style = MaterialTheme.typography.titleSmall, color = cs.primary)
         Column(Modifier.weight(1f)) {
-            Text(exercise.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(exercise.name, style = MaterialTheme.typography.bodyLarge)
             RirText(exercise.sets.joinToString("   ") { it.setText() }, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        }
+        exercise.exerciseId?.let {
+            Spacer(Modifier.width(12.dp))
+            RepMark(it)
         }
     }
 }

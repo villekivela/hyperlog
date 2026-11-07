@@ -87,6 +87,28 @@ class SessionMomentsTest {
         assertEquals("Reps", summary(lift("Reps", LiftChange.Up, set(60.0, 9), set(60.0, 8))).bestLift?.name)
     }
 
+    /** Review: a 0 kg lift made 0/0, which sorts above any real gain. */
+    @Test
+    fun aBodyweightLiftNeverOutranksARealGainOnNothing() {
+        val session = summary(lift("Dip", LiftChange.Up, set(0.0, 12), set(0.0, 10)), lift("Bench", LiftChange.Up, set(105.0, 6), set(100.0, 6)))
+        assertEquals("Bench", session.bestLift?.name)
+    }
+
+    /** Review: three of six exercises skipped read `9 of 9` and could rate Strong. */
+    @Test
+    fun anExerciseSkippedStillCountsAgainstThePlan() {
+        val session = summary(lift("A", LiftChange.Up, set(105.0, 6), set(100.0, 6))).copy(skippedSets = 6)
+        assertEquals(8, session.planned)
+        assertEquals(2, session.plannedDone)
+        assertEquals(SessionRating.Solid, session.rating)
+    }
+
+    /** Review: sets added on top of a plan read `14 of 12`. */
+    @Test
+    fun setsBeyondThePlanDontPassIt() {
+        assertEquals(2, summary(lift("A", null, set(100.0, 6), null, planned = 2, sets = 4)).plannedDone)
+    }
+
     @Test
     fun noLiftUpHasNoBestLift() {
         assertEquals(null, summary(lift("A", LiftChange.Same, set(100.0, 6), set(100.0, 6))).bestLift)

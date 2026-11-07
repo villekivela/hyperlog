@@ -4,6 +4,12 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.hyperlog.app.ui.mannequin.LocalExercises
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -17,11 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
-import com.hyperlog.app.domain.LadderSpec
-import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.gym.GymsScreen
 import com.hyperlog.app.ui.gym.GymsViewModel
@@ -111,8 +114,10 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) opened(intent)
         setContent {
             val exercises by sessions.exercises.collectAsStateWithLifecycle()
-            val byId = androidx.compose.runtime.remember(exercises) { exercises.associateBy { it.id } }
-            HyperlogTheme { androidx.compose.runtime.CompositionLocalProvider(com.hyperlog.app.ui.mannequin.LocalExercises provides byId) { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, trainingStyles, openCheckIn) } }
+            val byId = remember(exercises) { exercises.associateBy { it.id } }
+            // Off the main thread, so the first list of rep marks doesn't wait for the file.
+            LaunchedEffect(Unit) { withContext(Dispatchers.IO) { com.hyperlog.app.ui.mannequin.Poses.of(this@MainActivity) } }
+            HyperlogTheme { CompositionLocalProvider(LocalExercises provides byId) { App(sessions, library, gyms, programs, startingWeights, past, history, backups, updates, claudeKey, checkIns, trainingStyles, openCheckIn) } }
         }
     }
 
@@ -244,7 +249,7 @@ internal fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
                 selected = tab == selected,
                 onClick = { onSelect(tab) },
                 icon = { SymbolIcon(if (tab == selected) filled else symbol, null) },
-                label = { Text(label, Modifier.padding(horizontal = 2.dp), fontSize = labelSize, maxLines = 1) },
+                label = { Text(label, fontSize = labelSize, maxLines = 1) },
                 colors = ShortNavigationBarItemDefaults.colors(
                     selectedIndicatorColor = cs.primaryContainer,
                     selectedIconColor = cs.onPrimaryContainer,
@@ -349,6 +354,7 @@ private fun App(
     // The day picked on Today's calendar (epoch day; null: today), kept while a session opened from it is looked at.
     var todayDay by rememberSaveable { mutableStateOf<Long?>(null) }
     var startOnToday by rememberSaveable { mutableStateOf(false) }
+    var doneFelt by rememberSaveable { mutableStateOf<Long?>(null) }
     // Today's own saved state (each day's scroll), kept while another screen is up.
     val todayState = rememberSaveableStateHolder()
     // A session opened from Program or Today goes back there.
@@ -570,14 +576,12 @@ private fun App(
     val todayWorkout = waitingWorkouts.firstOrNull { it.addedOn == (program?.today ?: java.time.LocalDate.now()) }
     // The next action on Program and Progress, from the same state as Today, so it offers Start
     // only where Today has one, and Start opens Today's gym sheet.
-    val offer = program?.let {
-        com.hyperlog.app.today.TodayState(
-            it, pastSessions.orEmpty(), weekdayPlan, lastTrained, todayWorkout != null, running != null, running?.day, it.today, it.today,
-        ).nextOffer
+    val nextState = program?.let {
+        com.hyperlog.app.today.TodayState(it, pastSessions.orEmpty(), weekdayPlan, lastTrained, todayWorkout != null, running != null, running?.day, it.today, it.today)
     }
-    val nextAction = program?.next?.day?.let { day ->
+    val nextAction = nextState?.nextDay?.let { day ->
         val title = stringResource(R.string.program_week_day, day.position.week, day.day.name)
-        when (offer) {
+        when (val offer = nextState.nextOffer) {
             com.hyperlog.app.today.NextOffer.Resume -> NextAction(title, stringResource(R.string.next_resume)) { screen = Screen.Today; left = false }
             com.hyperlog.app.today.NextOffer.Start -> NextAction(title, stringResource(R.string.next_start)) { screen = Screen.Today; startOnToday = true }
             is com.hyperlog.app.today.NextOffer.On -> NextAction(title, date = com.hyperlog.app.ui.history.long(offer.date))
@@ -716,6 +720,8 @@ private fun App(
         finished != null && done?.shown != null -> PastExerciseScreen(done, pastModel, onBack = { pastModel.show(null) })
         finished != null -> SessionDoneScreen(
             done?.summary ?: finished,
+            firstShown = (done?.summary ?: finished).sessionId != doneFelt,
+            onShown = { doneFelt = it },
             onResume = { pastModel.close(); sessions.resumeFinished(); left = false },
             onClose = { pastModel.close(); sessions.dismissSummary(); left = false },
             onOpen = done?.let { d -> { i: Int -> pastModel.show(d.exercises[i].id) } },

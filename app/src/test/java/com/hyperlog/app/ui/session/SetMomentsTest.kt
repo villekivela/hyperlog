@@ -13,6 +13,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
 import com.hyperlog.app.domain.LoggedSet
@@ -51,9 +52,9 @@ class SetMomentsTest {
         override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) { felt += hapticFeedbackType }
     }
 
-    private fun session(sets: Int, records: List<Record?> = List(sets) { null }): ActiveSession {
+    private fun session(sets: Int, records: List<Record?> = List(sets) { null }, top: LoggedSet = set): ActiveSession {
         val exercise = SessionExercise(
-            id = 1, exercise = bench, sets = List(sets) { set }, lastTime = emptyList(), ladder = DefaultPlates.ladder(), ladderKnown = true,
+            id = 1, exercise = bench, sets = List(sets) { top }, lastTime = emptyList(), ladder = DefaultPlates.ladder(), ladderKnown = true,
             prescription = plan, plates = DefaultPlates, records = records,
         )
         val entry = SetEntry("100", "6", "", 1, Field.Weight, partialMode = false, fresh = true)
@@ -117,6 +118,49 @@ class SetMomentsTest {
         compose.mainClock.advanceTimeBy(600)
         compose.onNodeWithText("Estimate record · 100 × 6").assertExists()
         assertEquals(1, felt.count { it == HapticFeedbackType.LongPress })
+    }
+
+    /** Review: a drop, mini-set or hold is logged too. */
+    @Test
+    fun loggingADropIsFelt() {
+        show(session(1))
+        compose.runOnIdle { shown = session(1, top = set.copy(extensions = listOf(Extension(Extension.Kind.Drop, 80.0, 6)))) }
+        compose.waitForIdle()
+        assertEquals(1, confirms())
+    }
+
+    /** Review: taking the set back cancelled the timer that clears the pill, and it stayed. */
+    @Test
+    fun aRecordTakenBackTakesItsMomentWithIt() {
+        show(session(0))
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { shown = session(1, listOf(Record.Estimate)) }
+        compose.mainClock.advanceTimeBy(600)
+        compose.runOnIdle { shown = session(0) }
+        compose.mainClock.advanceTimeBy(4_000)
+        compose.onNodeWithText("New record").assertDoesNotExist()
+    }
+
+    /** Review: a correction that makes a record logs nothing new, so it has no moment. */
+    @Test
+    fun aCorrectionHasNoMoment() {
+        show(session(1))
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { shown = session(1, listOf(Record.Estimate)) }
+        compose.mainClock.advanceTimeBy(600)
+        compose.onNodeWithText("New record").assertDoesNotExist()
+    }
+
+    /** Review: the record shown is the set just logged, wherever it sits. */
+    @Test
+    fun aRecordOutOfOrderShowsTheSetThatMadeIt() {
+        val heavy = LoggedSet(120.0, 3, 0, 1)
+        val exercise = session(0).exercises.single().copy(sets = listOf(heavy, set), records = listOf(Record.Estimate, Record.Reps), setIndices = listOf(0, 2))
+        show(session(0).copy(exercises = listOf(exercise.copy(sets = listOf(set), records = listOf(Record.Reps), setIndices = listOf(2)))))
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { shown = session(0).copy(exercises = listOf(exercise), latestSet = 1L to 0) }
+        compose.mainClock.advanceTimeBy(600)
+        compose.onNodeWithText("Estimate record · 120 × 3").assertExists()
     }
 
     @Test

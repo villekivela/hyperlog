@@ -36,7 +36,8 @@ class WeekDoneTest {
             """
             { "format": 1, "title": "T", "blocks": [
               { "id": "one", "name": "One", "weekStart": 1, "weekEnd": 1, "days": [ ${day("a", "Day A", "db_bench_press")}, ${day("b", "Day B", "db_lateral_raise")} ] },
-              { "id": "two", "name": "Two", "weekStart": 2, "weekEnd": 2, "days": [ ${day("c", "Day A", "seated_db_shoulder_press")}, ${day("d", "Day B", "dumbbell_shoulder_press_standing")} ] } ] }
+              { "id": "two", "name": "Two", "weekStart": 2, "weekEnd": 2, "days": [ ${day("c", "Day A", "seated_db_shoulder_press")}, ${day("d", "Day B", "dumbbell_shoulder_press_standing")} ] },
+              { "id": "easy", "name": "Easy", "weekStart": 3, "weekEnd": 3, "weeks": { "3": { "deload": true } }, "days": [ ${day("e", "Day A", "db_flye")}, ${day("f", "Day B", "db_bicep_curl")} ] } ] }
             """,
         )
     }
@@ -86,6 +87,25 @@ class WeekDoneTest {
         val second = trainNext().week!!
         assertEquals(4, second.lastWeekSets)
         assertEquals(2, second.streak)
+    }
+
+    /** Review: a deload is lighter by design, so its card doesn't say `4 fewer than last week`. */
+    @Test
+    fun aDeloadWeekIsntComparedWithTheOneBefore() = runTest {
+        repeat(5) { trainNext() }
+        val summary = trainNext()
+        assertEquals(3, summary.week?.week)
+        assertNull(summary.week?.lastWeekSets)
+    }
+
+    /** Review: `3 weeks in a row` survived a month off. */
+    @Test
+    fun aMonthOffBreaksTheRun() = runTest {
+        trainNext()
+        trainNext()
+        now += 30 * 86_400_000L
+        trainNext()
+        assertEquals(1, trainNext().week?.streak)
     }
 
     @Test
