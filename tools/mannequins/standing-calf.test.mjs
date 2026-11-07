@@ -8,6 +8,7 @@ import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { CHECKS, checkStage } from './checks.mjs';
 import { wpos } from './rig.mjs';
+import { floating } from './floats.fixture.mjs';
 
 const ID = 'standing_calf_raise';
 const stage = await buildStage(prepare(ID));
@@ -51,6 +52,10 @@ test('the machine stands on the floor at its published size', () => {
   assert.ok(Math.abs(size.y - 1.829) < 0.03, `${size.y.toFixed(3)} tall, published 1.829`);
   assert.ok(Math.abs(size.z - 1.473) < 0.02, `${size.z.toFixed(3)} long, published 1.473`);
   assert.ok(Math.abs(size.x - 1.143) < 0.02, `${size.x.toFixed(3)} wide, published 1.143`);
+});
+
+test('nothing on the machine floats: every part joins the floor, all through the rep', () => {
+  for (const d of [0, 0.5, 1]) assert.deepEqual(floating(stage, d), [], `at ${d}`);
 });
 
 // The owner's bar (#241): no open tube end.
