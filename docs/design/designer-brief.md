@@ -63,6 +63,10 @@ look like the phone's own apps: Material 3 Expressive, with sections you can see
   a colour but two fixed scales. RIR uses its own three colours on one shape, the RIR chip (outlined = target, a badge = logged: deep with a pale number in dark, a tint with an edge in light; the number in the chip's hue).
   Plates use the kg competition colours: 25 and 2.5 red, 20 and 2 blue, 15 and 1.5 yellow, 10 and
   1 green, 5 and 0.5 white (outlined), 1.25 and others silver.
+- **One meaning per colour** (`docs/design/colours.md`). Amber is a falling weight only; the fit
+  chip has its own orchid. The four reds (error, RIR 0, the drop set, the 25 kg plate) stay, each
+  told apart by its shape, never by colour alone. Plate colours are exempt, because they follow
+  the kg plate standard.
 - **Plates are drawn, never written out**: one component, a drawing of one side of the bar with a
   legend (`1 × 20`, the bar's weight), at the top of the pad while a weight is typed and, compact,
   on warm-up rows. A tap on the pad's strip opens the whole bar (or plate-loaded machine).

@@ -609,9 +609,9 @@ each planned day with the training day it lands on, and never changes the day:
 - **Time.** When a day's `~N minutes` is more than 5 minutes over its training day's, the card
   shows it as a chip, `~58 min · Saturday has 50`, and tapping it starts a check-in whose first
   answer is "Day C runs ~58 minutes but Saturday has 50." A training day without minutes is never
-  checked. The chip is its own line under the card's numbers: the amber of the progression's
-  weight-down mark behind dark ink (owner, 2026-10-27; amber text alone read at 2.1 to 3.3:1 on
-  the hero and light cards, the chip's ink 8:1), the same on every card and in both themes, on
+  checked. The chip is its own line under the card's numbers: an orchid of its own, `#E58FD0`,
+  behind dark ink (owner, #271: amber means only a falling weight; the chip's ink reads at 7.7:1),
+  the same on every card and in both themes, on
   every card that has a date: Today's hero and planned days, and Program's days with dates. It is
   a 48 dp tap target ending in a chevron (`›`, in the ink, as the Training days row has; owner,
   2026-10-27), which the review's read-only chip leaves out; with no Claude key the tap hands the same words to Ask Claude to share.

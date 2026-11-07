@@ -14,4 +14,12 @@ class ColourInventoryTest {
             .filter { it.extension == "kt" && "Color(0x" in it.readText() }.map { it.name }.toSet()
         assertEquals(emptySet<String>(), written - scales)
     }
+
+    /** Amber is a falling weight and nothing else: no screen borrows the trend's colour for another meaning (owner, #271). */
+    @Test
+    fun amberMeansOnlyAFallingWeight() {
+        val borrowed = File("src/main/java/com/hyperlog/app/ui").walkTopDown()
+            .filter { it.extension == "kt" && "Direction.Down.color" in it.readText() }.map { it.name }.toSet()
+        assertEquals(emptySet<String>(), borrowed)
+    }
 }
