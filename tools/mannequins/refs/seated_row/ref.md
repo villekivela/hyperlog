@@ -53,8 +53,8 @@ In the videos the lifter is taken as 1.75 m, sitting 910 mm from seat to crown. 
 | Pulley diameter | 152 (6 in) | Atlantis D124 page |
 | Cable | 4.8 (3/16 in), rated 1905 kg (4200 lb) | Rating from the D124 page; size from the owner's manual, which gives 3/16 in for stacks over 200 lb |
 | Bench top height | about 430; rough, +-40 | estimated from D124_2 at x 650 (pad and upper rail 53 px, gap 66 px, lower beam 25 px, 40 px to the floor), scaled by the 2413 mm height. The wide row's bench agrees: 130 px at 9:43 gives 430, scaled by the 1.75 m lifter. The deadlift and kelso bench is lower, about 340 to 370 at 0:12 of the deadlift video, scaled the same way |
-| Bench pad length | 1000; low confidence | chosen from the videos' benches: 1040 (deadlift 0:12), 1080 (row 5:02), 925 (wide row 9:43), each scaled by the lifter. The D124 images don't separate pad from rail |
-| Bench pad width | 300; low confidence | chosen, the same fit rule as `pec_deck`'s back pad (the mannequin's hips and back). No view settles it |
+| Bench pad length | 1000; low confidence | estimated from the videos' benches: 1040 (deadlift 0:12), 1080 (row 5:02), 925 (wide row 9:43), each scaled by the lifter. The D124 images don't separate pad from rail |
+| Bench pad width | 300; low confidence | chosen from the same fit rule as `pec_deck`'s back pad (the mannequin's hips and back). No view settles it |
 | Bench pad thickness | 65 | estimated from D124_2 (about 30 px at 0.45 px/mm), scaled by the 2413 mm height; York publishes 2.5 in for its pad |
 | Bench end | L 2286 | published length |
 | Rear post centre | L about 2070, 215 in from the bench end | estimated from D124_2 (x about 870 against the end at 970), scaled by the vanishing point above; rough |
@@ -62,11 +62,11 @@ In the videos the lifter is taken as 1.75 m, sitting 910 mm from seat to crown. 
 | Foot plate top edge | L about 1005, about 400 high | estimated from D124_2 (y about 850), same scale; rough |
 | Foot plate angle | about 30 from vertical, the top leaning toward the tower; low confidence | estimated from D124_2, where the plate's edge leans 19 degrees in a view about 45 degrees off side-on. The videos' plates lean 32 degrees (deadlift 0:01) and about 40 degrees (wide row 9:43) |
 | Foot plate size | two plates, each about 190 wide and 360 long, about 90 apart; about 470 across both; low confidence, +-30 | estimated from D124_1 (70 to 78 px each and 42 px between them in a view about 30 degrees off the bench's line), scaled by the 686 mm tower width. Length follows from the two edges above |
-| Foot plate to seat | plate face to hips 570 to 830 for a 1.75 m lifter; the bench end stands 1115 from the plate's bottom edge | hips from the deadlift video at 0:05 and 0:19, scaled by the lifter; the bench end from D124_2 |
+| Foot plate to seat | plate face to hips 570 to 830 for a 1.75 m lifter; the bench end stands 1115 from the plate's bottom edge | hips estimated from the deadlift video at 0:05 and 0:19, scaled by the lifter; the bench end estimated from D124_2 |
 | Deck | from the plates' top edge at about 400, rising to about 570 at the tower's front; rubber covered | estimated from D124_2 (y about 850 and 770), scaled by the 2413 mm height; the rubber from the Atlantis page |
 | Cable exit (low pulley) | built at 850, the videos' height, at the tower's front, L about 640; the D124 reads about 700 high, rough, +-80 | estimated from D124_1, where the handle hangs from about y 810 with the tower's base at about y 1130 (2.2 mm/px), scaled by the 2413 mm height. The pulley itself is hidden: this is where the cable comes out, not a measured wheel |
 | Cable exit to plate's middle | about 450 along the machine | follows from the two rows above |
-| Cable line | rises from the exit to the hands: about 16 degrees at the reach, about 9 at the finish, for hands 890 high at L 1300 and L 1800 | follows from the exit above and the hands in the Motion table. The videos differ: the deadlift at 0:12 shows the cable near level, rising 3 degrees toward the machine at about 820 high, scaled by the lifter. The row at 5:00 puts it about 520 above the seat, so about 890 high on a 370 bench (its floor is out of frame). Those machines' pulleys sit higher than the D124's reads |
+| Cable line | from the 850 exit down about 14 degrees to the row's hands at the reach (760 high, 360 from the exit), and about level at the finish (860 high) | follows from the built exit and the built hands. The videos differ: the deadlift at 0:12 shows the cable near level, rising 3 degrees toward the machine at about 820 high, scaled by the lifter. The row at 5:00 puts it about 520 above the seat, so about 890 high on a 370 bench (its floor is out of frame). Those machines' pulleys sit higher than the D124's reads |
 | Tower footprint | 686 wide, about 610 deep (L 0 to 610); depth rough | width published; depth estimated from D124_2, scaled by the vanishing point above |
 | Stack at rest | bottom about 120, top about 570, about 450 tall | estimated from D124_1 (y 868 to 1072 at 2.2 mm/px) and D124_2 (y 760 to 950 at 0.41 px/mm), scaled by the 2413 mm height |
 | Stack travel | room for about 1500; low confidence | chosen from the height: from the 570 stack top to below the tower's top frame. The page says only "added weight stack travel" |
@@ -123,14 +123,14 @@ Atlantis publishes no tube sizes. Dealer text puts oval tubing on one other Prec
 ## Adjustments and fit rules
 No placard text found. Nothing on the machine adjusts.
 
-- The lifter sits so the knees stay a little bent with the arms long at the reach. The hips land 570 to 830 from the plate at 1.75 m tall. A 1000 pad from the bench end stops about 115 short of the plate's bottom edge, which covers that. The kit solves the hips' place from the mannequin's leg.
+- The lifter sits so the knees stay a little bent with the arms long at the reach. The hips land 570 to 830 from the plate at 1.75 m tall. A 1000 pad from the bench end stops about 115 short of the plate's bottom edge, which covers that. The kit seats the hips at one place on the pad, and each lift moves them along it with `slide`.
 - Feet: mid-plate, one on each, the cable passing between the shins. The plates run from 80 to 400 high, so the sole lies about 240 high on the D124, below the seat. In the videos the sole sits at about 480, above their seat: their plates are higher. The kit takes the D124's.
-- Cable taut at every lift's start: the reach already has the hands well short of the plate, so the stack is already a little off its rest there.
+- Cable taut at every lift's start: the stack is held a little off its rest at the stretch, as on every stack in the kit.
 - Attachment by lift as in the Handles table. Same cable, no pulley change.
 
 ## Open gaps
 - Built differently from the D124, on purpose: the pad is 220 wide, not the chosen 300, so the shins pass beside it with the plates this low; the tower is an open frame, not shrouded, so the stack shows moving; its wheels are the library's shared 90 mm ones, not the published 152.
-- The cable exit is built at 850, within the 820 to 890 the videos' cables run at, because the lifts are judged against the videos (coordinator, #127). The D124's own reads about 700, from where the handle hangs in one image, a low-confidence estimate. The pulley itself isn't visible. A wheel at foot height, as the brief for this file has it, would sit near 250. Both videos' cables run far higher, at about 820 to 890, near level with the hands. No source I reached shows a pulley at foot height on a machine of this kind, so the file keeps 700 for the owner's eye. The cable's angle to the hands follows from whichever height he picks.
+- The cable exit is built at 850, within the 820 to 890 the videos' cables run at, because the lifts are judged against the videos (coordinator, #127). The D124's own reads about 700, from where the handle hangs in one image, a low-confidence estimate. The pulley itself isn't visible. A wheel at foot height would sit near 250, but no source shows one on a machine of this kind.
 - The D124 images were read as sampled grids, not looked at by eye, and none is side-on. Lengths along the machine rest on one vanishing point. Heights rest on the published height, at about +-40 mm.
 - No technique video shows a D124. The foot plates in the videos sit higher than the D124's and their benches differ (about 350 and 430). Sizes follow the images. Body angles follow the videos.
 - Bench pad length and width stay chosen: the images don't separate pad from rail, and no view from above exists.
@@ -139,5 +139,9 @@ No placard text found. Nothing on the machine adjusts.
 - All tube sizes, the two bench beams' joints and the rear foot's width are chosen from the images' outlines. No source gives them.
 - How far the hips slide on the pad in each lift isn't settled.
 - The wide row's hand spacing and whole hand travel are chosen. Its frames show neither.
+- Built hand travel differs from the rough figures above, which come from lifters of other builds on other benches: the row 740 against about 560, its reach starting over the plates, not the shins; the wide row 360 against the chosen 450; the Kelso 200 against about 300. The deadlift's is about 860 against 830. Reviewers judged each path against the frames.
+- The row's hands finish 430 above the seat, against about 520 in the video on a lower bench.
+- The Kelso and the deadlift hold the long bar 480 and 500 apart, against about 550 in the videos, to stay on its plain length: its sleeves start at 600 apart.
+- The V handle is built as the library's two stirrups, `handles`, set close. Grips, spacing and palms match; the V's frame doesn't.
 - The three published heights (2413, 2430, 2438) disagree, and no page says which is right. The kit uses Atlantis's own page.
 - Overall width: the page's 686 is taken as the tower's, and no drawing confirms that.

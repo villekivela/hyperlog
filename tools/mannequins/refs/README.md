@@ -116,6 +116,9 @@ gaps says why):
 - `captains_chair` (built and posed, #237): the plan is scaled from the manual's drawing, but every height is rough (about
   ±50 mm, one three-quarter render, no side view); the arm pads' tilt is chosen flat. The video's
   chair is a lower make with no visible step.
+- `seated_row` (built and posed, #127): the pad's length and width, the stack's travel and the tube sizes stay chosen,
+  and lengths along the machine rest on one vanishing point. The cable exit follows the videos at 850, where the
+  published model reads about 700.
 
 Across them:
 

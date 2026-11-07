@@ -943,7 +943,7 @@ export const POSES = {
   // elbows drive out and back to the lower chest.
   wide_grip_seated_cable_row: {
     like: 'seated_cable_row',
-    kit: { seated_row: { attachment: 'lat_bar', spread: undefined } },
+    kit: { seated_row: { attachment: 'lat_bar' } },
     top: { trunk: -8, slide: -0.05, bar: [0.86, 0.5], offsets: { clavicle_l: [0, -8, 0], clavicle_r: [0, 8, 0] } },
     bottom: { trunk: -8, slide: -0.05, bar: [0.86, 0.14], offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
     grip: { width: 0.36, pole: [1, -0.4, -0.6] },

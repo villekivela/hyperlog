@@ -22,6 +22,10 @@ const failing = (id, stage) => {
   return CHECKS.filter((c) => !checks[c].ok).map((c) => `${c}: ${checks[c].found}`);
 };
 const bend = (a, b, c) => (a.clone().sub(b).angleTo(c.clone().sub(b)) * 180) / Math.PI;
+const leanOf = (g) => {
+  const up = g('neck_01').sub(g('pelvis'));
+  return (Math.atan2(up.z, up.y) * 180) / Math.PI;
+};
 
 test('the deck rises from the plates to the tower, seated at both ends', async () => {
   const { stage, at } = await posed('seated_cable_row');
@@ -50,6 +54,41 @@ test('the station stands on the floor, its overall size the published one', asyn
   assert.ok(size.x < 0.72, `${size.x.toFixed(3)} wide, published 0.686`);
 });
 
+test('the hips stay on the pad all through every lift', async () => {
+  for (const id of ['seated_cable_row', 'wide_grip_seated_cable_row', 'seated_cable_kelso_shrug', 'seated_cable_deadlift']) {
+    const { at } = await posed(id);
+    for (let d = 0; d <= 1; d += 0.1) {
+      const hips = at(d)('pelvis');
+      assert.ok(hips.y > 0.47 && hips.y < 0.55, `${id}: the hips ${hips.y.toFixed(3)} up at ${d.toFixed(1)}, the pad's top at 0.43`);
+      assert.ok(hips.z > -0.416 && hips.z < 0.584, `${id}: the hips at z ${hips.z.toFixed(3)} at ${d.toFixed(1)}, off the pad`);
+    }
+  }
+});
+
+// The owner's bar (#241): no open tube end.
+test('no tube on it stands open', async () => {
+  const { stage, at } = await posed('seated_cable_row');
+  at(0);
+  // An open length shows by its rim: an edge on one face. Extrusions, cylinders and spheres close by
+  // construction: only the seam of their vertices shows here. The handles are the library's, not this
+  // kit's.
+  const rims = [];
+  stage.kit.group.traverse((o) => {
+    if (!o.isMesh || !o.geometry.index) return;
+    if (['ExtrudeGeometry', 'CylinderGeometry', 'SphereGeometry'].includes(o.geometry.type) || o.name.startsWith('two_handles')) return;
+    const seen = new Map();
+    const i = o.geometry.index.array;
+    const p = o.geometry.attributes.position;
+    const key = (n) => `${p.getX(n).toFixed(4)},${p.getY(n).toFixed(4)},${p.getZ(n).toFixed(4)}`;
+    for (let t = 0; t < i.length; t += 3) for (const [a, b] of [[i[t], i[t + 1]], [i[t + 1], i[t + 2]], [i[t + 2], i[t]]]) {
+      const e = [key(a), key(b)].sort().join('|');
+      seen.set(e, (seen.get(e) ?? 0) + 1);
+    }
+    if ([...seen.values()].some((n) => n === 1)) rims.push(o.name || o.geometry.type);
+  });
+  assert.deepEqual(rims, []);
+});
+
 test('the seated cable row reaches long and draws the elbows back, feet on the plates, the stack rising', async () => {
   const { stage, at } = await posed('seated_cable_row');
   assert.deepEqual(failing('seated_cable_row', stage), []);
@@ -59,13 +98,9 @@ test('the seated cable row reaches long and draws the elbows back, feet on the p
   assert.ok(long > 150, `the elbow ${long.toFixed(0)}° at the reach: the arms long`);
   const knee = bend(reach('thigh_l'), reach('calf_l'), reach('foot_l'));
   assert.ok(knee > 115 && knee < 145, `the knee ${knee.toFixed(0)}° at the reach, bent about 50`);
-  const lean = (g) => {
-    const up = g('neck_01').sub(g('pelvis'));
-    return (Math.atan2(up.z, up.y) * 180) / Math.PI;
-  };
-  assert.ok(lean(reach) > 20, `the trunk ${lean(reach).toFixed(0)}° forward at the reach`);
+  assert.ok(leanOf(reach) > 20, `the trunk ${leanOf(reach).toFixed(0)}° forward at the reach`);
   const pull = at(1);
-  assert.ok(Math.abs(lean(pull)) < 18, `the trunk ${lean(pull).toFixed(0)}° at the finish, near upright`);
+  assert.ok(Math.abs(leanOf(pull)) < 18, `the trunk ${leanOf(pull).toFixed(0)}° at the finish, near upright`);
   const straighter = bend(pull('thigh_l'), pull('calf_l'), pull('foot_l'));
   assert.ok(straighter > knee + 12, `the knee opens from ${knee.toFixed(0)}° to ${straighter.toFixed(0)}° as the hips slide back`);
   assert.ok(pull('lowerarm_l').z < pull('upperarm_l').z, 'the elbow behind the shoulder at the finish');
@@ -78,8 +113,7 @@ test('the seated cable row reaches long and draws the elbows back, feet on the p
   assert.ok(heldAt(stage.rig, 'l').y < pull('upperarm_l').y, 'the hands below the shoulders');
 });
 
-// A thumb that has come round the bar: its tip lies by the bar, not standing off over it, all through
-// the rep. Near the bar's step it meets the sleeve's end as the hand rolls, and flicks straight.
+// A thumb that has come round the bar: its tip lies by the bar, not standing off over it.
 test('the thumbs wrap the long bar all through the rep', async () => {
   for (const id of ['wide_grip_seated_cable_row', 'seated_cable_kelso_shrug', 'seated_cable_deadlift']) {
     const { stage, at } = await posed(id);
@@ -91,11 +125,6 @@ test('the thumbs wrap the long bar all through the rep', async () => {
     }
   }
 });
-
-const leanOf = (g) => {
-  const up = g('neck_01').sub(g('pelvis'));
-  return (Math.atan2(up.z, up.y) * 180) / Math.PI;
-};
 
 test('the wide-grip seated row stays upright and draws a long bar in, the elbows out and back', async () => {
   const { stage, at } = await posed('wide_grip_seated_cable_row');

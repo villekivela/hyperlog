@@ -8,16 +8,16 @@
 import * as THREE from 'three';
 import { recipe, free, prismatic } from '../recipe.mjs';
 import {
-  ATTACHMENTS, UPRIGHTS, WHEEL, endCap, pad, part, pulley, rod, rodGeometry, span, stackFrame, tube, weightStack,
+  ATTACHMENTS, WHEEL, endCap, pad, part, pulley, rod, rodGeometry, span, stackFrame, tube, weightStack,
 } from '../parts.mjs';
 import { V, UP, gripTarget } from '../rig.mjs';
 
 // The pad's top and its two ends along z; how far above it the hips sit.
 const SEAT_Y = 0.43;
 const PAD_Z = [-0.416, 0.584];
+const SITS = 0.09;
 // Narrow enough for the shins to pass beside it, the plates standing below the seat.
 const PAD_W = 0.22;
-const SITS = 0.09;
 // The foot plates' low and high edges, [y, z], and how far either side of the middle each stands.
 const PLATE_LOW = [0.08, 0.7];
 const PLATE_HIGH = [0.4, 0.865];
@@ -27,6 +27,8 @@ const PLATE_THICK = 0.02;
 const DECK_END = [0.59, 1.3];
 const TOWER_Z = [1.26, 1.87];
 const TOWER_Y = 2.413;
+// The tower's posts stand this far in from its ends, the ties across them at the front ones.
+const TIE_Z = TOWER_Z[0] + 0.04;
 const TOWER_X = 0.305;
 // The cable's exit, built to the lifts' videos (the ref's Open gaps), and the stack's place.
 const EXIT = [0.85, 1.2];
@@ -72,7 +74,6 @@ export default recipe({
     const wheelTop = V(0, top - 0.04 - 0.035 - WHEEL - 0.02, STACK_Z);
     // Where a rib's line stands at height `y`.
     const ribAt = (y) => frameFoot.z + (high.z - 0.04 * PLATE_OUT.z - frameFoot.z) * (y - frameFoot.y) / (high.y - 0.04 * PLATE_OUT.y - frameFoot.y);
-    const ux = UPRIGHTS;
     const parts = [
       // The bench: the pad on its board, on a rail from the plates' frame to the rear post, a lower
       // beam under it, and the post down to its foot.
@@ -88,22 +89,22 @@ export default recipe({
       tube(0.06, V(-0.26, 0.1, low.z), V(0.26, 0.1, low.z), M.frame),
       ...[-1, 1].map((s) => pad(0.016, 0.066, 0.066, M.vinyl, V(s * 0.268, 0.1, low.z), { soft: 0.005, solid: false })),
       ...[-1, 0, 1].map((s) => tube(0.05, frameFoot.clone().setX(s * PLATES_OUT), high.clone().setX(s * PLATES_OUT).addScaledVector(PLATE_OUT, -0.04), M.frame)),
-      ...[-1, 1].map((s) => panel(0.19, PLATE_THICK, low.clone().setX(s * PLATES_OUT), high.clone().setX(s * PLATES_OUT), PLATE_OUT, M.metal, { soft: 0.004 })),
+      ...[-1, 1].map((s) => panel(0.19, PLATE_THICK, low.clone().setX(s * PLATES_OUT), high.clone().setX(s * PLATES_OUT), PLATE_OUT, M.frame, { soft: 0.004 })),
       // The deck, rubber on a plate, from the plates' top edge to the tower, and the low beam under it.
       panel(0.5, 0.03, high.clone().addScaledVector(PLATE_OUT, -0.015), V(0, ...DECK_END), V(0, 1, 0), M.vinyl, { soft: 0.006 }),
-      tube(0.05, V(-TOWER_X, DECK_END[0] - 0.04, TOWER_Z[0] + 0.04), V(TOWER_X, DECK_END[0] - 0.04, TOWER_Z[0] + 0.04), M.frame),
-      tube(0.06, V(0, 0.1, low.z), V(0, 0.1, TOWER_Z[0] + 0.04), M.frame),
+      tube(0.05, V(-TOWER_X, DECK_END[0] - 0.04, TIE_Z), V(TOWER_X, DECK_END[0] - 0.04, TIE_Z), M.frame),
+      tube(0.06, V(0, 0.1, low.z), V(0, 0.1, TIE_Z), M.frame),
       // The tower: a post at each corner on its foot rail, tied at the exit's height and at the top.
-      ...TOWER_Z.flatMap((z) => [-1, 1].map((s) => tube(0.076, V(s * TOWER_X, 0.038, z - (z > 1.5 ? 0.04 : -0.04)), V(s * TOWER_X, top, z - (z > 1.5 ? 0.04 : -0.04)), M.frame))),
+      ...[TIE_Z, TOWER_Z[1] - 0.04].flatMap((z) => [-1, 1].map((s) => tube(0.076, V(s * TOWER_X, 0.038, z), V(s * TOWER_X, top, z), M.frame))),
       ...[-1, 1].map((s) => tube(0.07, V(s * TOWER_X, 0.035, TOWER_Z[0]), V(s * TOWER_X, 0.035, TOWER_Z[1]), M.frame)),
-      tube(0.06, V(-TOWER_X, 0.1, TOWER_Z[0] + 0.04), V(TOWER_X, 0.1, TOWER_Z[0] + 0.04), M.frame),
-      tube(0.05, V(-TOWER_X, EXIT[0] - 0.05, TOWER_Z[0] + 0.04), V(TOWER_X, EXIT[0] - 0.05, TOWER_Z[0] + 0.04), M.frame),
+      tube(0.06, V(-TOWER_X, 0.1, TIE_Z), V(TOWER_X, 0.1, TIE_Z), M.frame),
+      tube(0.05, V(-TOWER_X, EXIT[0] - 0.05, TIE_Z), V(TOWER_X, EXIT[0] - 0.05, TIE_Z), M.frame),
       // The stack's base, under its uprights and guide rods.
       tube(0.07, V(-TOWER_X, 0.035, STACK_Z), V(TOWER_X, 0.035, STACK_Z), M.frame),
       pad(0.686, 0.024, TOWER_Z[1] - TOWER_Z[0], M.frame, V(0, top, (TOWER_Z[0] + TOWER_Z[1]) / 2), { soft: 0.004 }),
       ...stackFrame(STACK_Z, top - 0.04, M),
       // The exit's wheel on an arm from the tie across the tower's front, below the cable's run.
-      tube(0.05, V(0, EXIT[0] - 0.05, exit.z - 0.05), V(0, EXIT[0] - 0.05, TOWER_Z[0] + 0.04), M.frame),
+      tube(0.05, V(0, EXIT[0] - 0.05, exit.z - 0.05), V(0, EXIT[0] - 0.05, TIE_Z), M.frame),
       ...pulley(exit, M),
       ...pulley(wheelTop, M),
       // The cable inside the tower, from the exit's wheel up to the one over the stack.

@@ -553,14 +553,13 @@ export const MOTIONS = {
     const cable = exit.clone().sub(bar).normalize();
     return {
       hipC, u,
-      headDir: u.clone().addScaledVector(f, e.body?.look ?? 0.2).normalize(),
+      headDir: u.clone().addScaledVector(f, 0.2).normalize(),
       ankles: [-1, 1].map((side) => ankle.clone().addScaledVector(X, side * e.feet.stance)),
       foot: () => ({ heading: plateUp.clone(), top: plateOut.clone() }),
-      kneePole: (side) => V(side * (e.feet.kneesOut ?? 0.2), 1, 0.4).normalize(),
+      kneePole: (side) => V(side * e.feet.kneesOut, 1, 0.4).normalize(),
       support: () => ({ point: plate, normal: plateOut.clone() }),
       bar,
       grip: e.grip.width,
-      shrug: s.shrug,
       ...(e.kit.seated_row.attachment === 'handles' ? { across: () => V(0, cable.z, -cable.y) } : {}),
       armPole: elbowsTo(e, [0.5, -1, -0.5]),
       plate, plateUp,
