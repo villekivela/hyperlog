@@ -300,6 +300,19 @@ export const POSES = {
     camera: { target: [0, 0.55, 0.25], halfHeight: 0.78, azimuth: 72, elevation: 10 },
   },
 
+  // Under the machine's pads, the balls of the feet on its bar, the legs straight: the heels drop
+  // below the bar at the stretch and rise as high as they go, the shoulders carrying the pads.
+  standing_calf_raise: {
+    equipment: 'machine',
+    motion: 'standing_calf',
+    kit: { standing_calf: {} },
+    body: { trunk: -6, hipZ: 0.12, legs: 0.999, pads: 0.075 },
+    top: { arm: 10.4 },
+    feet: { stance: 0.09 },
+    grip: {},
+    camera: { target: [0, 0.95, 0.4], halfHeight: 1.05, azimuth: 72, elevation: 8 },
+  },
+
   // In the sled, the back on the pad and the shoulders under their pads, the feet on the tilted
   // platform: the hips travel down the rails until the knees are well past a right angle. The hands
   // hold the handles beside the head, the elbows out, so the knuckles can lie along them.
