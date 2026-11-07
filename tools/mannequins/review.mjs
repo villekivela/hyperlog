@@ -100,6 +100,8 @@ export const BATCHES = {
   'dip-machine': ['seated_dip_machine'],
   // The standing calf machine's one exercise, machine-first (#127).
   'standing-calf': ['standing_calf_raise'],
+  // The donkey calf machine's one exercise, machine-first (#127).
+  'donkey-calf': ['donkey_calf_raise'],
   // The library's machine exercises on kits other lifts built (#127).
   'machine-lifts': ['single_leg_leg_press', 'leg_press_calf_press', 'incline_machine_press', 'machine_row'],
   // The library's cable exercises on kits other lifts built (#127).

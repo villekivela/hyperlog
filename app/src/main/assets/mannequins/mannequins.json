@@ -2058,6 +2058,30 @@
         "kit_power_rack.bin"
       ]
     },
+    "donkey_calf_raise": {
+      "clip": "donkey_calf_raise.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.2
+        ],
+        "halfHeight": 0.95,
+        "azimuth": 78,
+        "elevation": 6
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 1.5,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_donkey_calf.bin"
+      ]
+    },
     "dumbbell_shoulder_press_standing": {
       "clip": "dumbbell_shoulder_press_standing.glb",
       "equipment": "dumbbell",

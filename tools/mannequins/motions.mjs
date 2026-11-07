@@ -1069,6 +1069,32 @@ export const MOTIONS = {
   },
 
   /**
+   * Hinged forward onto a front rest, the back under a pad on a lever, the forearms on the rest and the
+   * hands on its handles, the balls of the feet on a bar: the lever places the hips, and the heels tilt
+   * `sole` degrees, up positive, the knees bending between them.
+   */
+  donkey_calf(e, s, L) {
+    const { ball, padFace, hipsFromPad, hand, across } = s.linkage;
+    const u = trunkUp(spineLean(s.trunk, L));
+    const f = forwardOf(u);
+    // The hips below the pad's place on the back: along the trunk, and through the body's depth.
+    const hipC = padFace.clone().addScaledVector(u, -hipsFromPad.along).addScaledVector(f, hipsFromPad.through);
+    const onBall = (side) => V(side * e.feet.stance, ball[0] + L.ballY, ball[1]);
+    const [heading, top] = soleAt(s.sole);
+    return {
+      hipC, u,
+      headDir: u.clone().addScaledVector(f, 0.7).normalize(),
+      ankles: anklesOn(onBall, L)([heading, top]),
+      toeOut: 0,
+      foot: () => ({ heading: heading.clone(), top: top.clone() }),
+      kneePole: (side) => V(side * 0.1, 0, 1).normalize(),
+      support: (side) => ({ point: onBall(side).addScaledVector(top, -L.ballY), normal: top.clone() }),
+      hand, across,
+      armPole: elbowsTo(e, [0.1, -1, -0.2]),
+    };
+  },
+
+  /**
    * In a hack squat's sled, the back on its pad and the shoulders under its pads: the carriage rides
    * the rails with the joint, the hips and the handles on it; the trunk keeps the pad's lean,
    * `body.trunk`, and the feet stand on the machine's platform.

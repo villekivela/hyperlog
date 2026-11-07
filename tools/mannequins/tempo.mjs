@@ -30,6 +30,7 @@ export const MOTION_TEMPOS = {
   knee_lever: tempo(2, 0.3, 1, 0.6),
   calf_raise: tempo(2, 0.5, 1, 0.6),
   standing_calf: tempo(2, 0.5, 1, 0.6),
+  donkey_calf: tempo(2, 1.5, 1, 0.6),
   hack_squat: tempo(2, 0.3, 1, 0.6),
   // Pulled from arms long (a row, a machine pulldown): the clip's first half is the concentric.
   lever_handles: tempo(1, 0.3, 2, 0.5),

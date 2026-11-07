@@ -72,7 +72,7 @@ class MannequinsTest {
                 "db_flye", "db_guillotine_press", "db_hammer_curl", "db_incline_press",
                 "db_lateral_raise", "db_lunge", "db_romanian_deadlift", "db_shrug",
                 "db_skull_crusher", "db_triceps_kickback", "db_walking_lunge", "dead_hang",
-                "deadlift", "deficit_deadlift", "deficit_pendlay_row", "dip",
+                "deadlift", "deficit_deadlift", "deficit_pendlay_row", "dip", "donkey_calf_raise",
                 "dumbbell_shoulder_press_standing", "ffe_smith_machine_lunge", "floor_press",
                 "front_squat", "glute_ham_raise", "hack_squat", "hanging_leg_raise",
                 "high_cable_lateral_raise", "incline_machine_press", "kelso_shrug", "lat_pulldown",
