@@ -21,6 +21,7 @@ const MACHINES = {
   seated_leg_curl: 'lever',
   lying_leg_curl: 'lever',
   seated_calf_raise: 'lever',
+  standing_calf_raise: 'arm',
   hack_squat: 'carriage',
   chest_supported_machine_row: 'levers',
   machine_row: 'levers',
