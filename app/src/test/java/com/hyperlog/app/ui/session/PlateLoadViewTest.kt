@@ -1,5 +1,6 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -45,5 +46,12 @@ class PlateLoadViewTest {
     fun theWholeMachineCountsItsStartingWeight() {
         compose.setContent { HyperlogTheme { WholeBar(LadderSpec.Plates(30.0, listOf(20.0, 10.0)), 90.0, machine = true) } }
         compose.onNodeWithContentDescription("90 kg: a 30 kg machine with 1 × 20, 1 × 10 on each side").assertIsDisplayed()
+    }
+
+    /** With nothing typed the line says what it is, not a bar drawn alone (#269). */
+    @Test
+    fun withNothingTypedTheLineNamesTheBar() {
+        compose.setContent { HyperlogTheme { PlateLoad(LadderSpec.DefaultPlates, null) } }
+        compose.onNodeWithText("On a 20 kg bar", useUnmergedTree = true).assertExists()
     }
 }

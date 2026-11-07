@@ -1,14 +1,5 @@
 package com.hyperlog.app.ui.gym
 
-import com.hyperlog.app.ui.theme.accentButtonColors
-import com.hyperlog.app.ui.theme.interFigures
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.material3.ListItemDefaults
-import com.hyperlog.app.ui.theme.Group
-import com.hyperlog.app.ui.theme.SegmentedList
-import com.hyperlog.app.ui.theme.GroupHead
-import androidx.compose.foundation.layout.height
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,10 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -62,8 +55,13 @@ import com.hyperlog.app.gym.sections
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import androidx.compose.material3.Button
+import com.hyperlog.app.ui.theme.GroupHead
+import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.accentButtonColors
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import com.hyperlog.app.ui.theme.interFigures
 
 /**
  * Every gym, then the bars all gyms share: the barbell and the EZ, trap and safety bars, each
@@ -130,7 +128,7 @@ fun GymsScreen(
             SectionLabel(stringResource(R.string.gym_shared))
             val barLines = bars.values.map { stringResource(R.string.gym_bar_summary, formatKg(it)) }
             SegmentedList {
-                bars.entries.forEachIndexed { i, (bar, _) -> row(bar.label, barLines[i], Symbol.FitnessCenter, onClick = { weighing = bar }, trailing = chevron) }
+                bars.entries.forEachIndexed { i, (bar, _) -> row(bar.label, barLines[i], Symbol.LinearScale, onClick = { weighing = bar }, trailing = chevron) }
             }
         }
     }
@@ -240,7 +238,7 @@ fun GymScreen(
             val platesTitle = stringResource(R.string.gym_plates)
             val plates = gym.plates.ifEmpty { null }?.let(::platesLine) ?: stringResource(R.string.gym_plates_none)
             SegmentedList {
-                row(dumbbellsTitle, dumbbells, Symbol.Exercise, onClick = onDumbbells, trailing = chevron)
+                row(dumbbellsTitle, dumbbells, Symbol.Weight, onClick = onDumbbells, trailing = chevron)
                 // Every plate, wrapping: the smallest are the ones a lifter checks.
                 row(platesTitle, plates, Symbol.Toll, onClick = { plating = true }, supportingLines = 3, trailing = chevron)
                 row(pinsTitle, pins, Symbol.PushPin, onClick = { pinning = true }, trailing = chevron)
@@ -405,7 +403,7 @@ internal val com.hyperlog.app.gym.EquipmentItem.symbol: Symbol
     get() = when (equipmentKind) {
         com.hyperlog.app.gym.EquipmentKind.Stack -> if (cableStation) Symbol.Cable else Symbol.Stacks
         com.hyperlog.app.gym.EquipmentKind.PlateLoaded -> Symbol.Album
-        com.hyperlog.app.gym.EquipmentKind.Bar -> Symbol.FitnessCenter
+        com.hyperlog.app.gym.EquipmentKind.Bar -> Symbol.LinearScale
         com.hyperlog.app.gym.EquipmentKind.RackBench -> Symbol.AirlineSeatFlat
     }
 

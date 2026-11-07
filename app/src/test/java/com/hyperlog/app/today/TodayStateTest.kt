@@ -13,16 +13,16 @@ import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.week.RotationAnchor
 import com.hyperlog.app.week.Rotations
 import com.hyperlog.app.week.WeekdayPlan
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertNull
-import org.junit.Test
 import java.time.DayOfWeek.MONDAY
 import java.time.DayOfWeek.SATURDAY
 import java.time.DayOfWeek.THURSDAY
 import java.time.LocalDate
 import java.time.ZoneId
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 /** What Today decides for the date picked (SPEC, Today; Training days and the rotation). */
 class TodayStateTest {
@@ -134,6 +134,30 @@ class TodayStateTest {
         val tomorrow = state(program, selected = thu.plusDays(1))
         assertEquals(DayKind.Planned, tomorrow.kind)
         assertEquals("Day B", tomorrow.day?.day?.name)
+    }
+
+    // The next action on Program and Progress
+
+    @Test
+    fun theNextOfferIsStartOnlyWhenASessionCanStart() {
+        assertEquals(NextOffer.Start, state(rotating(thu)).nextOffer)
+    }
+
+    /** Sat with Monday next: Today has no Start, so the card must not lead there (round 2). */
+    @Test
+    fun theNextOfferOnADayWithNoTrainingNamesTheDay() {
+        val tuesday = state(rotating(tue))
+        assertEquals(NextOffer.On(tuesday.planned.keys.first()), tuesday.nextOffer)
+    }
+
+    @Test
+    fun aRunningSessionIsResumed() {
+        assertEquals(NextOffer.Resume, state(rotating(thu), running = true).nextOffer)
+    }
+
+    @Test
+    fun aFinishedProgramOffersNothing() {
+        assertEquals(null, state(null).nextOffer)
     }
 
     // Start, the missed day on offer and the last day

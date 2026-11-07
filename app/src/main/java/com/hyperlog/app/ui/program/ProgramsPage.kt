@@ -14,11 +14,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,12 +44,12 @@ import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.SegmentedList
 import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.theme.Sheet
+import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
 import java.time.Instant
 import java.time.ZoneId
-import com.hyperlog.app.ui.theme.TextEdge
 
 /**
  * Program → ⋮ → Programs (SPEC, Program → Programs): every program the app holds, newest first,
@@ -188,7 +188,7 @@ private fun sheetStatus(p: ListedProgram): String = when (val s = p.status) {
 private fun symbol(p: ListedProgram): Symbol = when (val s = p.status) {
     is ListedProgram.Status.Running -> if (s.finished) Symbol.Flag else Symbol.PlayArrow
     is ListedProgram.Status.Saved -> Symbol.Bookmark
-    is ListedProgram.Status.Past -> Symbol.History
+    is ListedProgram.Status.Past -> Symbol.Archive
 }
 
 /**

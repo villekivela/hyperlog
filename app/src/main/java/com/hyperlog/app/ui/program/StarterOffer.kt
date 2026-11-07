@@ -1,21 +1,21 @@
 package com.hyperlog.app.ui.program
 
-import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import com.hyperlog.app.ui.theme.SectionCard
-import com.hyperlog.app.ui.theme.ShapedSymbol
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,12 +28,15 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.SectionCard
+import com.hyperlog.app.ui.theme.ShapedSymbol
+import com.hyperlog.app.ui.theme.interFigures
 
 /**
  * The starter program, offered while no program runs: what it is, **Run this program**, and the
  * screen's other ways forward as text buttons under it (docs/design/program-and-today.md).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StarterOffer(
     starter: Program,
@@ -43,11 +46,15 @@ fun StarterOffer(
     others: @Composable RowScope.() -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
+    val scroll = rememberScrollState()
     // A hero card on the screen's tone: the shaped symbol, the program, and Run this program.
-    Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+    BoxWithConstraints(modifier.fillMaxSize()) {
+    // Centred on the screen, and scrolling once large text makes it taller than the screen.
+    val room = if (constraints.hasBoundedHeight) Modifier.verticalScroll(scroll).heightIn(min = maxHeight) else Modifier
+    Column(room.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
         SectionCard(padding = 24.dp) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                ShapedSymbol(Symbol.ViewTimeline)
+                ShapedSymbol(Symbol.FitnessCenter)
                 Spacer(Modifier.height(24.dp))
                 Text(stringResource(R.string.starter_label), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                 Spacer(Modifier.height(4.dp))
@@ -65,8 +72,10 @@ fun StarterOffer(
             }
         }
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), content = others)
+        // The second goes under the first when both don't fit.
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) { others() }
         // Optical centre: a little above the middle, as the other empty states.
         Spacer(Modifier.height(bottomSpace))
+    }
     }
 }

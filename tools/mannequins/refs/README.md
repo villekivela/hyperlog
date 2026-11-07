@@ -38,11 +38,12 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 16 | [`crunch_machine`](crunch_machine/ref.md) | 1 | Hammer Strength Select Abdominal Crunch |
 | 17 | [`trap_bar`](trap_bar/ref.md) | 1 | Rogue TB-3 Open Trap Bar; built (#234), not yet posed |
 | 18 | [`captains_chair`](captains_chair/ref.md) | 1 | Life Fitness Dip/Leg Raise (LBR-LD); built and posed (#237) |
-| 19 | [`standing_calf`](standing_calf/ref.md) | 1 | Hammer Strength Select Standing Calf (HS-SC); built and posed (#127) |
+| 19 | [`seated_row`](seated_row/ref.md) | 4 | Atlantis D124 Low Row; built and posed (#127) |
+| 20 | [`standing_calf`](standing_calf/ref.md) | 1 | Hammer Strength Select Standing Calf (HS-SC); built and posed (#127) |
 
 The cable crossover serves the 25 cable exercises that use a free handle at an adjustable height.
-The other 16 cable exercises (the pulldowns, the seated rows, the pressdown and the rest named in
-its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids include
+The four seated rows have the `seated_row` station. The other 12 cable exercises (the pulldowns, the
+pressdown and the rest named in its `ref.md`) stay on the existing `cable_tower`. The smith machine's 9 ids include
 `ffe_smith_machine_lunge`, the same movement as `smith_machine_lunge` with the front foot raised.
 
 ## Not here
@@ -116,6 +117,9 @@ gaps says why):
 - `captains_chair` (built and posed, #237): the plan is scaled from the manual's drawing, but every height is rough (about
   ±50 mm, one three-quarter render, no side view); the arm pads' tilt is chosen flat. The video's
   chair is a lower make with no visible step.
+- `seated_row` (built and posed, #127): the pad's length and width, the stack's travel and the tube sizes stay chosen,
+  and lengths along the machine rest on one vanishing point. The cable exit follows the videos at 850, where the
+  published model reads about 700.
 - `standing_calf` (built and posed, #127): no frame shows the pads loaded, so their travel and tilt are inferred, and
   the pad's reach and the grips' place are set by the mannequin's fit, not measured.
 

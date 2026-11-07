@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -18,20 +21,17 @@ import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.program.HoldPosition
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
+import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.luminance
 import com.hyperlog.app.ui.theme.GraphiteDark
 import com.hyperlog.app.ui.theme.GraphiteLight
-import org.junit.Assert.assertTrue
-import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.theme.onTechniqueColor
 import com.hyperlog.app.ui.theme.techniqueColor
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,6 +47,21 @@ class NextRowClockTest {
 
     private val bench = Exercise("barbell_bench_press", "Barbell Bench Press", Equipment.Barbell, MovementPattern.HorizontalPush, GripDemand.Low, listOf("Chest"))
     private val calls = mutableListOf<String>()
+
+    private fun resting(restEndsAt: Long) = ActiveSession(
+        id = 1, startedAt = 0, exercises = emptyList(), currentId = null, entry = null,
+        padVisible = true, restEndsAt = restEndsAt, restTotalMs = 180_000,
+    )
+
+    /** A session left open would count up without end (`+220:45`), which says nothing about rest. */
+    @Test
+    fun theCountUpLeavesTheRowAfterAnHour() {
+        val hour = 3_600_000L
+        val ended = 1_000_000L
+        assertEquals("+59:59", rowClock(resting(ended), ended + hour - 1_000)?.time)
+        assertEquals(null, rowClock(resting(ended), ended + hour))
+        assertEquals(null, rowClock(resting(ended), ended + 220 * 60_000L))
+    }
 
     private fun show(
         restEndsAt: Long? = null, restTotalMs: Long = 0, breathing: Boolean = false,

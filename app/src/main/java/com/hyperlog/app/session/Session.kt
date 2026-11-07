@@ -1,24 +1,26 @@
 package com.hyperlog.app.session
 
-import com.hyperlog.app.domain.countingSets
-import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PinLoad
+import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.domain.Warmups
-import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
+import com.hyperlog.app.domain.countingSets
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.PlannedDay
-import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.PlannedSlot
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.progression.Record
 import com.hyperlog.app.progression.Suggestion
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /** One exercise in a session, with what has been logged and what was done last time. */
 data class SessionExercise(
@@ -70,15 +72,28 @@ data class SessionExercise(
      * before it unlogged, so a logged set's index isn't always its place in [sets].
      */
     val setIndices: List<Int> = sets.indices.toList(),
+    /** What a finished session reads this lift against: [lastTime], unless that was a deload or an eased day. */
+    val comparedWith: List<LoggedSet> = lastTime,
     /** Each of [lastTime]'s set index, in the same order: a set skipped last time leaves a gap. */
     val lastTimeIndices: List<Int> = lastTime.indices.toList(),
     /** The bench angle set in this session, for an adjustable-bench exercise; null until set. */
     val benchAngle: Int? = null,
     /** The latest earlier session's bench angle for this exercise, at any gym: the target; null with none. */
     val lastBenchAngle: Int? = null,
+    /** How it has moved, on the exercise on screen, for its sheet (GLOSSARY, Lift trend); null elsewhere, or with nothing to say. */
+    val trend: com.hyperlog.app.history.LiftTrend? = null,
+    /** The sessions the [trend] reads, oldest first, with their estimates: the sheet's chart. */
+    val trendPoints: List<com.hyperlog.app.history.TrendPoint> = emptyList(),
 ) {
     /** Its sets with their records, as summaries show them. */
-    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records, benchAngle)
+    val summary: ExerciseSummary
+        get() {
+            val targets = sets.indices.mapNotNull { i -> sets[i].rir?.let { rir -> prescription?.getOrNull(setIndices[i])?.rir?.let { rir to it } } }
+            return ExerciseSummary(
+                exercise.name, sets, records, benchAngle, exercise.id, liftChange(sets, comparedWith), comparedWith.maxWithOrNull(Heaviest),
+                planned = prescription?.size, aimed = targets.size, onEffort = targets.count { (rir, target) -> abs(rir - target) <= 1 },
+            )
+        }
 
     /** How to load [kg] on a pin-stack [machine] (`pin 40 + 2.5 on the pin`); null for any other equipment or a weight off it. */
     fun pinLoad(kg: Double): PinLoad? = (machine?.ladder as? LadderSpec.PinStack)?.load(kg, pinPlates)
@@ -257,6 +272,116 @@ data class ExerciseSummary(
     val records: List<Record?> = emptyList(),
     /** The bench angle it was done at, for an adjustable-bench exercise; null when not set. */
     val benchAngle: Int? = null,
+    val exerciseId: String? = null,
+    /** How its top set compares with last time's; null with no last time. */
+    val change: LiftChange? = null,
+    /** Last time's top set; null with no last time. */
+    val lastTop: LoggedSet? = null,
+    /** The sets planned; null for an exercise added ad hoc, with no plan to finish. */
+    val planned: Int? = null,
+    /** Its sets with a target RIR, and those within 1 of it. */
+    val aimed: Int = 0,
+    val onEffort: Int = 0,
 )
 
-data class SessionSummary(val sessionId: Long, val startedAt: Long, val finishedAt: Long, val exercises: List<ExerciseSummary>)
+/** How a lift's top set compares with last time's. */
+enum class LiftChange { Up, Same, Down }
+
+/** How [sets]' top set compares with [lastTime]'s: heavier, or as heavy for more reps, is up. */
+fun liftChange(sets: List<LoggedSet>, lastTime: List<LoggedSet>): LiftChange? {
+    val now = sets.maxWithOrNull(Heaviest) ?: return null
+    val before = lastTime.maxWithOrNull(Heaviest) ?: return null
+    return Heaviest.compare(now, before).let { if (it > 0) LiftChange.Up else if (it < 0) LiftChange.Down else LiftChange.Same }
+}
+
+/** A session's length in whole minutes, the one figure every screen shows. */
+fun sessionMinutes(startedAt: Long, finishedAt: Long): Int = ((finishedAt - startedAt) / 60_000.0).roundToInt()
+
+/** The top set: the heaviest, with the most reps at that weight. */
+internal val Heaviest: Comparator<LoggedSet> = compareBy({ it.weightKg }, { it.fullReps })
+
+/**
+ * A program [week] just finished: the [days] trained in it and their [workSets], the work sets of
+ * the week before ([lastWeekSets], null with none), and how many weeks in a row have been trained.
+ */
+data class WeekDone(val week: Int, val days: Int, val workSets: Int, val lastWeekSets: Int? = null, val streak: Int = 1)
+
+/** How a session went, as a word: the rating of [SessionSummary.rating]. */
+enum class SessionRating { Strong, Solid, Banked }
+
+data class SessionSummary(
+    val sessionId: Long,
+    val startedAt: Long,
+    val finishedAt: Long,
+    val exercises: List<ExerciseSummary>,
+    /** The program week this session finished; null when there is more of it to come. */
+    val week: WeekDone? = null,
+    /** The sets planned on exercises left with nothing logged, which [exercises] leaves out. */
+    val skippedSets: Int = 0,
+) {
+    val workSets: Int get() = exercises.sumOf { it.sets.size }
+
+    /**
+     * This summary with the sets of [readBack], the session as stored, in its order. Only the sets
+     * can have changed: what finishing worked out (the week, the plan, what a lift compares with)
+     * can't be read back, so it stands, and a lift is read again against the same last time.
+     */
+    fun refreshedBy(readBack: SessionSummary): SessionSummary = copy(
+        exercises = readBack.exercises.map { stored ->
+            val finished = exercises.firstOrNull { it.exerciseId == stored.exerciseId } ?: return@map stored
+            finished.copy(
+                sets = stored.sets,
+                records = stored.records,
+                benchAngle = stored.benchAngle,
+                change = finished.lastTop?.let { liftChange(stored.sets, listOf(it)) },
+            )
+        },
+    )
+
+    /** The lifts with a last time to compare with, and those of them that went up. */
+    val compared: Int get() = exercises.count { it.change != null }
+    val up: Int get() = exercises.count { it.change == LiftChange.Up }
+
+    /** The sets of the plan done, of the sets planned; null when nothing was planned. */
+    val planned: Int? get() = exercises.mapNotNull { it.planned }.takeIf { it.isNotEmpty() }?.sum()?.plus(skippedSets)
+
+    /** The sets of the plan done: sets added on top of it don't count towards it. */
+    val plannedDone: Int get() = exercises.sumOf { e -> e.planned?.let { minOf(e.sets.size, it) } ?: 0 }
+
+    /** The sets within 1 RIR of their target, of the sets that had one. */
+    val aimed: Int get() = exercises.sumOf { it.aimed }
+    val onEffort: Int get() = exercises.sumOf { it.onEffort }
+
+    /** What the three measures come to: sets finished, effort on target and lifts up, each as far as it can be read. */
+    val rating: SessionRating
+        get() {
+            val done = planned?.takeIf { it > 0 }?.let { plannedDone.toDouble() / it }
+            val measures = listOfNotNull(
+                done,
+                aimed.takeIf { it > 0 }?.let { onEffort.toDouble() / it },
+                // A lift held counts half: it is good training, and not yet progress.
+                compared.takeIf { it > 0 }?.let { (up + exercises.count { e -> e.change == LiftChange.Same } * 0.5) / it },
+            )
+            val score = measures.takeIf { it.isNotEmpty() }?.average() ?: return SessionRating.Solid
+            // The plan comes first: however well the sets went, it caps what the session can be called.
+            return when {
+                done != null && done < HalfThePlan -> SessionRating.Banked
+                score >= StrongSession && (done == null || done >= StrongSession) -> SessionRating.Strong
+                score >= SolidSession -> SessionRating.Solid
+                else -> SessionRating.Banked
+            }
+        }
+
+    /** The lift that gained most on last time, by its top set's weight, then its reps. */
+    val bestLift: ExerciseSummary?
+        get() = exercises.filter { it.change == LiftChange.Up && it.lastTop != null }.maxWithOrNull(
+            // A lift with no weight has no gain to compare, so its reps alone decide it.
+            compareBy<ExerciseSummary>({ e -> e.lastTop!!.weightKg.takeIf { it > 0 }?.let { e.top.weightKg / it } ?: 1.0 }, { it.top.fullReps - it.lastTop!!.fullReps }),
+        )
+
+    private val ExerciseSummary.top: LoggedSet get() = sets.maxWith(Heaviest)
+}
+
+private const val StrongSession = 0.85
+private const val SolidSession = 0.55
+private const val HalfThePlan = 0.5

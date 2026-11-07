@@ -1,7 +1,6 @@
 package com.hyperlog.app.session
 
 import androidx.room.withTransaction
-import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.data.EntryColumns
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.data.LoggedSetEntity
@@ -17,10 +16,11 @@ import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.Reference
 import com.hyperlog.app.domain.SetEntry
-import com.hyperlog.app.domain.WeightCheck
-import com.hyperlog.app.domain.WeightLadder
+import com.hyperlog.app.domain.StackReading
 import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.domain.Warmups
+import com.hyperlog.app.domain.WeightCheck
+import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.domain.countingSets
 import com.hyperlog.app.domain.formatKg
@@ -28,8 +28,10 @@ import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.gym.LadderState
-import com.hyperlog.app.domain.StackReading
+import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.history.Bodyweights
+import com.hyperlog.app.history.History
+import com.hyperlog.app.history.LiftTrend
 import com.hyperlog.app.legacy.StartingWeights
 import com.hyperlog.app.legacy.suggestion
 import com.hyperlog.app.legacy.text
@@ -37,24 +39,27 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.ActiveProgram
-import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.SetPrescriptionJson
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.TechniqueJson
-import com.hyperlog.app.program.oneMore
 import com.hyperlog.app.program.backoffWeight
+import com.hyperlog.app.program.oneMore
 import com.hyperlog.app.program.plannedEntry
 import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.progression.WorkSet
+import com.hyperlog.app.rest.RestOverLimitMs
+import com.hyperlog.app.week.Rotations
+import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -88,6 +93,7 @@ class SessionLogger(
     private val corrections = SetCorrections(db)
     private val stored = StoredSessions(db, gyms, programs)
     private val exerciseHistory = ExerciseHistory(db, programs)
+    private val history = History(db, programs)
     private val records = SessionRecords(db, programs)
     /** The row being corrected and the finished exercise looked at: screen state, kept in memory only. */
     private var correction: Correction? = null
@@ -190,6 +196,55 @@ class SessionLogger(
             }?.id?.also { gyms.remember(gymId, exerciseId, it) }
         remembered?.let { dao.setEquipmentItem(sessionExerciseId, it) }
     }
+
+    /**
+     * When a session started at [startedAt] ended, counting only its time training: left open, or
+     * put down and picked up again, a gap of more than [RestOverLimitMs] between sets isn't training.
+     */
+    private fun trainingEnd(startedAt: Long, sets: List<Long>, now: Long): Long {
+        val marks = listOf(startedAt) + sets.sorted() + now
+        return startedAt + marks.zipWithNext { a, b -> b - a }.filter { it <= RestOverLimitMs }.sum()
+    }
+
+    /** The week session [sessionId] finished, if it did: nothing more to train in it. */
+    private suspend fun weekDone(sessionId: Long, week: Int): WeekDone? {
+        val active = programs.active.first()
+        val programId = dao.session(sessionId)?.programId ?: return null
+        val trained = dao.finishedSessions().filter { it.programId == programId && it.week != null }
+        return if (active?.rotates == true) calendarWeekDone(sessionId, week, active.next?.date, trained)
+        else programWeekDone(week, active?.next?.day?.position?.week, trained)
+    }
+
+    /** A sequence's week is the program's: done when what comes next is in a later one, or nothing does. */
+    private suspend fun programWeekDone(week: Int, next: Int?, trained: List<SessionEntity>): WeekDone? {
+        if (next != null && next <= week) return null
+        val byWeek = trained.groupBy { it.week!! }
+        // A run of weeks is one with no long break in it, however far the program has come.
+        var streak = 1
+        while (true) {
+            val earlier = byWeek[week - streak] ?: break
+            val after = byWeek.getValue(week - streak + 1)
+            if (after.minOf { it.startedAt } - earlier.maxOf { it.startedAt } > LongestRunGapMs) break
+            streak++
+        }
+        return WeekDone(week, byWeek[week].orEmpty().size, setsOf(byWeek[week]) ?: 0, setsOf(byWeek[week - 1]), streak)
+    }
+
+    /**
+     * On a rotation a program week is a calendar week (ADR 0006), and one can run twice: done when
+     * the next turn falls in a later calendar week, whatever week of the program it is.
+     */
+    private suspend fun calendarWeekDone(sessionId: Long, week: Int, next: LocalDate?, trained: List<SessionEntity>): WeekDone? {
+        val thisWeek = Rotations.mondayOf(programs.dateOf(dao.session(sessionId)!!.startedAt))
+        if (next != null && Rotations.mondayOf(next) <= thisWeek) return null
+        val byWeek = trained.groupBy { Rotations.mondayOf(programs.dateOf(it.startedAt)) }
+        val streak = generateSequence(thisWeek) { it.minusWeeks(1) }.takeWhile { it in byWeek }.count()
+        return WeekDone(week, byWeek[thisWeek].orEmpty().size, setsOf(byWeek[thisWeek]) ?: 0, setsOf(byWeek[thisWeek.minusWeeks(1)]), streak)
+    }
+
+    /** The work sets of [sessions]; null with no sessions at all. */
+    private suspend fun setsOf(sessions: List<SessionEntity>?) =
+        sessions?.flatMap { dao.sessionExercises(it.id) }?.filterNot { it.removed }?.sumOf { dao.sets(it.id).size }
 
     /** Adds [exerciseId] after the others and makes it the one on screen. */
     suspend fun addExercise(exerciseId: String) = locked {
@@ -985,10 +1040,16 @@ class SessionLogger(
         }
         correction = null
         viewingId = null
-        dao.updateSession(dao.session(session.id)!!.copy(finishedAt = now, entry = null, restEndsAt = null))
+        val ended = trainingEnd(session.startedAt, logged.flatMap { dao.sets(it.id) }.map { it.loggedAt }, now)
+        dao.updateSession(dao.session(session.id)!!.copy(finishedAt = ended, entry = null, restEndsAt = null))
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
+        val week = session.day?.let { weekDone(session.id, it.position.week) }
         _state.value = null
-        SessionSummary(session.id, session.startedAt, now, logged.map { it.summary })
+        // A deload is lighter by design: nothing in it is a lift down on last time.
+        val easy = session.day?.let { it.deload || it.eased } == true
+        val summaries = logged.map { e -> e.summary.let { if (easy) it.copy(change = null, lastTop = null) else it } }
+        val skipped = session.exercises.filter { it.sets.isEmpty() }.sumOf { it.prescription?.size ?: 0 }
+        SessionSummary(session.id, session.startedAt, ended, summaries, week?.takeUnless { easy } ?: week?.copy(lastWeekSets = null), skipped)
     }
 
     /**
@@ -1069,12 +1130,26 @@ class SessionLogger(
                 else -> dao.lastTime(se.exerciseId, row.id)
             }
             val lastTime = stored.sets(lastRows)
+            // Last time stays the real last time; a finished session measures past a lighter one.
+            val comparedWith = when {
+                past.isEmpty() -> lastTime
+                (judged?.let(past::get) ?: past.last()).lighter -> past.lastOrNull { !it.lighter }?.logged.orEmpty()
+                else -> lastTime
+            }
             val rows = dao.sets(se.id)
             val sets = stored.sets(rows)
             // Progression reads the sets before the set to do: a set logged out of order comes after it.
             val indices = rows.map { it.position }
             val before = before(sets, indices, firstUnlogged(indices))
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine && !needsLadder
+            // How it has moved, from the trend Progress draws, on this machine for machines (ADR 0002).
+            val (trend, trendPoints) = if (!onScreen) null to emptyList() else {
+                history.trend(se.exerciseId).lines.firstOrNull { !perMachine || it.itemId == machine?.id }?.let { line ->
+                    val eased = line.points.map { it.sessionId }.distinct().filter { id -> dao.session(id)?.let { programs.eased(it) } == true }.toSet()
+                    LiftTrend.of(line.points, eased, programs.dateOf(clock())) to
+                        line.points.filter { it.sessionId !in eased && it.estimateKg != null }.takeLast(TREND_SESSIONS)
+                } ?: (null to emptyList())
+            }
             // The old app's weight stands in until the exercise (on this machine) has its own history.
             val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
             val start = starting?.takeIf { !perMachine }
@@ -1100,6 +1175,9 @@ class SessionLogger(
                 exercise = exercise,
                 sets = sets,
                 lastTime = lastTime,
+                trend = trend,
+                trendPoints = trendPoints.takeIf { trend != null }.orEmpty(),
+                comparedWith = comparedWith,
                 ladder = ladder.ladder,
                 ladderKnown = ladder.known,
                 machine = machine,
@@ -1247,6 +1325,9 @@ class SessionLogger(
 
         /** How many past sessions of an exercise progression reads. */
         const val HISTORY_SESSIONS = 12
+
+        /** How many sessions the lift trend's chart draws, as Progress's rows do. */
+        const val TREND_SESSIONS = 12
     }
 }
 
@@ -1290,3 +1371,6 @@ internal fun SetExtensionEntity.toExtension() = Extension(Extension.Kind.valueOf
 private fun SetEntry.toColumns() = EntryColumns(weight, full, partial, rir, field.name, partialMode, fresh, right)
 
 private fun EntryColumns.toEntry() = SetEntry(weight, full, partial, rir, Field.valueOf(field), partialMode, fresh, right)
+
+/** The longest gap between sessions that keeps a run of weeks going: a fortnight. */
+private const val LongestRunGapMs = 14 * 24 * 3_600_000L

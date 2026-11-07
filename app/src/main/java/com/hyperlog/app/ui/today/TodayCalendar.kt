@@ -5,9 +5,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -19,9 +22,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.IconButton
@@ -33,6 +35,7 @@ import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
@@ -45,9 +48,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -56,10 +58,9 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
-import com.hyperlog.app.today.RestDay
 import com.hyperlog.app.session.date
-import com.hyperlog.app.week.DayFit
-import com.hyperlog.app.week.FitAsk
+import com.hyperlog.app.session.sessionMinutes
+import com.hyperlog.app.today.RestDay
 import com.hyperlog.app.ui.session.RirText
 import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.symbols.Symbol
@@ -67,14 +68,16 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.CardShape
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.figureHeadline
 import com.hyperlog.app.ui.theme.figureMedium
-import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.FitAsk
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
-import com.hyperlog.app.ui.theme.TextEdge
 
 // Today's calendar of weeks and the cards for the day picked on it (SPEC, Today; design note,
 // Today's calendar).
@@ -319,7 +322,7 @@ internal fun WeekRow(
                 Spacer(Modifier.height(4.dp))
                 val shape = RoundedCornerShape(8.dp)
                 // Two letters (`CA`, `A+`) widen it; one keeps 28 dp.
-                val marker = Modifier.height(20.dp).widthIn(min = 28.dp).clip(shape)
+                val marker = Modifier.heightIn(min = 20.dp).widthIn(min = 28.dp).clip(shape)
                 when {
                     sessions.isNotEmpty() -> {
                         val (fill, letter) = doneFill(cs)
@@ -372,9 +375,11 @@ private fun Stat(number: String, label: String, color: Color) {
 }
 
 /** Exercises, sets and minutes (`~45` for an estimate). */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Stats(exercises: Int, sets: Int, minutes: Int, estimate: Boolean, color: Color) {
-    Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+    // The last goes under the others rather than split its word.
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
         Stat("$exercises", pluralStringResource(R.plurals.today_stat_exercises, exercises), color)
         Stat("$sets", pluralStringResource(R.plurals.today_stat_sets, sets), color)
         Stat(if (estimate) "~$minutes" else "$minutes", pluralStringResource(R.plurals.today_stat_minutes, minutes), color)
@@ -436,13 +441,13 @@ private fun CardHead(
 
 /**
  * `Deload` on a day of a deload week: a small tonal tag like the technique pills, the program's
- * spa symbol and the word in onTertiaryContainer, 24 dp high on the 8 dp grid.
+ * spa symbol and the word in onTertiaryContainer, 24 dp high on the 8 dp grid, taller at large text.
  */
 @Composable
 private fun DeloadTag(words: Int = R.string.today_deload) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.height(24.dp).clip(RoundedCornerShape(8.dp)).background(cs.tertiaryContainer).padding(horizontal = 8.dp),
+        Modifier.heightIn(min = 24.dp).clip(RoundedCornerShape(8.dp)).background(cs.tertiaryContainer).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SymbolIcon(Symbol.Spa, null, Modifier.size(16.dp), tint = cs.onTertiaryContainer)
@@ -527,7 +532,7 @@ internal fun DoneCard(session: PastSessionItem, onOpen: () -> Unit) {
             headColor = cs.primary, titleColor = cs.onSurface,
         )
         Spacer(Modifier.height(CardPadding))
-        val minutes = ((session.finishedAt - session.startedAt) / 60_000).toInt()
+        val minutes = sessionMinutes(session.startedAt, session.finishedAt)
         Stats(session.exercises.size, session.exercises.sumOf { it.sets.size }, minutes, estimate = false, color = cs.onSurface)
         Spacer(Modifier.height(CardPadding))
         FilledTonalButton(onClick = onOpen, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.today_open_session)) }
@@ -624,7 +629,7 @@ internal fun DoneRow(number: Int, exercise: ExerciseSummary) {
     ) {
         Text("$number", Modifier.width(40.dp), style = MaterialTheme.typography.titleSmall, color = cs.primary)
         Column(Modifier.weight(1f)) {
-            Text(exercise.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(exercise.name, style = MaterialTheme.typography.bodyLarge)
             RirText(exercise.sets.joinToString("   ") { it.setText() }, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         }
     }
@@ -635,7 +640,7 @@ internal fun DoneRow(number: Int, exercise: ExerciseSummary) {
 internal fun AdHocButton(onAdHoc: () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
         TextButton(onClick = onAdHoc, Modifier.heightIn(min = 48.dp)) {
-            SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(ButtonDefaults.IconSize))
+            SymbolIcon(Symbol.AddCircle, null, Modifier.size(ButtonDefaults.IconSize))
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.today_ad_hoc))
         }

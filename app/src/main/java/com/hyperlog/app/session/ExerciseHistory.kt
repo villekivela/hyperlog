@@ -22,6 +22,8 @@ internal data class PastPerformance(
     /** The sets as logged, drops, partials and all; [performance] holds the main set of each. */
     val logged: List<LoggedSet>,
     val performance: Performance,
+    /** A deload or an eased day: lighter by design, so nothing to measure a lift against. */
+    val lighter: Boolean = false,
 )
 
 /**
@@ -63,6 +65,7 @@ internal class ExerciseHistory(db: HyperlogDatabase, private val programs: Progr
                     slot = past.slotId,
                     dumbbells = exercise.implements,
                 ),
+                lighter = day?.deload == true || day?.eased == true,
             )
         }
     }

@@ -1,6 +1,5 @@
 package com.hyperlog.app.ui.library
 
-import com.hyperlog.app.openTab
 import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -10,6 +9,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -21,6 +21,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
 import com.hyperlog.app.click
+import com.hyperlog.app.openTab
 import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitForDescription
 import org.junit.Assert.assertEquals
@@ -140,7 +141,8 @@ class LibraryScreenTest {
 
         compose.onNodeWithText("Cable Lateral Raise").performClick()
         compose.waitFor("Technique video · 10:53")
-        compose.onNodeWithText("Raise your arm \"out\", not \"up\". Mind-muscle connection with the middle fibers.").assertIsDisplayed()
+        // The sheet's copy; the cue band behind it has the same cue.
+        compose.onAllNodesWithText("Raise your arm \"out\", not \"up\". Mind-muscle connection with the middle fibers.").onLast().assertIsDisplayed()
         compose.onNodeWithText("Cable · Side Delts").assertIsDisplayed()
         compose.click("Technique video · 10:53")
 

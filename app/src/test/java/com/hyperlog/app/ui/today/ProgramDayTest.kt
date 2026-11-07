@@ -1,23 +1,26 @@
 package com.hyperlog.app.ui.today
 
-import androidx.compose.ui.test.hasScrollToIndexAction
-import com.hyperlog.app.onScreen
-import androidx.compose.ui.test.performScrollToNode
-import com.hyperlog.app.openTab
 import android.app.Application
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.FreshDatabaseRule
 import com.hyperlog.app.MainActivity
+import com.hyperlog.app.navItem
+import com.hyperlog.app.onScreen
+import com.hyperlog.app.openTab
 import com.hyperlog.app.press
 import com.hyperlog.app.program.TestPrograms
 import com.hyperlog.app.ui.program.ProgramStore
@@ -25,6 +28,7 @@ import com.hyperlog.app.waitFor
 import com.hyperlog.app.waitForCount
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -54,8 +58,8 @@ class ProgramDayTest {
         compose.onNodeWithText("Week 1 · Main").assertIsDisplayed()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
         // Week 1's ramp-in is one RIR easier than written.
-        compose.onNodeWithText("1 × 4–6\u00A02 RIR", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("2 × 6–8\u00A02 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("1\u00A0×\u00A04–6\u00A02 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("2\u00A0×\u00A06–8\u00A02 RIR", substring = true).assertIsDisplayed()
         // Planned sets are targets: outlined RIR chips, and no `@` left on screen.
         compose.onAllNodesWithTag(com.hyperlog.app.ui.session.RirChipTargetTag, useUnmergedTree = true).onFirst().assertExists()
         compose.onAllNodesWithText("@", substring = true).assertCountEquals(0)
@@ -129,6 +133,30 @@ class ProgramDayTest {
         // Back returns to Program, where the session was opened from.
         compose.onNodeWithContentDescription("Back").performClick()
         compose.waitFor("Main · weeks 1–2")
+    }
+
+    /** Start on Program does what Today's does, in one tap (round 2). */
+    @Test
+    fun startOnProgramStartsTheSession() {
+        importProgram()
+        compose.onNode(navItem("Program")).performClick()
+        compose.waitFor("Start")
+        compose.onNodeWithText("Start").performClick()
+        compose.waitFor("Reps")
+    }
+
+    /** The list ends above the button, so however long it is and however large the text, no row runs under it (#269). */
+    @Test
+    fun resumeHasALaneOfItsOwnBelowTheExercises() {
+        importProgram()
+        compose.onNodeWithText("Start session").performClick()
+        compose.waitFor("Reps")
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("Leave").performClick()
+        compose.waitFor("Resume session")
+        val button = compose.onNodeWithText("Resume session").getBoundsInRoot()
+        val list = compose.onNodeWithTag(TodayDayListTag).getBoundsInRoot()
+        assertTrue("The list runs to ${list.bottom}, under Resume at ${button.top}", list.bottom <= button.top)
     }
 
     @Test

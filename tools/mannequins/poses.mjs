@@ -938,6 +938,50 @@ export const POSES = {
     camera: { target: [0, 0.8, 0.2], halfHeight: 1.1, azimuth: 25, elevation: 8 },
   },
 
+  // On the row station's bench, the feet on its plates, two close handles from the cable between the
+  // shins: from the arms long and the trunk forward, the hips slide back as the trunk comes up and
+  // the elbows drive back past the ribs.
+  seated_cable_row: {
+    equipment: 'cable',
+    motion: 'seated_row',
+    kit: { seated_row: { attachment: 'handles', spread: 0.09 } },
+    top: { trunk: 28, slide: -0.01, bar: [0.76, 0.84], offsets: { clavicle_l: [0, -8, 0], clavicle_r: [0, 8, 0] } },
+    bottom: { trunk: -2, slide: -0.1, bar: [0.86, 0.1], offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
+    feet: { stance: 0.17, down: 0.05, kneesOut: 0.47 },
+    grip: { width: 0.09, swing: 70, pole: [0.35, -0.7, -1.3] },
+    camera: { target: [0, 0.75, 0.5], halfHeight: 1.05, azimuth: 70, elevation: 10 },
+  },
+
+  // Upright on the row station, a long bar overhand on its sleeves: the trunk holds still as the
+  // elbows drive out and back to the lower chest.
+  wide_grip_seated_cable_row: {
+    like: 'seated_cable_row',
+    kit: { seated_row: { attachment: 'lat_bar' } },
+    top: { trunk: -8, slide: -0.05, bar: [0.86, 0.5], offsets: { clavicle_l: [0, -8, 0], clavicle_r: [0, 8, 0] } },
+    bottom: { trunk: -8, slide: -0.05, bar: [0.86, 0.14], offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
+    grip: { width: 0.36, pole: [1, -0.4, -0.6] },
+  },
+
+  // From upright the trunk rocks back about 15° on a still pelvis, a long bar on long arms: the
+  // shoulder blades draw back and peel apart, the pause at the squeeze a full second.
+  seated_cable_kelso_shrug: {
+    like: 'wide_grip_seated_cable_row',
+    top: { trunk: -11, slide: -0.05, bar: [0.82, 0.49], offsets: { clavicle_l: [0, -8, 0], clavicle_r: [0, 8, 0] } },
+    bottom: { trunk: -27, slide: -0.05, bar: [0.81, 0.29], offsets: { clavicle_l: [0, 18, 0], clavicle_r: [0, -18, 0] } },
+    grip: { width: 0.24, pole: [0.5, -1, -0.3] },
+    tempo: { lowering: 1, bottom: 1, lifting: 2, top: 0.5 },
+  },
+
+  // On the row station, a long bar on long arms: the trunk swings from over the legs to well back,
+  // the hips sliding along the pad with it.
+  seated_cable_deadlift: {
+    like: 'wide_grip_seated_cable_row',
+    top: { trunk: 34, slide: 0, rise: 0, arm: 16, reach: 0.65 },
+    bottom: { trunk: -72, slide: -0.08, rise: 0.03, arm: 2, reach: 0.6 },
+    grip: { width: 0.25, pole: [0.4, -1, -0.3] },
+    camera: { target: [0, 0.75, 0.4], halfHeight: 1.05, azimuth: 70, elevation: 10 },
+  },
+
   // Back on an upright bench between the towers, the pulleys at the seated shoulder: the handles
   // sweep from wide behind the line of the chest to about shoulder width in front of it (owner, #127).
   seated_cable_flye: {

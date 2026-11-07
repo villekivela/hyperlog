@@ -12,14 +12,14 @@ import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 
 /** A finished session as a list shows it: when, which day and gym, and what was logged. */
 data class PastSessionItem(
@@ -91,7 +91,7 @@ class PastSessionEditor(
             val sets = stored.sets(se.id)
             val exercise = library[se.exerciseId]
             if (sets.isEmpty()) null
-            else ExerciseSummary(exercise?.name ?: se.exerciseId, sets, benchAngle = se.benchAngle.takeIf { exercise?.adjustableBench == true })
+            else ExerciseSummary(exercise?.name ?: se.exerciseId, sets, benchAngle = se.benchAngle.takeIf { exercise?.adjustableBench == true }, exerciseId = se.exerciseId)
         }
         return PastSessionItem(row.id, row.startedAt, row.finishedAt ?: row.startedAt, title(row), row.gymId?.let { gyms.gym(it)?.name }, exercises,
             programId = row.programId.takeIf { row.workoutId == null },

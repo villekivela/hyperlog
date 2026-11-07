@@ -1,18 +1,5 @@
 package com.hyperlog.app.ui.session
 
-import com.hyperlog.app.ui.theme.accentButtonColors
-import com.hyperlog.app.ui.theme.interFigures
-import com.hyperlog.app.ui.theme.figureLarge
-import com.hyperlog.app.ui.theme.figureDisplay
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.scrollBy
-import com.hyperlog.app.session.machineChoices
-import com.hyperlog.app.domain.LadderSpec
-import androidx.compose.foundation.lazy.itemsIndexed
-import com.hyperlog.app.ui.theme.Sheet
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.cardBehind
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,11 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,10 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -71,27 +59,21 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.domain.Field
-import com.hyperlog.app.domain.LoggedSet
-import com.hyperlog.app.domain.SetEntry
-import com.hyperlog.app.domain.WarmupSet
-import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.gym.EquipmentItem
@@ -101,14 +83,12 @@ import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.TechniqueVideo
 import com.hyperlog.app.library.search
 import com.hyperlog.app.program.SetPrescription
-import com.hyperlog.app.program.plannedWeight
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.session.Correction
-import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.session.SessionOrder
 import com.hyperlog.app.session.keptEdits
+import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.ui.gym.ItemEditor
 import com.hyperlog.app.ui.gym.LadderEditor
 import com.hyperlog.app.ui.gym.LadderKind
@@ -123,9 +103,16 @@ import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import kotlinx.coroutines.delay
-import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.Sheet
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.accentButtonColors
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.figureDisplay
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.interFigures
+import kotlinx.coroutines.delay
 
 /**
  * The logging screen (docs/design/logging-screen.md): one exercise at a time as set rows, the
@@ -167,7 +154,7 @@ fun SessionScreen(
     KeepScreenOn()
 
     // Back steps out of a correction, then out of a finished exercise, and only then asks to leave.
-    BackHandler {
+    val goBack = {
         when {
             session.correction != null -> actions.cancelCorrection()
             session.warmupEdit != null -> actions.closeWarmup()
@@ -176,6 +163,8 @@ fun SessionScreen(
             else -> showLeave = true
         }
     }
+    BackHandler(onBack = goBack)
+    SetLoggedHaptic(session)
 
     val current = session.current
     /** A finished exercise opened from the list, looked at in place of the current one. */
@@ -248,6 +237,7 @@ fun SessionScreen(
                     Header(
                         exercise = viewing,
                         session = session,
+                        onBack = goBack,
                         onName = { showDetails = true },
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
@@ -272,6 +262,7 @@ fun SessionScreen(
                     Header(
                         exercise = current,
                         session = session,
+                        onBack = goBack,
                         onName = { showDetails = true },
                         onAddExercise = { showPicker = true },
                         onFinish = { showFinish = true },
@@ -320,10 +311,14 @@ fun SessionScreen(
                             openIndex = session.openIndex,
                             onBenchAngle = { benchFor = current.id },
                         )
-                        SetTable(table, Modifier.weight(1f))
+                        SetTable(table, Modifier.weight(1f)) { room ->
+                            CueBand(current.slot?.note ?: current.exercise.note, room, onClick = { showDetails = true })
+                        }
                     }
                 }
             }
+            // Over whatever is on screen: the next exercise can open its machine or ladder at once.
+            RecordMoment(session, Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 72.dp))
           }
             // Next is the pad's top row, and stays at the bottom as the same row when the pad is hidden or gone.
             val clock = rowClock(session, now)
@@ -476,6 +471,7 @@ fun SessionScreen(
                 benchAngle = current.benchAngle,
                 lastBenchAngle = current.lastBenchAngle,
                 set = current.toDo,
+                trend = current.trend?.let { it to current.trendPoints },
             )
         }
     }
@@ -525,6 +521,8 @@ fun SessionScreen(
 private fun Header(
     exercise: SessionExercise,
     session: ActiveSession,
+    /** The on-screen way out, the same step as system Back. */
+    onBack: () -> Unit,
     onName: () -> Unit,
     onAddExercise: () -> Unit,
     onFinish: () -> Unit,
@@ -544,9 +542,11 @@ private fun Header(
     Column(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
     // Name and ⋮ on one row; the clock is on the Next row.
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = Margin, end = 8.dp, top = 8.dp),
+        // The arrow's 48 dp target starts 12 dp out, so its symbol sits on the screen's margin.
+        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = Margin - 12.dp, end = 8.dp, top = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        IconButton(onClick = onBack) { SymbolIcon(Symbol.ArrowBack, stringResource(R.string.session_leave), tint = cs.onSurfaceVariant) }
         val details = stringResource(R.string.session_exercise_details)
         ExerciseName(exercise.exercise.name, Modifier.weight(1f).clickable(onClickLabel = details, onClick = onName))
         Box {
@@ -613,20 +613,46 @@ private fun Header(
 private fun HeaderChip(symbol: Symbol?, text: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val cs = MaterialTheme.colorScheme
     Row(
-        modifier.height(32.dp).border(1.dp, cs.outlineVariant, ChipShape)
+        modifier.heightIn(min = 32.dp).border(1.dp, cs.outlineVariant, ChipShape)
             .then(if (onClick != null) Modifier.clip(ChipShape).clickable(onClick = onClick) else Modifier)
-            .padding(start = if (symbol != null) 8.dp else 12.dp, end = 12.dp).testTag(HeaderChipTag),
+            .padding(start = if (symbol != null) 8.dp else 12.dp, end = 12.dp, top = 4.dp, bottom = 4.dp).testTag(HeaderChipTag),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         symbol?.let {
             SymbolIcon(it, null, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
             Spacer(Modifier.width(8.dp))
         }
-        Text(text, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
     }
 }
 
 internal const val HeaderChipTag = "header-chip"
+internal const val CueBandTag = "cue-band"
+
+/**
+ * The exercise's [cue], under its name, before the table: part of the exercise, so always shown and
+ * wrapping. Only when the whole of it would leave the table no [room] is it cut to its first lines,
+ * and a tap opens the exercise's sheet, where it is whole.
+ */
+@Composable
+private fun CueBand(cue: String?, room: Dp, onClick: () -> Unit) {
+    cue ?: return
+    val style = MaterialTheme.typography.bodyMedium
+    val line = with(LocalDensity.current) { style.lineHeight.toDp() }
+    val lines = ((room - 16.dp) / line).toInt().coerceAtLeast(1)
+    Text(
+        cue,
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClickLabel = stringResource(R.string.session_exercise_details), onClick = onClick)
+            .padding(horizontal = Margin, vertical = 8.dp).testTag(CueBandTag),
+        style = style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = lines,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+/** The text size from which a session list row's action sits under its name. */
+private const val ListActionUnderScale = 1.3f
 
 @Composable
 private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) {
@@ -636,15 +662,16 @@ private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) 
     ) {
         Text(stringResource(R.string.rest_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            FilledTonalButton(onClick = { actions.adjustRest(-15_000) }, Modifier.width(96.dp)) { Text("−15") }
+        Row(Modifier.widthIn(max = 352.dp), verticalAlignment = Alignment.CenterVertically) {
+            val nudge = PaddingValues(horizontal = 4.dp)
+            FilledTonalButton(onClick = { actions.adjustRest(-15_000) }, Modifier.weight(1f), contentPadding = nudge) { Text("−15") }
             Text(
                 clock(leftMs),
                 Modifier.width(160.dp),
                 style = MaterialTheme.typography.figureDisplay,
                 textAlign = TextAlign.Center,
             )
-            FilledTonalButton(onClick = { actions.adjustRest(15_000) }, Modifier.width(96.dp)) { Text("+15") }
+            FilledTonalButton(onClick = { actions.adjustRest(15_000) }, Modifier.weight(1f), contentPadding = nudge) { Text("+15") }
         }
         Spacer(Modifier.height(16.dp))
         TextButton(onClick = { actions.endRest(); onEnd() }) { Text(stringResource(R.string.rest_end)) }
@@ -657,8 +684,8 @@ internal const val SuggestionTag = "suggestion"
 
 /**
  * Why the set to do's weight is what it is (SPEC, Every suggestion says why): one short muted
- * line under the name, led by the direction in the fixed trend scale. The full sentence is in the
- * exercise sheet.
+ * line under the name, led by the direction in the fixed trend scale; it wraps rather than lose
+ * its reason. The full sentence is in the exercise sheet.
  */
 @Composable
 private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
@@ -670,7 +697,7 @@ private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
     ) {
         SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = direction.color)
         Spacer(Modifier.width(8.dp))
-        RirText(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        RirText(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -713,17 +740,18 @@ internal const val LadderOfferTag = "ladder-offer"
 private fun StartingHintRow(set: String) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().testTag(StartingHintTag), verticalAlignment = Alignment.Top) {
-        SymbolIcon(Symbol.History, null, Modifier.size(20.dp), tint = muted)
+        SymbolIcon(Symbol.MoveToInbox, null, Modifier.size(20.dp), tint = muted)
         Spacer(Modifier.width(16.dp))
-        // The set on a line of its own, so it never breaks inside it.
+        // The set starts a line of its own.
         Column {
             Text(stringResource(R.string.starting_hint), style = MaterialTheme.typography.bodyMedium, color = muted)
-            RirText(set, style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            RirText(set, style = MaterialTheme.typography.bodyMedium, color = muted)
         }
     }
 }
 
 /** Every planned set is logged: the pad gives way to Finish session, under the session's [records]. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
     val ink = MaterialTheme.colorScheme.onPrimaryContainer
@@ -739,10 +767,17 @@ private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
             // A long list scrolls inside the strip, which never grows past the pad it replaces.
             RecordLines(records, Modifier.padding(bottom = 16.dp).heightIn(max = 288.dp).verticalScroll(rememberScrollState()), color = ink, muted = ink.copy(alpha = 0.8f), tint = ink)
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)
-            Spacer(Modifier.width(16.dp))
-            Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = ink)
+        // Finish beside it, or under it when the two don't fit: never a word in two.
+        androidx.compose.foundation.layout.FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)
+                Spacer(Modifier.width(16.dp))
+                Text(stringResource(R.string.session_day_done), style = MaterialTheme.typography.titleMedium, color = ink, maxLines = 1, softWrap = false)
+            }
             Button(onClick = onFinish, colors = accentButtonColors()) { Text(stringResource(R.string.session_finish)) }
         }
     }
@@ -777,7 +812,7 @@ internal fun NextLine(
             Text(it, style = MaterialTheme.typography.labelLarge, color = if (clock != null) ink else cs.primary)
             Spacer(Modifier.width(16.dp))
         }
-        Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, color = if (clock != null) ink else Color.Unspecified, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(name, Modifier.weight(1f).padding(vertical = 4.dp), style = MaterialTheme.typography.bodyLarge, color = if (clock != null) ink else Color.Unspecified)
         if (clock != null) {
             Spacer(Modifier.width(8.dp))
             val rest = clock.kind == ClockKind.Rest || clock.kind == ClockKind.Over
@@ -852,8 +887,17 @@ internal fun SessionList(
                         }
                     }
                 }
+                val action: @Composable () -> Unit = {
+                    when {
+                        now -> Unit
+                        e.done -> FilledTonalButton(onClick = { onOpen(e.id) }) { Text(stringResource(R.string.session_open_exercise)) }
+                        else -> FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
+                    }
+                }
+                // At large text Start would squeeze the name into pieces, so it goes under it.
+                val under = LocalDensity.current.fontScale >= ListActionUnderScale
                 Column(Modifier.weight(1f)) {
-                    Text(e.exercise.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(e.exercise.name, style = MaterialTheme.typography.bodyLarge)
                     if (e.sets.isNotEmpty()) {
                         RirText(
                             e.sets.joinToString("   ") { it.setText() },
@@ -863,12 +907,9 @@ internal fun SessionList(
                     } else {
                         e.prescription?.let { SetSummary(it) }
                     }
+                    if (under) action()
                 }
-                when {
-                    now -> Unit
-                    e.done -> FilledTonalButton(onClick = { onOpen(e.id) }) { Text(stringResource(R.string.session_open_exercise)) }
-                    else -> FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
-                }
+                if (!under) action()
                 edits?.let { ExerciseEditMenu(e.exercise.name, it(e, blocks)) }
             }
             }
@@ -955,13 +996,11 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
                     .padding(horizontal = Margin - com.hyperlog.app.ui.theme.CardMargin, vertical = 12.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface)
                 Text(
                     item.ladder.withPlates(gymPlates).summary(pinPlates),
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
             }
@@ -985,7 +1024,7 @@ private fun gripHow(name: String?): String? = when (name) {
 
 /** The library's exercises, hidden ones left out, with a search field on top. */
 @Composable
-private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
     var query by rememberSaveable { mutableStateOf("") }
     Column(modifier.fillMaxWidth()) {
         Text(
@@ -1005,11 +1044,12 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
             val found = exercises.search(query)
             itemsIndexed(found, key = { _, it -> it.id }) { i, e ->
                 com.hyperlog.app.ui.theme.Segment(i, found.size, color = MaterialTheme.colorScheme.surfaceContainerHigh, onClick = { onPick(e.id) }) {
-                    Text(
-                        e.name,
+                    Row(
                         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = com.hyperlog.app.ui.theme.CardPadding, vertical = 16.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(e.name, style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
             }
             item { Spacer(Modifier.navigationBarsPadding().height(16.dp)) }
@@ -1043,6 +1083,8 @@ internal fun ExerciseSheet(
     lastBenchAngle: Int? = null,
     /** The set being done (0 the first), for an exercise whose grip changes set by set; null outside a session. */
     set: Int? = null,
+    /** How it has moved (GLOSSARY, Lift trend) and the sessions behind it; null with nothing to say. */
+    trend: Pair<com.hyperlog.app.history.LiftTrend, List<com.hyperlog.app.history.TrendPoint>>? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -1087,7 +1129,7 @@ internal fun ExerciseSheet(
                 Row(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                     SymbolIcon(Symbol.LocationOn, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
                     Spacer(Modifier.width(16.dp))
-                    Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                     onEditMachine?.let { edit ->
                         val label = stringResource(R.string.machine_edit_description)
                         TextButton(onClick = edit, Modifier.semantics { contentDescription = label }) {
@@ -1115,12 +1157,13 @@ internal fun ExerciseSheet(
                 StartingHintRow(it)
             }
             plan?.let { Prescription(it) }
-            goal?.let { GoalBlock(exercise.name, it) }
+            if (goal != null) GoalBlock(exercise.name, goal, trend?.first)
+            else trend?.let { (moved, points) -> TrendBlock(exercise.name, moved, points) }
             slotNote?.let { note ->
                 Spacer(Modifier.height(24.dp))
                 val label = stringResource(R.string.sheet_program_note)
                 Row(Modifier.semantics { contentDescription = label }) {
-                    SymbolIcon(Symbol.ViewTimeline, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
+                    SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
                     Spacer(Modifier.width(16.dp))
                     Text(note, style = MaterialTheme.typography.bodyLarge)
                 }
@@ -1155,11 +1198,44 @@ internal fun ExerciseSheet(
 }
 
 /**
+ * How the lift has moved, where there's no goal to read it against: the e1RM now, the trend in
+ * words (as Progress and the coach line say it), and the e1RM session by session on a time axis.
+ */
+@Composable
+private fun TrendBlock(name: String, trend: com.hyperlog.app.history.LiftTrend, points: List<com.hyperlog.app.history.TrendPoint>) {
+    val cs = MaterialTheme.colorScheme
+    val (direction, words) = trendWords(trend)
+    Spacer(Modifier.height(24.dp))
+    Row {
+        SymbolIcon(direction.symbol, null, Modifier.padding(top = 4.dp).size(20.dp), tint = direction.color)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            points.lastOrNull()?.estimateKg?.let {
+                Text(stringResource(R.string.trend_e1rm, com.hyperlog.app.ui.history.estimateText(it)), style = MaterialTheme.typography.figureLarge)
+            }
+            Text(words, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            TrendChart(
+                dates = points.map { it.date },
+                line = points.map { it.estimateKg },
+                dots = points.map { null },
+                selected = points.size - 1,
+                onSelect = {},
+                height = 64.dp,
+                ticks = false,
+                smooth = true,
+                description = stringResource(R.string.trend_chart, name),
+            )
+        }
+    }
+}
+
+/**
  * The lift goal under the prescription: the flag, the estimate against the goal and how far is
  * left, then the estimate's trend with the goal line, small and without a grid.
  */
 @Composable
-private fun GoalBlock(name: String, progress: GoalProgress) {
+private fun GoalBlock(name: String, progress: GoalProgress, trend: com.hyperlog.app.history.LiftTrend? = null) {
     val cs = MaterialTheme.colorScheme
     val estimate = progress.estimateKg
     Spacer(Modifier.height(24.dp))
@@ -1169,6 +1245,7 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
         Column(Modifier.weight(1f)) {
             GoalFigure(estimate, progress.goal, MaterialTheme.typography.figureLarge)
             Text(goalStatus(estimate, progress.goal), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            trend?.let { Text(trendWords(it).second, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
             val points = progress.points.filter { it.estimateKg != null }
             if (points.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
@@ -1179,10 +1256,10 @@ private fun GoalBlock(name: String, progress: GoalProgress) {
                     selected = points.size - 1,
                     onSelect = {},
                     height = 64.dp,
-                    axis = false,
                     ticks = false,
                     goal = progress.goal.kg,
                     goalLabel = goalLabel(progress.goal),
+                    smooth = true,
                     description = stringResource(R.string.goal_chart, name),
                 )
             }
@@ -1202,7 +1279,7 @@ private fun Prescription(plan: List<SetPrescription>) {
     // The plan is one card on the sheet, its edge 12 dp out from the text.
     Column(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).padding(vertical = 4.dp)) {
     plan.forEachIndexed { i, set ->
-        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "${i + 1}",
                 Modifier.width(ColSet),
@@ -1218,7 +1295,7 @@ private fun Prescription(plan: List<SetPrescription>) {
                     technique != null -> {
                         SymbolIcon(technique.symbol(), null, Modifier.size(20.dp), tint = cs.tertiary)
                         Spacer(Modifier.width(8.dp))
-                        Text(techniqueText(technique), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(techniqueText(technique), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary)
                     }
                     backoff != null -> {
                         SymbolIcon(Symbol.SouthEast, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
@@ -1227,8 +1304,6 @@ private fun Prescription(plan: List<SetPrescription>) {
                             stringResource(R.string.technique_backoff, backoff.percent),
                             style = MaterialTheme.typography.bodyMedium,
                             color = cs.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }

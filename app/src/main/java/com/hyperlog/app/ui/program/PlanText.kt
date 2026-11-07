@@ -14,7 +14,6 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.hyperlog.app.R
 import com.hyperlog.app.program.SetPrescription
@@ -23,11 +22,11 @@ import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.program.planChunks
 import com.hyperlog.app.ui.session.RirChipKey
 import com.hyperlog.app.ui.session.appendRir
+import com.hyperlog.app.ui.session.isDarkSurface
 import com.hyperlog.app.ui.session.rirChipContent
 import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.session.isDarkSurface
-import com.hyperlog.app.ui.theme.techniqueColor
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.techniqueColor
 
 /**
  * Each technique kind's symbol and name (docs/design/logging-screen.md, Technique label): the one
@@ -83,9 +82,11 @@ fun SetSummary(
     val symbols = mutableMapOf<String, Symbol>()
     val kinds = mutableMapOf<String, TechniqueKind>()
     val chips = mutableSetOf<RirChipKey>()
+    // Joined by no-break spaces, so a line wraps between sets, never inside one.
     val parts = chunks.map { c ->
-        if (c.rir != null) stringResource(R.string.plan_sets_rir, c.count, c.reps.toString(), c.rir)
+        val part = if (c.rir != null) stringResource(R.string.plan_sets_rir, c.count, c.reps.toString(), c.rir)
         else stringResource(R.string.plan_sets, c.count, c.reps.toString())
+        part.replace(' ', '\u00A0')
     }
     val text = buildAnnotatedString {
         chunks.forEachIndexed { i, c ->
@@ -93,7 +94,7 @@ fun SetSummary(
             if (c.backoff) {
                 symbols["backoff"] = Symbol.SouthEast
                 appendInlineContent("backoff", "back-off")
-                append(" ")
+                append("\u00A0")
             }
             appendRir(parts[i], target = true, chips)
             c.techniques.distinct().forEach { t ->
@@ -111,5 +112,5 @@ fun SetSummary(
             SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else techniqueColor(kinds.getValue(key), dark))
         }
     } + rirChipContent(chips, style.fontSize)
-    Text(text, modifier, style = style, color = color, inlineContent = inline, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    Text(text, modifier, style = style, color = color, inlineContent = inline)
 }

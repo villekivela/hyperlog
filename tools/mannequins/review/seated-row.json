@@ -1,0 +1,22 @@
+{
+  "seated_cable_deadlift": {
+    "ok": true,
+    "clip": "280de6c1064c544c",
+    "at": "2026-11-07T10:35:51.894Z"
+  },
+  "seated_cable_kelso_shrug": {
+    "ok": true,
+    "clip": "4423d101a16bf69f",
+    "at": "2026-11-07T10:35:24.779Z"
+  },
+  "seated_cable_row": {
+    "ok": true,
+    "clip": "cc676e205b864941",
+    "at": "2026-11-07T06:54:06.857Z"
+  },
+  "wide_grip_seated_cable_row": {
+    "ok": true,
+    "clip": "6f37e16c8c5efe9a",
+    "at": "2026-11-07T10:34:08.725Z"
+  }
+}

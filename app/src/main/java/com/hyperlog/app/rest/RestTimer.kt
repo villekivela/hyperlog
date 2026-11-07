@@ -17,6 +17,9 @@ import com.hyperlog.app.MainActivity
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.formatKg
 
+/** How long after rest ends its count-up runs: past this, a session left open says nothing about rest. */
+internal const val RestOverLimitMs = 3_600_000L
+
 /**
  * Rest with the phone in a pocket (SPEC, Rest on the lock screen): an ongoing notification that
  * counts down to the next set, with +15 s and End rest, and an exact alarm that buzzes like an
@@ -122,6 +125,8 @@ class RestTimer(
             // A Live Update (Android 16): the countdown also shows as a chip in the status bar. A
             // short critical text would take the chronometer's place there, so there is none.
             .setRequestPromotedOngoing(true)
+        // Rest over goes with the row's count-up, from when rest ended, however late this is posted.
+        if (over) builder.setTimeoutAfter((notice.endsAt + RestOverLimitMs - clock()).coerceAtLeast(1))
         if (!breathing) {
             if (!over) builder.addAction(0, res.getString(R.string.rest_add), actionIntent(RestReceiver.ACTION_ADD))
             builder.addAction(0, res.getString(R.string.rest_end), actionIntent(RestReceiver.ACTION_END))
