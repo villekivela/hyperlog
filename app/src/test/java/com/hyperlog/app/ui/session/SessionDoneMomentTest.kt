@@ -1,18 +1,29 @@
 package com.hyperlog.app.ui.session
 
 import android.provider.Settings
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.domain.LoggedSet
+import com.hyperlog.app.library.Equipment
+import com.hyperlog.app.library.Exercise
+import com.hyperlog.app.library.GripDemand
+import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.progression.Record
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.LiftChange
 import com.hyperlog.app.session.SessionSummary
 import com.hyperlog.app.session.WeekDone
+import com.hyperlog.app.ui.mannequin.LocalExercises
+import com.hyperlog.app.ui.mannequin.RepPlayTag
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -61,6 +72,54 @@ class SessionDoneMomentTest {
     }
 
     @Test
+    fun aSessionIsRatedInAWord() {
+        show(listOf(ExerciseSummary("hack_squat", List(2) { set }, exerciseId = "hack_squat", change = LiftChange.Up, lastTop = LoggedSet(95.0, 6, 0, 1), planned = 2, aimed = 2, onEffort = 2)))
+        compose.onNodeWithText("Strong session").assertIsDisplayed()
+    }
+
+    @Test
+    fun theMeasuresBehindTheWordAreOnScreen() {
+        show(listOf(ExerciseSummary("hack_squat", List(2) { set }, exerciseId = "hack_squat", planned = 3, aimed = 2, onEffort = 1)))
+        compose.onNodeWithText("2 of 3 sets").assertIsDisplayed()
+        compose.onNodeWithText("1 of 2 on effort").assertIsDisplayed()
+    }
+
+    @Test
+    fun theBestLiftIsCalledOut() {
+        val best = ExerciseSummary("Hack Squat", listOf(LoggedSet(105.0, 6, 0, 1)), exerciseId = "hack_squat", change = LiftChange.Up, lastTop = LoggedSet(100.0, 6, 0, 1))
+        show(listOf(best))
+        compose.onNodeWithText("Best lift: Hack Squat, 100\u00A0×\u00A06 → 105\u00A0×\u00A06").assertIsDisplayed()
+    }
+
+    @Test
+    fun theLeadLiftPerformsItsRep() {
+        val lead = Exercise("hack_squat", "Hack Squat", Equipment.Machine, MovementPattern.Squat, GripDemand.None, listOf("Quads"))
+        compose.setContent {
+            HyperlogTheme {
+                CompositionLocalProvider(LocalExercises provides mapOf(lead.id to lead)) {
+                    SessionDoneScreen(SessionSummary(1, 0, 3_600_000, session), onResume = {}, onClose = {})
+                }
+            }
+        }
+        compose.onNodeWithTag(RepPlayTag, useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aFinishedSessionIsFeltAndAFinishedWeekMoreSo() {
+        val felt = mutableListOf<HapticFeedbackType>()
+        val haptics = object : HapticFeedback {
+            override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) { felt += hapticFeedbackType }
+        }
+        compose.setContent {
+            CompositionLocalProvider(LocalHapticFeedback provides haptics) {
+                HyperlogTheme { SessionDoneScreen(SessionSummary(1, 0, 3_600_000, session, WeekDone(8, 4, 42)), onResume = {}, onClose = {}) }
+            }
+        }
+        compose.waitForIdle()
+        assertEquals(listOf(HapticFeedbackType.Confirm, HapticFeedbackType.LongPress), felt)
+    }
+
+    @Test
     fun aFirstSessionHasNothingToCompareSoSaysNothing() {
         show(listOf(lift("pec_deck", null, sets = 1)))
         compose.onNodeWithText("1 set").assertIsDisplayed()
@@ -74,11 +133,38 @@ class SessionDoneMomentTest {
         assertEquals(4, compose.onAllNodesWithTag(DoneMarkTag, useUnmergedTree = true).fetchSemanticsNodes().size)
     }
 
+    /** One exercise is already the hero and its own row: a third of it adds nothing. */
+    @Test
+    fun oneExerciseNeedsNoRowOfMarks() {
+        show(listOf(lift("hack_squat", null)))
+        assertEquals(0, compose.onAllNodesWithTag(DoneMarkTag, useUnmergedTree = true).fetchSemanticsNodes().size)
+    }
+
     @Test
     fun aFinishedWeekHasItsMoment() {
         show(week = WeekDone(week = 8, days = 4, workSets = 42))
         compose.onNodeWithText("Week 8 done").assertIsDisplayed()
         compose.onNodeWithText("4 days · 42 sets").assertIsDisplayed()
+    }
+
+    @Test
+    fun aFinishedWeekComparesWithTheLastAndCountsTheRun() {
+        show(week = WeekDone(week = 8, days = 4, workSets = 42, lastWeekSets = 39, streak = 3))
+        compose.onNodeWithText("3 more than last week").assertIsDisplayed()
+        compose.onNodeWithText("3 weeks in a row").assertIsDisplayed()
+    }
+
+    @Test
+    fun aLighterWeekSaysSoPlainly() {
+        show(week = WeekDone(week = 8, days = 4, workSets = 30, lastWeekSets = 31, streak = 1))
+        compose.onNodeWithText("1 fewer than last week").assertIsDisplayed()
+        compose.onNodeWithText("in a row", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aWeeksDaysAreCounted() {
+        show(week = WeekDone(week = 8, days = 4, workSets = 42))
+        assertEquals(4, compose.onAllNodesWithTag(WeekDotTag, useUnmergedTree = true).fetchSemanticsNodes().size)
     }
 
     @Test

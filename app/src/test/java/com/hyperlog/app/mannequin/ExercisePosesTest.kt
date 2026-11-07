@@ -53,6 +53,15 @@ class ExercisePosesTest {
         assertFalse(shown.exact)
     }
 
+    /** The figure does the rep: the clip's two ends, and every place between. */
+    @Test
+    fun aRepRunsFromItsStartToItsEnd() {
+        val pose = RepPose(listOf("pelvis"), listOf(100, 200), listOf(300, 600), "l")
+        assertEquals(listOf(100, 200), pose.at(0f))
+        assertEquals(listOf(300, 600), pose.at(1f))
+        assertEquals(listOf(200, 400), pose.at(0.5f))
+    }
+
     @Test
     fun noPosesAtAllDrawNothing() {
         assertNull(ExercisePoses.parse("""{ "joints": [], "poses": {} }""").poseFor(exercise("x", MovementPattern.Squat)))

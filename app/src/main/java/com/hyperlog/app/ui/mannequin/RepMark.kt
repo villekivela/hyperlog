@@ -1,6 +1,9 @@
 package com.hyperlog.app.ui.mannequin
 
 import android.content.Context
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -37,6 +41,7 @@ import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.mannequin.ExercisePoses
 import com.hyperlog.app.mannequin.PoseShown
 import com.hyperlog.app.mannequin.RepPose
+import com.hyperlog.app.ui.theme.animationsRemoved
 
 /** The exercise library by id, so a mark can be drawn wherever only an exercise's id is known. */
 internal val LocalExercises = staticCompositionLocalOf<Map<String, Exercise>> { emptyMap() }
@@ -44,6 +49,7 @@ internal val LocalExercises = staticCompositionLocalOf<Map<String, Exercise>> { 
 internal const val RepMarkTag = "rep-mark"
 internal const val RepMarkFallbackTag = "rep-mark-fallback"
 internal const val RepStageTag = "rep-stage"
+internal const val RepPlayTag = "rep-play"
 
 /** How much of a mark's edge stays clear, so a head or a foot never touches its tile. */
 private const val Inset = 0.14f
@@ -56,7 +62,7 @@ private object Poses {
 }
 
 /** A pose's joints as index pairs, worked out once, so drawing a row is a few lines and nothing else. */
-private class RepFigure(pose: RepPose) {
+private class RepFigure(val pose: RepPose) {
     val start = pose.start
     val end = pose.end
     private val at = pose.joints.withIndex().associate { (i, name) -> name to i }
@@ -106,12 +112,12 @@ private fun DrawScope.drawPoints(figure: RepFigure, points: List<Int>, ink: Colo
  * The rep: its end in full ink over its start as a ghost, so the mark shows how the lift moves. A
  * halo in the [ground]'s colour cuts the end pose out of the ghost, or at list size the two muddy.
  */
-private fun DrawScope.drawRep(figure: RepFigure, ink: Color, ghost: Boolean, ground: Color) {
+private fun DrawScope.drawRep(figure: RepFigure, ink: Color, ghost: Boolean, ground: Color, at: List<Int> = figure.end) {
     if (ghost) {
         drawPoints(figure, figure.start, ink.copy(alpha = 0.2f))
-        drawPoints(figure, figure.end, ground, grow = size.minDimension * 0.05f, solid = true)
+        drawPoints(figure, at, ground, grow = size.minDimension * 0.05f, solid = true)
     }
-    drawPoints(figure, figure.end, ink)
+    drawPoints(figure, at, ink)
 }
 
 /**
@@ -134,6 +140,30 @@ internal fun RepMark(exercise: Exercise?, modifier: Modifier = Modifier, size: D
 /** [RepMark] for the exercise with this [id] in the library. */
 @Composable
 internal fun RepMark(id: String, modifier: Modifier = Modifier, size: Dp = 48.dp) = RepMark(LocalExercises.current[id], modifier, size)
+
+/**
+ * The figure does the rep, once: down, up, and down again to rest on the rep's end, where the mark
+ * has it. With the system's animations off it is simply there. Nothing waits for it.
+ */
+@Composable
+internal fun RepPlay(exercise: Exercise?, modifier: Modifier = Modifier, size: Dp = 48.dp, ground: Color = MaterialTheme.colorScheme.surface) {
+    val figure = rememberFigure(exercise) ?: return
+    val context = LocalContext.current
+    val moved = remember(exercise) { Animatable(if (animationsRemoved(context)) 1f else 0f) }
+    LaunchedEffect(exercise) {
+        if (moved.value == 1f) return@LaunchedEffect
+        val stroke = tween<Float>(RepStrokeMs, easing = FastOutSlowInEasing)
+        moved.animateTo(1f, stroke)
+        moved.animateTo(0f, stroke)
+        moved.animateTo(1f, stroke)
+    }
+    val ink = if (figure.second) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+    Canvas(modifier.size(size).testTag(RepPlayTag)) {
+        drawRep(figure.first, ink, ghost = figure.second, ground = ground, at = figure.first.pose.at(moved.value))
+    }
+}
+
+private const val RepStrokeMs = 600
 
 /**
  * The band a short exercise leaves above its table: the rep, large, with its [cue]. A tap opens the

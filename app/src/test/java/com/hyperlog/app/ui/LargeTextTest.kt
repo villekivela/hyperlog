@@ -28,6 +28,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.AppNavigationBar
+import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.Screen
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
@@ -349,17 +350,21 @@ class LargeTextTest {
     @Config(qualifiers = "w448dp-h1000dp-xxhdpi")
     fun progressHoldsItsWordsOnAPhonesScreen() {
         val monday = LocalDate.of(2026, 11, 2)
-        val weeks = listOf(WeekSets(monday, emptyMap()), WeekSets(monday.minusWeeks(1), mapOf("Gastrocnemius" to 1.5, "Triceps Lateral Head" to 3.0), 4))
+        val weeks = listOf(WeekSets(monday, emptyMap()), WeekSets(monday.minusWeeks(1), mapOf("Gastrocnemius" to 1.5, "Triceps Lateral Head" to 3.0, "Calves" to 13.0), 4))
         atEveryScale({
             HistoryScreen(
                 emptyList(), weeks, emptyList(), emptyList(), tab = 1, onTab = {}, onOpenSession = {}, onOpenExercise = {},
-                onBodyweight = {}, onLogBodyweight = {}, onBack = {}, today = LocalDate.of(2026, 11, 5),
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {}, today = LocalDate.of(2026, 11, 5), standing = NumberRange(10, 16),
             )
         }) { scale ->
             compose.onNodeWithText("Gastrocnemius", useUnmergedTree = true).assertWholeWords("Gastrocnemius at $scale")
             compose.onNodeWithText("Triceps Lateral Head", useUnmergedTree = true).assertWholeWords("Triceps at $scale")
-            assertEquals("The target wraps at $scale", 1, compose.onNodeWithText("Target 8–14 sets", useUnmergedTree = true).layout().lineCount)
+            assertEquals("The target wraps at $scale", 1, compose.onNodeWithText("Target 10–16 sets", useUnmergedTree = true).layout().lineCount)
             assertEquals("The head wraps at $scale", 1, compose.onNodeWithText("Sets last week", useUnmergedTree = true).layout().lineCount)
+            // Ticks that can't both fit leave the top one, not `1016`.
+            val low = compose.onAllNodes(hasText("10"), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()?.boundsInRoot
+            val high = compose.onNode(hasText("16"), useUnmergedTree = true).getBoundsInRoot()
+            if (low != null) assertTrue("10 and 16 touch at $scale", with(compose.density) { low.right.toDp() } + 4.dp <= high.left)
         }
     }
 

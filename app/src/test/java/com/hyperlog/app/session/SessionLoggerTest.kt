@@ -261,6 +261,24 @@ class SessionLoggerTest {
         assertEquals(lastSet, summary.finishedAt)
     }
 
+    /** Left open and picked up days later read 5256 min on a build: only the time training counts. */
+    @Test
+    fun aSessionResumedAfterDaysCountsOnlyItsTimeTraining() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        val started = now
+        now += 5 * 60_000L
+        logger.type("60"); logger.done(); logger.type("12"); logger.selectRir(1); logger.done()
+        now += 3 * 24 * 3_600_000L
+        logger.type("12"); logger.selectRir(1); logger.done()
+        now += 10 * 60_000L
+
+        val summary = logger.finish()!!
+
+        assertEquals(started + 15 * 60_000L, summary.finishedAt)
+    }
+
     @Test
     fun aSessionFinishedSoonAfterItsLastSetEndsWhenFinished() = runTest {
         val logger = logger()

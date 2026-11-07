@@ -5,12 +5,16 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.math.roundToInt
 
 /**
  * One rep drawn flat: each joint's place in a 0–1000 box at its [start] and [end], as x, y pairs in
  * [joints]' order, and the side further from the camera ([far], `l` or `r`).
  */
-data class RepPose(val joints: List<String>, val start: List<Int>, val end: List<Int>, val far: String)
+data class RepPose(val joints: List<String>, val start: List<Int>, val end: List<Int>, val far: String) {
+    /** The figure [t] of the way from [start] to [end]. */
+    fun at(t: Float): List<Int> = start.indices.map { start[it] + ((end[it] - start[it]) * t).roundToInt() }
+}
 
 /** [pose] for an exercise, and whether it is that exercise's own ([exact]) or its pattern's. */
 data class PoseShown(val pose: RepPose, val exact: Boolean)

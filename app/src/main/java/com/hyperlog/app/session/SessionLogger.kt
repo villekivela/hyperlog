@@ -193,14 +193,24 @@ class SessionLogger(
         remembered?.let { dao.setEquipmentItem(sessionExerciseId, it) }
     }
 
+    /**
+     * When a session started at [startedAt] ended, counting only its time training: left open, or
+     * put down and picked up again, a gap of more than [RestOverLimitMs] between sets isn't training.
+     */
+    private fun trainingEnd(startedAt: Long, sets: List<Long>, now: Long): Long {
+        val marks = listOf(startedAt) + sets.sorted() + now
+        return startedAt + marks.zipWithNext { a, b -> b - a }.filter { it <= RestOverLimitMs }.sum()
+    }
+
     /** The program week [week] as trained, if session [sessionId] finished it: what comes next is in a later one, or there is none. */
     private suspend fun weekDone(sessionId: Long, week: Int): WeekDone? {
         val next = programs.active.first()?.next?.day
         if (next != null && next.position.week <= week) return null
         val programId = dao.session(sessionId)?.programId ?: return null
-        val trained = dao.finishedSessions().filter { it.programId == programId && it.week == week }
-        val sets = trained.flatMap { dao.sessionExercises(it.id) }.filterNot { it.removed }.sumOf { dao.sets(it.id).size }
-        return WeekDone(week, trained.mapNotNull { it.dayIndex }.distinct().size, sets)
+        val byWeek = dao.finishedSessions().filter { it.programId == programId && it.week != null }.groupBy { it.week!! }
+        suspend fun sets(w: Int) = byWeek[w]?.flatMap { dao.sessionExercises(it.id) }?.filterNot { it.removed }?.sumOf { dao.sets(it.id).size }
+        val streak = generateSequence(week) { it - 1 }.takeWhile { it in byWeek }.count()
+        return WeekDone(week, byWeek[week].orEmpty().mapNotNull { it.dayIndex }.distinct().size, sets(week) ?: 0, sets(week - 1), streak)
     }
 
     /** Adds [exerciseId] after the others and makes it the one on screen. */
@@ -997,9 +1007,7 @@ class SessionLogger(
         }
         correction = null
         viewingId = null
-        // A session left open ended at its last set, not whenever it was remembered.
-        val lastSet = logged.flatMap { dao.sets(it.id) }.maxOf { it.loggedAt }
-        val ended = if (now - lastSet > RestOverLimitMs) lastSet else now
+        val ended = trainingEnd(session.startedAt, logged.flatMap { dao.sets(it.id) }.map { it.loggedAt }, now)
         dao.updateSession(dao.session(session.id)!!.copy(finishedAt = ended, entry = null, restEndsAt = null))
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
         val week = session.day?.let { weekDone(session.id, it.position.week) }

@@ -194,6 +194,7 @@
     <string name="record_reps">Rep record</string>
     <string name="records_title">Records</string>
     <string name="record_new">New record</string>
+    <string name="record_detail">%1$s · %2$s</string>
     <string name="done_when">Started %1$s, %2$d min</string>
     <string name="done_close">Done</string>
     <plurals name="done_sets">
@@ -212,6 +213,19 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
+    <plurals name="done_sets_of">
+        <item quantity="one">%1$d of %2$d set</item>
+        <item quantity="other">%1$d of %2$d sets</item>
+    </plurals>
+    <string name="done_on_effort">%1$d of %2$d on effort</string>
+    <string name="done_rating_strong">Strong session</string>
+    <string name="done_rating_solid">Solid session</string>
+    <string name="done_rating_banked">In the bank</string>
+    <string name="done_best">Best lift: %1$s, %2$s → %3$s</string>
+    <string name="done_week_more">%1$d more than last week</string>
+    <string name="done_week_fewer">%1$d fewer than last week</string>
+    <string name="done_week_same">As many as last week</string>
+    <string name="done_week_streak">%1$d weeks in a row</string>
     <string name="done_week">Week %1$d done</string>
     <string name="done_week_line">%1$s · %2$s</string>
     <string name="finish_title">Finish the session?</string>

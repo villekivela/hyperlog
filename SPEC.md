@@ -1370,23 +1370,33 @@ gallery (Technique videos).
   else, a bolt is a workout from Claude, and a storefront is a gym.
 - **Moments** (#272): a record, a finished session and a finished week each have a moment, and none
   holds anything up.
-  - **A record**, as it is logged: a pill over the table, `New record` with the record's name, in ink
-    like the record's mark. It goes by itself after 2.5 seconds, takes no touches and sits clear
-    of the pad. TalkBack reads it politely.
-  - **A finished session**: Session done brings the session's rep marks in one by one, then says what
-    it came to: its sets, the lifts up on last time (`2 of 3 lifts up`, a lift being up if its top set
-    is heavier, or as heavy for more reps) and its records. A first session has nothing to compare,
-    so it says nothing of the lifts. Done and Resume work from the first frame.
-  - **A finished week**: a session that closes a program week adds `Week 8 done` and `4 days · 42 sets`.
-  - **Feel**: logging a set is felt as a confirm, by the pad or the check, and opening a session or
-    taking a set back is not. Rest ending buzzes, as it did.
+  - **The figure does the rep**: where a moment shows a lift, the rep mark's figure moves through it
+    once, between the clip's two ends, and rests on the end.
+  - **A record**, as it is logged: a pill over the table, the figure doing the rep beside `New record`
+    and `Rep record · 50 × 30`, in ink like the record's mark. It goes by itself after 3 seconds,
+    takes no touches and sits clear of the pad. TalkBack reads it politely.
+  - **A finished session**: Session done leads with its best lift doing the rep, then a rating in a
+    word, `Strong session`, `Solid session` or `In the bank`, and the measures behind it: sets of the
+    plan done, sets within 1 RIR of target, and lifts up on last time (a lift being up if its top set
+    is heavier, or as heavy for more reps; held counts half). A measure that can't be read doesn't
+    count against a session, so a first session is judged on what it has. Under them come the
+    records, the best lift (`Best lift: Hack Squat, 100 × 6 → 105 × 6`) and, with two or more
+    exercises, the session's rep marks coming in one by one. Done and Resume work from the first frame.
+  - **A finished week**: a session that closes a program week adds `Week 8 done`, a dot filling in for
+    each day trained, `4 days · 42 sets`, the change on last week (`3 more than last week`) and, from
+    two weeks up, the run (`3 weeks in a row`).
+  - **Feel**: logging a set is a confirm, by the pad or the check, and opening a session or taking a
+    set back is nothing. A record, and a finished week, are felt more strongly. Rest ending buzzes,
+    as it did.
   - **The system's animation setting** is followed everywhere: Compose's animations stop with it, a
-    moment just appears and goes, and the rep marks are all there at once. The mannequin holds a still.
+    moment just appears and goes, a figure rests on its end, marks and dots are there at once, and
+    the mannequin holds a still.
 - **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
   with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
   tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.
-- **A session left open ends at its last set** (#273): finished more than an hour after its last set,
-  its end is that set, so a session forgotten for days reads the time it took, not `5192 min`.
+- **A session's length is its time training** (#273): a gap of more than an hour between sets, or
+  after the last one, doesn't count, so a session forgotten for days, or left open and picked up
+  again, reads the time it took, not `5192 min`.
 - **Today's one action has a lane of its own** (#269): Start and Resume sit under the list, not over
   it, so they never cover an exercise at any text size, and the list fades out above them.
 - **The set table reads aloud** (#268): every value on a row says which row it belongs to and its

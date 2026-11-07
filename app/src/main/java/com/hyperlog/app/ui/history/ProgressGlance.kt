@@ -115,7 +115,7 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
             }
             val name = maxOf(inner * NameShare, word + 8.dp).coerceAtMost(inner - figure - 8.dp - TrackMinimum)
             Column {
-                MuscleScale(glance.muscles.map { it.range }.distinct().singleOrNull(), most, figure, name)
+                MuscleScale(glance.muscles.map { it.range }.distinct().singleOrNull(), most, figure, name, inner - name - figure - 8.dp)
                 (if (all) rows else rows.take(MusclesShown)).forEach { MuscleRow(it, most, figure, name) }
             }
         }
@@ -143,7 +143,7 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
 
 /** The rows' scale, over the tracks: zero, the target's ends (or the top, when ranges differ) and the target in words. */
 @Composable
-private fun MuscleScale(range: NumberRange?, most: Double, figure: Dp, name: Dp) {
+private fun MuscleScale(range: NumberRange?, most: Double, figure: Dp, name: Dp, track: Dp) {
     val style = MaterialTheme.typography.labelSmall
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     val target = range?.let { stringResource(R.string.history_target, it.low, it.high) }.orEmpty()
@@ -153,7 +153,21 @@ private fun MuscleScale(range: NumberRange?, most: Double, figure: Dp, name: Dp)
     if (!beside) Text(target, Modifier.padding(horizontal = TextEdge), style = style, color = color)
     Row(Modifier.fillMaxWidth().padding(horizontal = TextEdge), verticalAlignment = Alignment.CenterVertically) {
         if (beside) Text(target, Modifier.width(name), style = style, color = color) else Spacer(Modifier.width(name))
-        val ticks = if (range != null) listOf(0.0, range.low.toDouble(), range.high.toDouble()) else listOf(0.0, most)
+        // With no room for the target's two ends, the top stands alone: the words above say the rest.
+        val density = LocalDensity.current
+        val apart = range?.let {
+            val low = with(density) { measurer.measure("${it.low}", style).size.width.toDp() }
+            val high = with(density) { measurer.measure("${it.high}", style).size.width.toDp() }
+            // Where they land: each centred on its value, the top one kept inside the track.
+            val lowEnd = track * (it.low / most).toFloat() + low / 2
+            val highStart = minOf(track * (it.high / most).toFloat() - high / 2, track - high)
+            lowEnd + 4.dp <= highStart
+        } == true
+        val ticks = when {
+            range == null -> listOf(0.0, most)
+            apart -> listOf(0.0, range.low.toDouble(), range.high.toDouble())
+            else -> listOf(0.0, range.high.toDouble())
+        }
         Layout({ ticks.forEach { Text(formatSets(it), style = style, color = color) } }, Modifier.weight(1f)) { items, constraints ->
             val placed = items.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
             layout(constraints.maxWidth, placed.maxOf { it.height }) {

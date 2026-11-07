@@ -352,6 +352,9 @@ _Avoid_: Thumbnail, exercise image
 **Rep stage**:
 The rep mark's figure, large, with the set's cue, in the space a short exercise leaves above its set table.
 
+**Session rating**:
+What a finished session came to, in a word: Strong session, Solid session or In the bank, from the sets of the plan done, the sets within 1 RIR of target and the lifts up on last time, each as far as it can be read.
+
 **Next action**:
 The one thing to do next, in an accent card at the top of Program and Progress: on to Today, or back to the session running.
 

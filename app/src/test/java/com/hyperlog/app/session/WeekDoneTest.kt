@@ -34,13 +34,14 @@ class WeekDoneTest {
         programs = Programs(db, clock = { now })
         programs.import(
             """
-            { "format": 1, "title": "T", "blocks": [ { "id": "b", "name": "B", "weekStart": 1, "weekEnd": 4, "days": [
-              ${day("a", "Day A", "db_bench_press")}, ${day("b", "Day B", "db_lateral_raise")} ] } ] }
+            { "format": 1, "title": "T", "blocks": [
+              { "id": "one", "name": "One", "weekStart": 1, "weekEnd": 1, "days": [ ${day("a", "Day A", "db_bench_press")}, ${day("b", "Day B", "db_lateral_raise")} ] },
+              { "id": "two", "name": "Two", "weekStart": 2, "weekEnd": 2, "days": [ ${day("c", "Day A", "seated_db_shoulder_press")}, ${day("d", "Day B", "dumbbell_shoulder_press_standing")} ] } ] }
             """,
         )
     }
 
-    /** Each day its own exercise, so neither comes prefilled from the other. */
+    /** Each day its own exercise, so none comes prefilled from another. */
     private fun day(id: String, name: String, exercise: String) = """{ "id": "$id", "name": "$name", "groups": [
         { "slots": [ { "id": "s$id", "exercise": "$exercise", "sets": [ { "count": 2, "reps": "8-10", "rir": 1, "rest": 90 } ] } ] } ] }"""
 
@@ -71,7 +72,20 @@ class WeekDoneTest {
     @Test
     fun theLastDayOfAWeekFinishesIt() = runTest {
         trainNext()
-        assertEquals(WeekDone(week = 1, days = 2, workSets = 4), trainNext().week)
+        assertEquals(WeekDone(week = 1, days = 2, workSets = 4, lastWeekSets = null, streak = 1), trainNext().week)
+    }
+
+    /** Two sets on each of two days a week: the second week's card compares with the first. */
+    @Test
+    fun aWeekComparesWithTheOneBeforeAndCountsTheRun() = runTest {
+        trainNext()
+        val first = trainNext().week!!
+        assertEquals(null, first.lastWeekSets)
+        assertEquals(1, first.streak)
+        trainNext()
+        val second = trainNext().week!!
+        assertEquals(4, second.lastWeekSets)
+        assertEquals(2, second.streak)
     }
 
     @Test

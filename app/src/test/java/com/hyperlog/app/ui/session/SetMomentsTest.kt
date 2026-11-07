@@ -108,6 +108,17 @@ class SetMomentsTest {
         compose.onNodeWithText("New record").assertDoesNotExist()
     }
 
+    /** A record says which set made it, and is felt apart from an ordinary set. */
+    @Test
+    fun aRecordSaysWhatItWasAndIsFelt() {
+        show(session(0))
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { shown = session(1, listOf(Record.Estimate)) }
+        compose.mainClock.advanceTimeBy(600)
+        compose.onNodeWithText("Estimate record · 100 × 6").assertExists()
+        assertEquals(1, felt.count { it == HapticFeedbackType.LongPress })
+    }
+
     @Test
     fun aSetWithNoRecordHasNoMoment() {
         show(session(0))

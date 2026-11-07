@@ -28,4 +28,67 @@ class SessionMomentsTest {
 
     @Test
     fun nothingToCompareWithIsNoChange() = assertEquals(null, liftChange(listOf(set(100.0, 6)), emptyList()))
+
+    private fun lift(name: String, change: LiftChange?, top: LoggedSet, last: LoggedSet?, planned: Int? = 2, sets: Int = 2, aimed: Int = 2, onEffort: Int = 2) =
+        ExerciseSummary(name, List(sets) { top }, change = change, lastTop = last, planned = planned, aimed = aimed, onEffort = onEffort)
+
+    private fun summary(vararg lifts: ExerciseSummary) = SessionSummary(1, 0, 3_600_000, lifts.toList())
+
+    @Test
+    fun everythingDoneOnEffortWithLiftsUpIsStrong() {
+        val session = summary(lift("A", LiftChange.Up, set(105.0, 6), set(100.0, 6)), lift("B", LiftChange.Up, set(60.0, 9), set(60.0, 8)))
+        assertEquals(SessionRating.Strong, session.rating)
+    }
+
+    /** Holding every number on a plan done in full is good training, not a failure. */
+    @Test
+    fun aPlanDoneInFullWithLiftsHeldIsSolid() {
+        val session = summary(lift("A", LiftChange.Same, set(100.0, 6), set(100.0, 6)), lift("B", LiftChange.Same, set(60.0, 8), set(60.0, 8)))
+        assertEquals(SessionRating.Solid, session.rating)
+    }
+
+    /** Half the sets in the bank still counts, and says so kindly. */
+    @Test
+    fun aShortSessionIsBanked() {
+        val session = summary(lift("A", LiftChange.Down, set(90.0, 6), set(100.0, 6), planned = 4, sets = 1, aimed = 1, onEffort = 0))
+        assertEquals(SessionRating.Banked, session.rating)
+    }
+
+    /** A first session has no last time: it is read on what it has. */
+    @Test
+    fun whatCantBeMeasuredDoesntCountAgainstASession() {
+        assertEquals(SessionRating.Strong, summary(lift("A", null, set(100.0, 6), null)).rating)
+        assertEquals(SessionRating.Solid, summary(lift("A", null, set(100.0, 6), null, planned = null, aimed = 0, onEffort = 0)).rating)
+    }
+
+    @Test
+    fun theSessionAddsUpItsMeasures() {
+        val session = summary(
+            lift("A", LiftChange.Up, set(105.0, 6), set(100.0, 6), planned = 3, sets = 2, aimed = 2, onEffort = 1),
+            lift("B", null, set(60.0, 9), null, planned = null, sets = 1, aimed = 0, onEffort = 0),
+        )
+        assertEquals(3, session.planned)
+        assertEquals(2, session.aimed)
+        assertEquals(1, session.onEffort)
+    }
+
+    @Test
+    fun theBestLiftGainedMostOnLastTime() {
+        val session = summary(
+            lift("Small", LiftChange.Up, set(102.5, 6), set(100.0, 6)),
+            lift("Big", LiftChange.Up, set(66.0, 6), set(60.0, 6)),
+            lift("Same", LiftChange.Same, set(50.0, 6), set(50.0, 6)),
+        )
+        assertEquals("Big", session.bestLift?.name)
+    }
+
+    @Test
+    fun moreRepsAtTheSameWeightCanBeTheBest() {
+        assertEquals("Reps", summary(lift("Reps", LiftChange.Up, set(60.0, 9), set(60.0, 8))).bestLift?.name)
+    }
+
+    @Test
+    fun noLiftUpHasNoBestLift() {
+        assertEquals(null, summary(lift("A", LiftChange.Same, set(100.0, 6), set(100.0, 6))).bestLift)
+    }
 }
