@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -374,9 +376,11 @@ private fun Stat(number: String, label: String, color: Color) {
 }
 
 /** Exercises, sets and minutes (`~45` for an estimate). */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Stats(exercises: Int, sets: Int, minutes: Int, estimate: Boolean, color: Color) {
-    Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+    // The last goes under the others rather than split its word.
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
         Stat("$exercises", pluralStringResource(R.plurals.today_stat_exercises, exercises), color)
         Stat("$sets", pluralStringResource(R.plurals.today_stat_sets, sets), color)
         Stat(if (estimate) "~$minutes" else "$minutes", pluralStringResource(R.plurals.today_stat_minutes, minutes), color)
@@ -438,13 +442,13 @@ private fun CardHead(
 
 /**
  * `Deload` on a day of a deload week: a small tonal tag like the technique pills, the program's
- * spa symbol and the word in onTertiaryContainer, 24 dp high on the 8 dp grid.
+ * spa symbol and the word in onTertiaryContainer, 24 dp high on the 8 dp grid, taller at large text.
  */
 @Composable
 private fun DeloadTag(words: Int = R.string.today_deload) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.height(24.dp).clip(RoundedCornerShape(8.dp)).background(cs.tertiaryContainer).padding(horizontal = 8.dp),
+        Modifier.heightIn(min = 24.dp).clip(RoundedCornerShape(8.dp)).background(cs.tertiaryContainer).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SymbolIcon(Symbol.Spa, null, Modifier.size(16.dp), tint = cs.onTertiaryContainer)

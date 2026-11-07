@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -57,13 +59,13 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
@@ -625,6 +627,9 @@ private fun HeaderChip(symbol: Symbol?, text: String, modifier: Modifier = Modif
 
 internal const val HeaderChipTag = "header-chip"
 
+/** The text size from which a session list row's action sits under its name. */
+private const val ListActionUnderScale = 1.3f
+
 @Composable
 private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) {
     Column(
@@ -633,15 +638,16 @@ private fun RestSheet(leftMs: Long, actions: SessionActions, onEnd: () -> Unit) 
     ) {
         Text(stringResource(R.string.rest_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            FilledTonalButton(onClick = { actions.adjustRest(-15_000) }, Modifier.width(96.dp)) { Text("−15") }
+        Row(Modifier.widthIn(max = 352.dp), verticalAlignment = Alignment.CenterVertically) {
+            val nudge = PaddingValues(horizontal = 4.dp)
+            FilledTonalButton(onClick = { actions.adjustRest(-15_000) }, Modifier.weight(1f), contentPadding = nudge) { Text("−15") }
             Text(
                 clock(leftMs),
                 Modifier.width(160.dp),
                 style = MaterialTheme.typography.figureDisplay,
                 textAlign = TextAlign.Center,
             )
-            FilledTonalButton(onClick = { actions.adjustRest(15_000) }, Modifier.width(96.dp)) { Text("+15") }
+            FilledTonalButton(onClick = { actions.adjustRest(15_000) }, Modifier.weight(1f), contentPadding = nudge) { Text("+15") }
         }
         Spacer(Modifier.height(16.dp))
         TextButton(onClick = { actions.endRest(); onEnd() }) { Text(stringResource(R.string.rest_end)) }
@@ -712,10 +718,10 @@ private fun StartingHintRow(set: String) {
     Row(Modifier.fillMaxWidth().testTag(StartingHintTag), verticalAlignment = Alignment.Top) {
         SymbolIcon(Symbol.MoveToInbox, null, Modifier.size(20.dp), tint = muted)
         Spacer(Modifier.width(16.dp))
-        // The set on a line of its own, so it never breaks inside it.
+        // The set starts a line of its own.
         Column {
             Text(stringResource(R.string.starting_hint), style = MaterialTheme.typography.bodyMedium, color = muted)
-            RirText(set, style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            RirText(set, style = MaterialTheme.typography.bodyMedium, color = muted)
         }
     }
 }
@@ -857,6 +863,15 @@ internal fun SessionList(
                         }
                     }
                 }
+                val action: @Composable () -> Unit = {
+                    when {
+                        now -> Unit
+                        e.done -> FilledTonalButton(onClick = { onOpen(e.id) }) { Text(stringResource(R.string.session_open_exercise)) }
+                        else -> FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
+                    }
+                }
+                // At large text Start would squeeze the name into pieces, so it goes under it.
+                val under = LocalDensity.current.fontScale >= ListActionUnderScale
                 Column(Modifier.weight(1f)) {
                     Text(e.exercise.name, style = MaterialTheme.typography.bodyLarge)
                     if (e.sets.isNotEmpty()) {
@@ -868,12 +883,9 @@ internal fun SessionList(
                     } else {
                         e.prescription?.let { SetSummary(it) }
                     }
+                    if (under) action()
                 }
-                when {
-                    now -> Unit
-                    e.done -> FilledTonalButton(onClick = { onOpen(e.id) }) { Text(stringResource(R.string.session_open_exercise)) }
-                    else -> FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
-                }
+                if (!under) action()
                 Spacer(Modifier.width(8.dp))
                 RepMark(e.exercise, size = 40.dp)
                 edits?.let { ExerciseEditMenu(e.exercise.name, it(e, blocks)) }
@@ -1095,7 +1107,7 @@ internal fun ExerciseSheet(
                 Row(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                     SymbolIcon(Symbol.LocationOn, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
                     Spacer(Modifier.width(16.dp))
-                    Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                     onEditMachine?.let { edit ->
                         val label = stringResource(R.string.machine_edit_description)
                         TextButton(onClick = edit, Modifier.semantics { contentDescription = label }) {
@@ -1210,7 +1222,7 @@ private fun Prescription(plan: List<SetPrescription>) {
     // The plan is one card on the sheet, its edge 12 dp out from the text.
     Column(Modifier.cardBehind(Tones.sheetCard, inset = -12.dp).padding(vertical = 4.dp)) {
     plan.forEachIndexed { i, set ->
-        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "${i + 1}",
                 Modifier.width(ColSet),
@@ -1226,7 +1238,7 @@ private fun Prescription(plan: List<SetPrescription>) {
                     technique != null -> {
                         SymbolIcon(technique.symbol(), null, Modifier.size(20.dp), tint = cs.tertiary)
                         Spacer(Modifier.width(8.dp))
-                        Text(techniqueText(technique), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(techniqueText(technique), style = MaterialTheme.typography.bodyMedium, color = cs.tertiary)
                     }
                     backoff != null -> {
                         SymbolIcon(Symbol.SouthEast, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
@@ -1235,8 +1247,6 @@ private fun Prescription(plan: List<SetPrescription>) {
                             stringResource(R.string.technique_backoff, backoff.percent),
                             style = MaterialTheme.typography.bodyMedium,
                             color = cs.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }

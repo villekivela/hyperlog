@@ -20,14 +20,17 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
@@ -53,14 +56,18 @@ import com.hyperlog.app.history.WeekSets
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.GripDemand
+import com.hyperlog.app.library.LibrarySeed
 import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.navItem
+import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Backoff
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.program.HoldPosition
 import com.hyperlog.app.program.Position
+import com.hyperlog.app.program.ProgramParser
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
+import com.hyperlog.app.program.StarterProgram
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.session.ActiveSession
@@ -75,6 +82,7 @@ import com.hyperlog.app.session.WarmupEdit
 import com.hyperlog.app.ui.coach.TileCard
 import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.history.HistoryScreen
+import com.hyperlog.app.ui.library.LibraryScreen
 import com.hyperlog.app.ui.program.BlockChoice
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.session.PadTag
@@ -93,8 +101,15 @@ import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.today.SlotRows
+import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.ui.today.WeekRow
+import com.hyperlog.app.week.RotationAnchor
+import com.hyperlog.app.week.Rotations
+import com.hyperlog.app.week.WeekdayPlan
+import java.io.File
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -519,36 +534,46 @@ class LargeTextTest {
         return getLineBaseline(last) + (if (descends) em * 0.2f else 0f) > size.height + 0.5f
     }
 
+    /** Its layout; null for a text still to be laid out, off in a list or a sheet on its way in. */
+    private fun SemanticsNodeInteraction.laidOut(): TextLayoutResult? {
+        val layouts = mutableListOf<TextLayoutResult>()
+        fetchSemanticsNode().config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.invoke(layouts)
+        return layouts.firstOrNull()
+    }
+
     /** Every text on screen that doesn't read whole, with what's wrong with it. */
     private fun faults(): List<String> {
         val texts = SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult)
         val all = compose.onAllNodes(texts, useUnmergedTree = true)
         val cut = all.fetchSemanticsNodes().indices.mapNotNull { i ->
-            val layout = all[i].layout()
+            val layout = all[i].laidOut() ?: return@mapNotNull null
             val text = layout.layoutInput.text.text
             val lines = 0 until layout.lineCount
-            fun inWord(c: Char) = c.isLetterOrDigit() || c == '.'
+            fun inWord(c: Char) = c.isLetterOrDigit() || c == '.' || c == '–'
             when {
                 text.isBlank() -> null
                 lines.any { layout.isLineEllipsized(it) } -> "`$text` ellipsized"
                 layout.getLineEnd(layout.lineCount - 1, visibleEnd = true) < text.trimEnd().length -> "`$text` loses its end"
                 layout.inkBelowItsBox() -> "`$text` is cut at the foot"
-                lines.any { layout.getLineRight(it) > layout.size.width + 0.5f } -> "`$text` runs past its box"
-                (1 until layout.lineCount).any { inWord(text[layout.getLineStart(it) - 1]) && inWord(text[layout.getLineStart(it)]) } -> "`$text` splits inside a word or figure"
+                lines.any { layout.getLineRight(it) - layout.getLineLeft(it) > layout.size.width + 1.5f } -> "`$text` runs past its box, ${lines.maxOf { layout.getLineRight(it) - layout.getLineLeft(it) }} in ${layout.size.width}"
+                (1 until layout.lineCount).any { inWord(text[layout.getLineStart(it) - 1]) && inWord(text[layout.getLineStart(it)]) } -> {
+                    val at = (1 until layout.lineCount).first { inWord(text[layout.getLineStart(it) - 1]) && inWord(text[layout.getLineStart(it)]) }.let(layout::getLineStart)
+                    "`${text.substring(maxOf(0, at - 8), at)}|${text.substring(at, minOf(text.length, at + 8))}` splits inside a word or figure"
+                }
                 else -> null
             }
         }
-        // What the pad's own rows hold back: a text laid out whole in a row too short for it.
-        val inPad = compose.onAllNodes(texts and hasAnyAncestor(hasTestTag(PadTag)), useUnmergedTree = true)
-        val heldBack = inPad.fetchSemanticsNodes().indices.mapNotNull { i ->
-            val layout = inPad[i].layout()
-            val shown = inPad[i].fetchSemanticsNode().boundsInRoot
-            "`${layout.layoutInput.text.text}` is clipped by its row".takeIf { shown.height < layout.size.height - 1f || shown.width < layout.size.width - 1f }
+        // What a row holds back: a text laid out whole in a box too short for it. A list's rows only pass out of view.
+        val fixed = compose.onAllNodes(texts and !hasAnyAncestor(hasScrollAction()), useUnmergedTree = true)
+        val heldBack = fixed.fetchSemanticsNodes().indices.mapNotNull { i ->
+            val layout = fixed[i].laidOut() ?: return@mapNotNull null
+            val shown = fixed[i].fetchSemanticsNode().boundsInRoot
+            "`${layout.layoutInput.text.text}` is clipped by its row".takeIf { layout.layoutInput.text.isNotBlank() && (shown.height < layout.size.height - 1f || shown.width < layout.size.width - 1f) }
         }
         // Two values whole but touching read as one: `102.5` beside `12 + 6` was `102.512 + 6` on the build.
         val inTable = compose.onAllNodes(texts and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)
         val ink = inTable.fetchSemanticsNodes().indices.mapNotNull { i ->
-            val layout = inTable[i].layout()
+            val layout = inTable[i].laidOut() ?: return@mapNotNull null
             val box = inTable[i].fetchSemanticsNode().boundsInRoot
             val lines = 0 until layout.lineCount
             val text = layout.layoutInput.text.text
@@ -560,7 +585,7 @@ class LargeTextTest {
                 .filter { (_, _, next) -> next.first - edges.second < gap }.map { (next, _, _) -> "`$text` runs into `$next`" }
         }
         val pad = compose.onAllNodes(hasTestTag(PadTag), useUnmergedTree = true)
-        val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val root = compose.onAllNodes(isRoot())[0].fetchSemanticsNode().boundsInRoot
         val offScreen = listOfNotNull("The pad runs off the screen".takeIf { pad.fetchSemanticsNodes().any { it.boundsInRoot.bottom > root.bottom + 1f || it.boundsInRoot.top < root.top } })
         return (cut + heldBack + touching + offScreen).distinct()
     }
@@ -634,6 +659,13 @@ class LargeTextTest {
             put("which machine", sweepSession(sweepExercise.copy(needsMachine = true), entry = null).copy(gym = Gym(1, "Hyperlog Fitness Centre", listOf(EquipmentItem(id = 1, gymId = 1, name = "Plate-loaded Chest Press Machine With Long Name", ladder = LadderSpec.DefaultPinStack)))))
             val cued = bench.copy(id = "2_grip_lat_pulldown", note = "Two grips: wide overhand (1.5× shoulder width) and underhand (shoulder width).")
             put("rep stage with its cue", sweepSession(sweepExercise.copy(exercise = cued).logged(done, done), onWeight("102.5")))
+            // The entry narrower than a set to come: every other state typed the widest weight, which hid this.
+            val heavy = sweepExercise.copy(lastTime = listOf(LoggedSet(200.0, 5, 0, 1)))
+            val backoff = heavy.copy(prescription = listOf(SetPrescription(RepRange(4, 6), 1, 180), SetPrescription(RepRange(4, 6), 1, 180, backoff = Backoff(0, 10))))
+            val dropping = heavy.copy(prescription = listOf(SetPrescription(RepRange(4, 6), 1, 180, technique = Technique.Dropset(2, 25))))
+            put("a wider weight to come", sweepSession(backoff, onReps("210")))
+            put("a wider weight to come, under the check", sweepSession(backoff, onReps("210")).copy(weightCheck = WeightCheck("2.2× last time", listOf(100.0, 102.5, 105.0))))
+            put("a wider drop to come", sweepSession(dropping, onReps("210")))
             put("pad hidden", sweepSession().copy(padVisible = false))
             put("rest running", sweepSession(sweepExercise.logged(done)).copy(restEndsAt = System.currentTimeMillis() + 95_000))
             put("superset chips", sweepSession(sweepExercise.copy(slot = slot), more = listOf(partner)))
@@ -656,19 +688,182 @@ class LargeTextTest {
     @Config(qualifiers = "w427dp-h2000dp-xxhdpi")
     fun everyRowOfEveryStateReadsWhole() = assertEveryStateWhole()
 
-    private fun assertEveryStateWhole() {
-        val states = sessionStates()
-        var state by mutableStateOf(states.keys.first())
+    private fun assertEveryStateWhole() = assertWhole(sessionStates().mapValues { (_, session) -> Sweep { SweepScreen(session) } })
+
+    @Composable
+    private fun SweepScreen(session: ActiveSession) = SessionScreen(session, library.exercises, Recording(mutableListOf()), onLeave = {})
+
+    /** One state of a sweep: [content] on screen, then [open] to bring up what sits over it, which has [shows] in it. */
+    private class Sweep(val open: () -> Unit = {}, val shows: String? = null, val content: @Composable () -> Unit)
+
+    /** Every one of [states] at every size. A state that can't be opened is a fault too, not a pass. */
+    private fun assertWhole(states: Map<String, Sweep>) {
+        var state by mutableStateOf<String?>(null)
         val found = mutableListOf<String>()
-        atEveryScale({ key(state) { SessionScreen(states.getValue(state), listOf(bench), Recording(mutableListOf()), onLeave = {}) } }) { scale ->
-            states.keys.forEach {
-                compose.runOnIdle { state = it }
+        atEveryScale({ key(state) { state?.let { states.getValue(it).content() } } }) { scale ->
+            states.forEach { (name, sweep) ->
+                compose.runOnIdle { state = null }
                 compose.waitForIdle()
-                faults().forEach { fault -> found += "$scale, $it: $fault" }
+                compose.runOnIdle { state = name }
+                compose.waitForIdle()
+                runCatching { sweep.open(); compose.waitForIdle() }.onFailure { found += "$scale, $name: `could not open`: ${it.message?.take(120)}" }
+                sweep.shows?.let { words ->
+                    if (compose.onAllNodes(hasText(words, substring = true), useUnmergedTree = true).fetchSemanticsNodes().isEmpty()) found += "$scale, $name: `$words` never came up"
+                }
+                faults().forEach { fault -> found += "$scale, $name: $fault" }
             }
         }
         assertTrue("${found.size} faults:\n${found.joinToString("\n")}", found.isEmpty())
     }
+
+    private fun tap(description: String) {
+        compose.onNode(hasContentDescription(description)).performClick()
+    }
+
+    private fun tapText(text: String) {
+        compose.onNodeWithText(text).performClick()
+    }
+
+    private val library = LibrarySeed.parse(File("src/main/assets/exercises.json").readText())
+    private val starter = (ProgramParser.parse(File("src/main/assets/${StarterProgram.ASSET}").readText(), library.exercises.map { it.id }.toSet(), library.merged) as ProgramParser.Result.Valid).program
+
+    /** Three exercises at a gym: one on screen with every kind of planned set, one to start, one done. */
+    private fun sheetSession(): ActiveSession {
+        val slot = PlannedSlot("s", "1", 0, "barbell_rdl", emptyList(), "Keep the bar close to your shins all the way down and up.", emptyList())
+        val plan = listOf(
+            SetPrescription(RepRange(8, 10), 1, 180),
+            SetPrescription(RepRange(8, 10), 1, 180, backoff = Backoff(0, 10)),
+            SetPrescription(RepRange(8, 10), 1, 90, technique = Technique.Dropset(2, 25)),
+            SetPrescription(RepRange(8, 10), 0, 90, technique = Technique.MyoReps(3)),
+            SetPrescription(RepRange(8, 10), 0, 90, technique = Technique.IsoHold(20, HoldPosition.Stretch)),
+        )
+        fun find(name: String) = library.exercises.first { it.name == name }
+        val onScreen = sweepExercise.copy(exercise = find("Barbell RDL"), slot = slot, prescription = plan, startingHint = "45 kg × 12 @ 1 RIR, 12 Sep")
+        val next = SessionExercise(
+            2, find("2-Grip Lat Pulldown"), emptyList(), listOf(LoggedSet(50.0, 10, 0, 1)), DefaultPlates.ladder(), true,
+            slot = slot.copy(id = "t", label = "2", exercise = "2_grip_lat_pulldown"), prescription = List(3) { SetPrescription(RepRange(8, 10), 1, 120) },
+        )
+        val logged = List(3) { LoggedSet(102.5, 8, 2, 1) }
+        val done = SessionExercise(
+            3, find("Barbell Bench Press"), logged, logged, DefaultPlates.ladder(), true,
+            slot = slot.copy(id = "u", label = "3", exercise = "barbell_bench_press"), prescription = List(3) { SetPrescription(RepRange(8, 10), 1, 120) },
+        )
+        return sweepSession(onScreen, more = listOf(next, done)).copy(gym = Gym(1, "Hyperlog Fitness Centre", emptyList()))
+    }
+
+    /** What sits over the logging screen: its sheets, menus and dialogs. */
+    private fun sheetStates(): Map<String, Sweep> {
+        val session = sheetSession()
+        fun over(shows: String, on: ActiveSession = session, open: () -> Unit) = Sweep(open, shows) { SweepScreen(on) }
+        fun menu(item: String) = { tap("More"); compose.waitForIdle(); tapText(item) }
+        val resting = session.copy(exercises = listOf(session.exercises[0].logged(LoggedSet(102.5, 5, 0, 1))) + session.exercises.drop(1), restEndsAt = System.currentTimeMillis() + 95_000)
+        val benched = session.copy(exercises = listOf(session.exercises[0].copy(exercise = session.exercises[0].exercise.copy(adjustableBench = true), lastBenchAngle = 30)) + session.exercises.drop(1))
+        return mapOf(
+            "session list" to over("Session") { tap("Session list") },
+            "session list's row menu" to over("Remove from session") { tap("Session list"); compose.waitForIdle(); tap("Edit 2-Grip Lat Pulldown") },
+            "session menu" to over("Finish session") { tap("More") },
+            "add picker" to over("Search") { menu("Add exercise")() },
+            "swap picker" to over("Swap Barbell RDL") { menu("Swap exercise")() },
+            "remove dialog" to over("Remove", open = menu("Remove from session")),
+            "finish dialog" to over("Finish the session?", open = menu("Finish session")),
+            "leave dialog" to over("Leave") { tap("Leave session") },
+            "exercise sheet" to over("Back-off") { tapText("Barbell RDL") },
+            "set sheet" to over("Intensity technique") { tap("Set 1 options") },
+            "rest sheet" to over("End rest", resting) { compose.onNode(hasClickAction() and hasText(":", substring = true)).performClick() },
+            "whole bar sheet" to over("On a 20 kg bar") { compose.onNode(hasContentDescription("Plates", substring = true)).performClick() },
+            "bench angle sheet" to over("Bench angle", benched) {
+                compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))).performScrollToNode(hasText("30°"))
+                compose.onNode(hasClickAction() and hasText("30°")).performClick()
+            },
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun everySheetOverTheSessionReadsWhole() = assertWhole(sheetStates())
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    fun everySheetOverTheSessionReadsWholeOnASmallPhone() = assertWhole(sheetStates())
+
+    /** Sheets scroll too, and a list composes only what's on screen: tall screens have every row. */
+    @Test
+    @Config(qualifiers = "w427dp-h2000dp-xxhdpi")
+    fun everyRowOfEverySheetReadsWhole() = assertWhole(sheetStates())
+
+    @Test
+    @Config(qualifiers = "w360dp-h2000dp-xxhdpi")
+    fun everyRowOfEverySheetReadsWholeOnASmallPhone() = assertWhole(sheetStates())
+
+    private val sat17 = LocalDate.of(2026, 10, 17)
+    private val gyms = listOf(Gym(1, "Hyperlog Fitness Centre", emptyList()), Gym(2, "Itis", emptyList()))
+    private val mwf = WeekdayPlan(mapOf(DayOfWeek.MONDAY to 1L, DayOfWeek.WEDNESDAY to 1L, DayOfWeek.FRIDAY to 2L))
+
+    /** Week [week]'s Monday to Friday trained, ending the day before Saturday the 17th. */
+    private fun trained(week: Int) = (0..2).map { day ->
+        val date = sat17.minusDays(5L - day * 2)
+        val at = date.atTime(17, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        PastSessionItem(
+            day + 1L, at, at + 3_840_000, starter.plannedDay(Position(week, day))!!.day.name, "Hyperlog Fitness Centre",
+            listOf(ExerciseSummary("Barbell Bench Press", listOf(LoggedSet(102.5, 5, 0, 1), LoggedSet(92.5, 7, 0, 1)))),
+            programId = 1, position = Position(week, day),
+        )
+    }
+
+    @Composable
+    private fun Today(active: ActiveProgram?, startOnOpen: Boolean = false, sessions: List<PastSessionItem> = trained(6)) = TodayScreen(
+        sessionRunning = false, onResume = {}, onStart = { _, _, _ -> }, startOnOpen = startOnOpen, program = active,
+        exerciseNames = library.exercises.associate { it.id to it.name }, library = library.exercises, gyms = gyms, weekdayPlan = mwf,
+        sessions = sessions, lastTrained = sat17.minusDays(1).takeIf { sessions.isNotEmpty() }, starter = starter,
+    )
+
+    /** Today's next-up card and calendar, in each kind of week, and what opens from them. */
+    private fun todayStates(): Map<String, Sweep> {
+        val week7 = ActiveProgram(1, starter, Position(7, 0), today = sat17)
+        val monday = LocalDate.of(2026, 11, 16)
+        val rotation = Rotations.of(starter, RotationAnchor(LocalDate.of(2026, 10, 26), week = 1, day = 0, emptyWeeks = 1), mwf.days, emptyList(), monday)
+        return mapOf(
+            "next-up card" to Sweep { Today(week7) },
+            "deload week" to Sweep(shows = "Deload") { Today(ActiveProgram(1, starter, Position(12, 1), today = sat17)) },
+            "easy week" to Sweep(shows = "Easy week") { Today(ActiveProgram(1, starter, rotation.next, today = monday, rotation = rotation), sessions = emptyList()) },
+            "no program" to Sweep { Today(null) },
+            "gym sheet" to Sweep(shows = "Itis") { Today(week7, startOnOpen = true) },
+            "training days sheet" to Sweep({ tap("Training days") }, shows = "Mon") { Today(week7) },
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun todayReadsWhole() = assertWhole(todayStates())
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    fun todayReadsWholeOnASmallPhone() = assertWhole(todayStates())
+
+    @Test
+    @Config(qualifiers = "w427dp-h2000dp-xxhdpi")
+    fun everyRowOfTodayReadsWhole() = assertWhole(todayStates())
+
+    @Test
+    @Config(qualifiers = "w360dp-h2000dp-xxhdpi")
+    fun everyRowOfTodayReadsWholeOnASmallPhone() = assertWhole(todayStates())
+
+    private fun libraryStates() = mapOf(
+        "library" to Sweep { LibraryScreen(library.exercises, "", onQuery = {}, onOpen = {}, onNew = {}, onBack = {}) },
+        "library search" to Sweep { LibraryScreen(library.exercises, "bench", onQuery = {}, onOpen = {}, onNew = {}, onBack = {}) },
+    )
+
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun theLibraryReadsWhole() = assertWhole(libraryStates())
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    fun theLibraryReadsWholeOnASmallPhone() = assertWhole(libraryStates())
+
+    @Test
+    @Config(qualifiers = "w427dp-h2000dp-xxhdpi")
+    fun everyRowOfTheLibraryReadsWhole() = assertWhole(libraryStates())
 
     /** Round 4: at 200 % `97.5 × 5` almost touched the kg column. */
     @Test

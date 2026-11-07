@@ -268,6 +268,15 @@ private fun TableState.loggedWeights(): List<String> = buildList {
     }
     current.lastTime.forEach { add(formatKg(it.weightKg)) }
     warmups.forEach { add(formatKg(it.weightKg)) }
+    current.prescription?.let { plan ->
+        plan.indices.forEach { i ->
+            val kg = plannedWeight(i, plan, current::setAt, current.toDo, current.lastTime, current.ladder, activeKg)
+            kg?.let { add(formatKg(it)) }
+            (current.techniqueAt(i) as? Technique.Dropset)?.let { drops ->
+                generateSequence(kg) { backoffWeight(it, drops.percent, current.ladder) }.drop(1).take(drops.drops).forEach { add(formatKg(it)) }
+            }
+        }
+    }
 }
 
 /** How the Last column writes its sets, the same for the whole table. */
@@ -692,10 +701,13 @@ private fun BenchRow(angle: Int?, last: Int?, onClick: (() -> Unit)?) {
             }
         }
         val label = MaterialTheme.typography.bodyLarge
-        Text(
-            stringResource(R.string.bench_row), Modifier.weight(1f), style = label, maxLines = 1,
-            autoSize = TextAutoSize.StepBased(minFontSize = KgFloor, maxFontSize = label.fontSize),
-        )
+        val bench = stringResource(R.string.bench_row)
+        val atFloor = label.copy(fontSize = KgFloor)
+        val needs = widestText(listOf(bench), atFloor)
+        // Like Last, it gives way: the circle and the cell still say what the row is.
+        BoxWithConstraints(Modifier.weight(1f)) {
+            if (needs <= maxWidth) Text(bench, style = label, maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = KgFloor, maxFontSize = label.fontSize))
+        }
         // The table's cell: outlined in outline, the value Inter at figureLarge's size, a placeholder muted.
         Box(
             Modifier.width(LocalKg.current.width).padding(horizontal = CellInset).height(CellHeight).border(1.dp, cs.outline, CellShape),

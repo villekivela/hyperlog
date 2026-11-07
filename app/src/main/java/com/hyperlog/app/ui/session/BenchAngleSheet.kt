@@ -42,7 +42,6 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.BenchAngle
@@ -160,8 +159,6 @@ internal fun BenchAngleSheet(
             Modifier.padding(horizontal = TextEdge),
             style = MaterialTheme.typography.bodyMedium,
             color = cs.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
         Column(
             Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 24.dp).semantics(mergeDescendants = true) {},

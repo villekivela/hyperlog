@@ -32,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
@@ -75,8 +74,6 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
             interFigures(stringResource(R.string.edit_swap_title, exercise.exercise.name)),
             Modifier.padding(start = TextEdge, end = TextEdge, top = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineSmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
         )
         SearchField(
             query,

@@ -14,7 +14,6 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.hyperlog.app.R
 import com.hyperlog.app.program.SetPrescription
@@ -113,5 +112,5 @@ fun SetSummary(
             SymbolIcon(symbol, null, Modifier.fillMaxSize(), tint = if (key == "backoff") color else techniqueColor(kinds.getValue(key), dark))
         }
     } + rirChipContent(chips, style.fontSize)
-    Text(text, modifier, style = style, color = color, inlineContent = inline, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    Text(text, modifier, style = style, color = color, inlineContent = inline)
 }

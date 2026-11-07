@@ -1439,8 +1439,10 @@ gallery (Technique videos).
   text needs more, then grows: its weights share one size down to 12 sp, then show three rungs in
   place of five; the check's reason sits beside its weights while two lines hold it, then above
   them; a follow-up's progress goes above its buttons when they leave it no room. The why-line
-  wraps, since it gives the reason for the weight, and so do the header chips and a machine's name
-  in Which machine. A connected choice stacks its options
+  wraps, since it gives the reason for the weight, and so do the header chips, a machine's name in
+  Which machine, a plan's rows on the exercise sheet, the set summary, and a Library row's line. In
+  the session list the action goes under the name from 130 %. Search fields grow with their text.
+  The bench row's label gives way like Last. A weight on the pad keeps at most two decimals. A connected choice stacks its options
   when their labels no longer fit side by side. The program's phases go to one row of chips instead, the picked one scrolled into view
   and a chip at the edge fading out, so the weeks under them stay on screen. Past its floor a set
   table head runs over its column into the room around it, whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip

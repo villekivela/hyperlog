@@ -44,7 +44,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.Extension
@@ -216,7 +215,7 @@ private fun TechniqueOption(technique: Technique?, selected: Boolean, name: Stri
         Spacer(Modifier.width(4.dp))
         Column(Modifier.weight(1f)) {
             Text(name, style = MaterialTheme.typography.bodyLarge)
-            Text(detail, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(detail, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         }
         technique?.let { SymbolIcon(it.symbol(), null, Modifier.size(20.dp), tint = techniqueColor(it.kind, isDarkSurface())) }
     }

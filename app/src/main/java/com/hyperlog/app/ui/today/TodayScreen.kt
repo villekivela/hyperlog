@@ -1035,7 +1035,8 @@ internal fun SlotRows(
                 }
                 Text(
                     names[slot.exercise] ?: slot.exercise,
-                    style = MaterialTheme.typography.bodyLarge,
+                    // A name too long for the line breaks where a word may, not at its last letter.
+                    style = MaterialTheme.typography.bodyLarge.copy(hyphens = androidx.compose.ui.text.style.Hyphens.Auto),
                 )
                 if (rest && slot.sets.isNotEmpty()) {
                     Row {

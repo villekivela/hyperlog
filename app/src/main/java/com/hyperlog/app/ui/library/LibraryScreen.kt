@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
@@ -156,8 +155,6 @@ internal fun LibraryRow(exercise: Exercise) {
                 exercise.summary,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (muted) cs.outline else cs.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -170,8 +167,8 @@ fun SearchField(query: String, onChange: (String) -> Unit, placeholder: String, 
     TextField(
         value = query,
         onValueChange = onChange,
-        modifier = modifier.fillMaxWidth().height(56.dp),
-        placeholder = { Text(placeholder, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
+        placeholder = { Text(placeholder) },
         leadingIcon = { SymbolIcon(Symbol.Search, null, tint = cs.onSurfaceVariant) },
         trailingIcon = if (query.isEmpty()) null else {
             {
