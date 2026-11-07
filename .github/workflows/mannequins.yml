@@ -43,14 +43,14 @@ jobs:
 
   # Every test in tools/mannequins/, so a test added with a change runs on the PR and not only on
   # the worker's machine. A failing test fails its shard, and the shards are required for a merge.
-  # One runner took 21.5 minutes, so the files are split across four.
+  # One runner took 21.5 minutes and four reached the job's limit, so the files are split across six.
   suite:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     defaults:
       run:
         working-directory: tools/mannequins
@@ -65,5 +65,5 @@ jobs:
 
       - run: npm ci
 
-      - name: Every mannequin test, shard ${{ matrix.shard }} of 4
-        run: npm test -- --test-shard=${{ matrix.shard }}/4
+      - name: Every mannequin test, shard ${{ matrix.shard }} of 6
+        run: npm test -- --test-shard=${{ matrix.shard }}/6
