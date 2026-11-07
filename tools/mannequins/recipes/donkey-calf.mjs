@@ -10,26 +10,31 @@
 // Everything is laid out with `z` forward toward the rest and the lifter's ankles near the origin.
 import * as THREE from 'three';
 import { recipe, revolute } from '../recipe.mjs';
-import { mitered, pad, part, pivotJoint, rod, rodGeometry, span, stretchedTube, tube, weightStack } from '../parts.mjs';
-import { V, X, rad } from '../rig.mjs';
+import { mitered, pad, part, pivotJoint, rodGeometry, span, stretchedTube, tube, weightStack } from '../parts.mjs';
+import { UP, V, X, rad } from '../rig.mjs';
 
-/** A place in the ref's terms: `d` forward of the base's rear, `y` up, both in metres. */
+// The base's rear, along z.
 const REAR = -1.135;
+/** A place in the ref's terms: `d` forward of the base's rear, `y` up, both in metres. */
 const at = (d, y, x = 0) => V(x, y, REAR + d);
 
 const HEIGHT = 1.473;
-// The side frames: how far out they stand, and the tube, wide across and tall in the frame's plane.
-const SIDE = { out: 0.368, wide: 0.051, tall: 0.102 };
+// The side frames: how far out they stand, and the tube, laid flat: wide across, tall in the frame's plane.
+const SIDE = { out: 0.3425, wide: 0.102, tall: 0.051 };
 // The foot bar's top, its middle, and its size.
 const BAR = { top: 0.155, d: 1.265, wide: 0.787, deep: 0.105 };
-// The lever's pivot, and how far it turns up from level at the stretch and at the top.
-const PIVOT = [1.145, 0.4];
+// How far off the bar the ball's joint is seated beyond the sole, so the tilted sole rides its edge.
+const BALL_OFF = 0.018;
+// The lever's pivot, [d, y], and how far it turns up from level at the stretch and at the top.
+const PIVOT = [0.4, 1.145];
 const STRETCH = rad(8.7);
 const TOP = rad(17.6);
-// The loop's arms: how far out, and their reach to the loop's front.
-const LEVER = { out: 0.295, reach: 0.87 };
+// The loop's arms: how far out, their reach to the loop's front, and the tube.
+const LEVER = { out: 0.26, reach: 0.87, tube: 0.051 };
 // The hip pad, hung under the loop: its reach, its middle below the lever's line, and its size.
-const PAD = { reach: 0.8, drop: 0.115, wide: 0.67, deep: 0.23, thick: 0.085 };
+const PAD = { reach: 0.8, drop: 0.097, wide: 0.67, deep: 0.23, thick: 0.085 };
+// The hips from the pad's face: back along the trunk, and through the body's depth.
+const HIPS_FROM_PAD = { along: 0.01, through: 0.125 };
 // The rest pad's size, its middle and its tilt, front up.
 const REST = { wide: 0.89, deep: 0.216, thick: 0.08, d: 1.808, top: 0.905, tilt: rad(4) };
 // A handle from under the rest's front edge to its tip, this far out, and where along it the hand holds.
@@ -37,9 +42,10 @@ const HANDLE = { from: [1.91, 0.805], to: [2.115, 1.0], out: 0.25, hold: 0.35 };
 // The stack's column, the post's reach along the lever from the pivot, and how far ahead of the post
 // the rollers' axle stands, clear of the guide rods in the stack's plane.
 const STACK_D = 0.79;
-const POST_REACH = STACK_D - PIVOT[1];
+const POST_REACH = STACK_D - PIVOT[0];
 const AXLE_AHEAD = 0.03;
-// The stack's rise for each radian the lever turns, the post being that far from the pivot.
+const ROLLER = 0.03;
+// The stack's rise for each radian the lever turns, near enough: `lift` takes it from the lever's angle.
 const RATIO = POST_REACH;
 
 const sides = [-1, 1];
@@ -50,7 +56,7 @@ const proxies = (points, w, M) => points.slice(1).map((p, i) => proxy(tube(w - 0
 /** Names what a part is, for the tests. */
 const role = (mesh, name) => { mesh.userData.role = name; return mesh; };
 /** A point on the lever turned `turn` up from level, `reach` out from the pivot and `rise` off its line. */
-const onLever = (turn, reach, rise = 0) => at(...PIVOT.slice().reverse()).add(V(0, rise, reach).applyAxisAngle(X, -turn));
+const onLever = (turn, reach, rise = 0) => at(...PIVOT).add(V(0, rise, reach).applyAxisAngle(X, -turn));
 const handlePoint = (t) => HANDLE.from.map((a, i) => a + (HANDLE.to[i] - a) * t);
 
 export default recipe({
@@ -67,7 +73,8 @@ export default recipe({
   linkage: () => ({
     at: (value) => ({
       value,
-      ball: [BAR.top, REAR + BAR.d],
+      ball: [BAR.top + BALL_OFF, REAR + BAR.d],
+      hipsFromPad: HIPS_FROM_PAD,
       /** Where the pad's face meets the back. */
       padFace: onLever(value, PAD.reach, -PAD.drop - PAD.thick / 2),
       hand: (s) => at(...handlePoint(HANDLE.hold)).setX(s * HANDLE.out),
@@ -76,36 +83,36 @@ export default recipe({
   }),
   standsAlone: { camera: { target: [0, 0.75, 0], halfHeight: 1.05, azimuth: 70, elevation: 12 } },
   build(_options, M) {
-    const topOf = (s) => at(0.28, 1.273, s * SIDE.out);
+    // One length each side, from the upright's foot on the rail, over the top, down the strut, along
+    // the rail and up the leg under the rest.
     const frameOf = (s) => [
-      topOf(s), at(0, 0.16, s * SIDE.out), at(0.06, 0.052, s * SIDE.out), at(1.44, 0.052, s * SIDE.out),
-      at(1.52, 0.15, s * SIDE.out), at(1.86, 0.84, s * SIDE.out),
+      at(0.88, 0.05, s * SIDE.out), at(0.34, 1.273, s * SIDE.out), at(0.26, 1.273, s * SIDE.out), at(0, 0.16, s * SIDE.out),
+      at(0.06, 0.026, s * SIDE.out), at(1.44, 0.026, s * SIDE.out), at(1.52, 0.15, s * SIDE.out), at(1.86, 0.84, s * SIDE.out),
     ];
-    const uprightOf = (s) => [at(0.88, 0.05, s * SIDE.out), topOf(s)];
-    const open = { solid: false, tall: SIDE.tall };
 
     // The lever, built level about its pivot: two arms, a tie at the loop's front, the pad hung under it.
     const lever = new THREE.Group();
     lever.name = 'donkey_calf_lever';
-    const arms = sides.map((s) => role(tube(0.051, V(s * LEVER.out, 0, 0), V(s * LEVER.out, 0, LEVER.reach), M.frame), 'leverArm'));
+    const loop = [V(-LEVER.out, 0, 0), V(-LEVER.out, 0, LEVER.reach), V(LEVER.out, 0, LEVER.reach), V(LEVER.out, 0, 0)];
+    const [armR, front, armL] = proxies(loop, LEVER.tube, M);
     const hipPad = role(pad(PAD.wide, PAD.thick, PAD.deep, M.vinyl, V(0, -PAD.drop, PAD.reach), { soft: 0.03 }), 'hipPad');
     lever.add(
-      ...arms, hipPad,
-      tube(0.051, V(-LEVER.out, 0, 0), V(LEVER.out, 0, 0), M.frame),
-      tube(0.051, V(-LEVER.out, 0, LEVER.reach), V(LEVER.out, 0, LEVER.reach), M.frame),
+      role(mitered(loop, LEVER.tube, M.frame, { solid: false }), 'leverLoop'),
+      role(armR, 'leverArm'), front, role(armL, 'leverArm'), hipPad,
+      tube(LEVER.tube, V(-LEVER.out, 0, 0), V(LEVER.out, 0, 0), M.frame),
       ...sides.map((s) => role(tube(0.03, V(s * 0.2, 0, PAD.reach), V(s * 0.2, -PAD.drop + PAD.thick / 2, PAD.reach), M.frame), 'padLug')),
       role(tube(0.03, V(-LEVER.out, 0, PAD.reach), V(LEVER.out, 0, PAD.reach), M.frame), 'padRod'),
     );
-    lever.position.copy(at(...PIVOT.slice().reverse()));
+    lever.position.copy(at(...PIVOT));
 
     // The stack, and the post on its top plate carrying the rollers under the lever's arms.
     const weights = weightStack(at(STACK_D, 0), M, { rodTop: HEIGHT, toward: 1 });
-    const post = stretchedTube(0.07, M.frame);
+    const post = role(stretchedTube(0.07, M.frame), 'rollerPost');
     const axle = role(part(rodGeometry(0.012), M.metal), 'rollerAxle');
-    const rollers = sides.map(() => role(part(rodGeometry(0.03, 20), M.vinyl), 'roller'));
+    const rollers = sides.map(() => role(part(rodGeometry(ROLLER, 20), M.vinyl), 'roller'));
     let lifted = 0;
     const lay = () => {
-      const under = onLever(-lever.rotation.x, POST_REACH + AXLE_AHEAD, -0.0255 - 0.03);
+      const under = onLever(-lever.rotation.x, POST_REACH + AXLE_AHEAD, -LEVER.tube / 2 - ROLLER);
       span(post, weights.top(lifted), under.clone().setZ(at(STACK_D, 0).z));
       span(axle, under.clone().setX(-LEVER.out - 0.03), under.clone().setX(LEVER.out + 0.03));
       rollers.forEach((m, i) => {
@@ -128,25 +135,22 @@ export default recipe({
       return m;
     });
     const joints = sides.flatMap((s) => {
-      const { housing, fixed } = pivotJoint(M, at(PIVOT[1], PIVOT[0], s * (LEVER.out + 0.05)), X);
+      const { housing, fixed } = pivotJoint(M, at(...PIVOT, s * (LEVER.out + 0.05)), X);
       return [housing, ...fixed];
     });
 
     return {
       parts: [
-        // Each side frame, its upright, and the beams between them.
+        // Each side frame, and the beams between them.
         ...sides.flatMap((s) => [
-          role(mitered(frameOf(s), SIDE.wide, M.frame, open), 'sideFrame'),
-          ...proxies(frameOf(s), SIDE.wide, M),
-          mitered(uprightOf(s), SIDE.wide, M.frame, open),
-          ...proxies(uprightOf(s), SIDE.wide, M),
+          role(mitered(frameOf(s), SIDE.wide, M.frame, { solid: false, tall: SIDE.tall, ends: [UP, null] }), 'sideFrame'),
+          ...proxies(frameOf(s), SIDE.tall, M),
         ]),
         role(tube(0.08, at(0.38, 1.215, -SIDE.out), at(0.38, 1.215, SIDE.out), M.frame), 'crossbeam'),
         role(tube(0.06, at(STACK_D, 0.05, -SIDE.out), at(STACK_D, 0.05, SIDE.out), M.frame), 'crossbeam'),
-        role(tube(0.06, at(1.72, 0.74, -SIDE.out), at(1.72, 0.74, SIDE.out), M.frame), 'crossbeam'),
         // The foot bar across the rails, its rubber on top, and the rest on its cross tube.
         pad(BAR.wide, BAR.deep, BAR.deep, M.frame, at(BAR.d, BAR.top - 0.01 - BAR.deep / 2), { soft: 0.006 }),
-        pad(0.749, 0.01, 0.095, M.vinyl, at(BAR.d, BAR.top - 0.005), { soft: 0.002, solid: false }),
+        pad(0.749, 0.01, 0.095, M.vinyl, at(BAR.d, BAR.top - 0.005), { soft: 0.002 }),
         rest,
         tube(0.05, at(1.85, 0.825, -SIDE.out), at(1.85, 0.825, SIDE.out), M.frame),
         ...handles,
@@ -158,9 +162,10 @@ export default recipe({
       bodies: { lever: [lever] },
       stacks: {
         lever: {
-          lift(l) {
-            lifted = l;
-            weights.lift(l);
+          // The rollers ride the arms, so the stack stands where the lever's angle puts it.
+          lift() {
+            lifted = POST_REACH * Math.tan(-lever.rotation.x);
+            weights.lift(lifted);
             lay();
           },
         },
@@ -170,12 +175,12 @@ export default recipe({
         const value = P.linkage?.value ?? STRETCH;
         place(value);
         return {
-          joints: { lever: { value, origin: at(...PIVOT.slice().reverse()) } },
+          joints: { lever: { value, origin: at(...PIVOT) } },
           points: {
             hipPad: [onLever(value, PAD.reach, -PAD.drop)],
             rest: sides.map((s) => at(REST.d - 0.05, REST.top, s * HANDLE.out)),
             grips: sides.map((s) => P.hand(s).clone()),
-            bar: P.ankles.map((a) => V(a.x, BAR.top, REAR + BAR.d)),
+            bar: P.ankles.map((a) => V(a.x, BAR.top - 0.005, REAR + BAR.d)),
           },
         };
       },

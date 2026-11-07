@@ -319,7 +319,6 @@ export const POSES = {
     equipment: 'machine',
     motion: 'donkey_calf',
     kit: { donkey_calf: {} },
-    body: { padUp: 0.01, padDeep: 0.125 },
     top: { lever: 17.6, trunk: 73, sole: 12.5, wrist: [0, -40] },
     bottom: { trunk: 65, sole: -29.5, wrist: [0, -40] },
     feet: { stance: 0.1 },

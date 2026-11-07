@@ -1041,11 +1041,11 @@ export const MOTIONS = {
    * `sole` degrees, up positive, the knees bending between them.
    */
   donkey_calf(e, s, L) {
-    const { ball, padFace, hand, across } = s.linkage;
+    const { ball, padFace, hipsFromPad, hand, across } = s.linkage;
     const u = trunkUp(spineLean(s.trunk, L));
     const f = forwardOf(u);
     // The hips below the pad's place on the back: along the trunk, and through the body's depth.
-    const hipC = padFace.clone().addScaledVector(u, -e.body.padUp).addScaledVector(f, e.body.padDeep);
+    const hipC = padFace.clone().addScaledVector(u, -hipsFromPad.along).addScaledVector(f, hipsFromPad.through);
     const onBall = (side) => V(side * e.feet.stance, ball[0] + L.ballY, ball[1]);
     const [heading, top] = soleAt(s.sole);
     return {
