@@ -1,7 +1,6 @@
 package com.hyperlog.app.ui.mannequin
 
 import android.content.Context
-import android.provider.Settings
 import android.view.View
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -29,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.hyperlog.app.ui.theme.animationsRemoved
 import com.hyperlog.app.mannequin.MannequinClip
 import com.hyperlog.app.mannequin.Mannequins
 import com.hyperlog.app.mannequin.RepTimeline
@@ -181,6 +181,3 @@ internal fun rememberMannequins(): Mannequins? {
     return produceState<Mannequins?>(null) { value = withContext(Dispatchers.IO) { Mannequins.fromAssets(context) } }.value
 }
 
-/** Whether the system's animations are off (Settings → Accessibility → Remove animations). */
-private fun animationsRemoved(context: Context): Boolean =
-    Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f

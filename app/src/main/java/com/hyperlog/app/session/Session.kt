@@ -78,7 +78,7 @@ data class SessionExercise(
     val lastBenchAngle: Int? = null,
 ) {
     /** Its sets with their records, as summaries show them. */
-    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records, benchAngle, exercise.id)
+    val summary: ExerciseSummary get() = ExerciseSummary(exercise.name, sets, records, benchAngle, exercise.id, liftChange(sets, lastTime))
 
     /** How to load [kg] on a pin-stack [machine] (`pin 40 + 2.5 on the pin`); null for any other equipment or a weight off it. */
     fun pinLoad(kg: Double): PinLoad? = (machine?.ladder as? LadderSpec.PinStack)?.load(kg, pinPlates)
@@ -258,6 +258,35 @@ data class ExerciseSummary(
     /** The bench angle it was done at, for an adjustable-bench exercise; null when not set. */
     val benchAngle: Int? = null,
     val exerciseId: String? = null,
+    /** How its top set compares with last time's; null with no last time. */
+    val change: LiftChange? = null,
 )
 
-data class SessionSummary(val sessionId: Long, val startedAt: Long, val finishedAt: Long, val exercises: List<ExerciseSummary>)
+/** How a lift's top set compares with last time's. */
+enum class LiftChange { Up, Same, Down }
+
+/** How [sets]' top set compares with [lastTime]'s: heavier, or as heavy for more reps, is up. */
+fun liftChange(sets: List<LoggedSet>, lastTime: List<LoggedSet>): LiftChange? {
+    val heaviest = compareBy<LoggedSet>({ it.weightKg }, { it.fullReps })
+    val now = sets.maxWithOrNull(heaviest) ?: return null
+    val before = lastTime.maxWithOrNull(heaviest) ?: return null
+    return heaviest.compare(now, before).let { if (it > 0) LiftChange.Up else if (it < 0) LiftChange.Down else LiftChange.Same }
+}
+
+/** A program [week] just finished: the [days] trained in it and their [workSets]. */
+data class WeekDone(val week: Int, val days: Int, val workSets: Int)
+
+data class SessionSummary(
+    val sessionId: Long,
+    val startedAt: Long,
+    val finishedAt: Long,
+    val exercises: List<ExerciseSummary>,
+    /** The program week this session finished; null when there is more of it to come. */
+    val week: WeekDone? = null,
+) {
+    val workSets: Int get() = exercises.sumOf { it.sets.size }
+
+    /** The lifts with a last time to compare with, and those of them that went up. */
+    val compared: Int get() = exercises.count { it.change != null }
+    val up: Int get() = exercises.count { it.change == LiftChange.Up }
+}

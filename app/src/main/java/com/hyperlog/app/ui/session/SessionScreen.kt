@@ -178,6 +178,7 @@ fun SessionScreen(
         }
     }
     BackHandler(onBack = goBack)
+    SetLoggedHaptic(session)
 
     val current = session.current
     /** A finished exercise opened from the list, looked at in place of the current one. */
@@ -324,8 +325,11 @@ fun SessionScreen(
                             openIndex = session.openIndex,
                             onBenchAngle = { benchFor = current.id },
                         )
-                        SetTable(table, Modifier.weight(1f)) {
-                            RepStage(current.exercise, current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
+                        Box(Modifier.weight(1f)) {
+                            SetTable(table, Modifier.fillMaxSize()) {
+                                RepStage(current.exercise, current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
+                            }
+                            RecordMoment(session, Modifier.align(Alignment.TopCenter).padding(top = 8.dp))
                         }
                     }
                 }

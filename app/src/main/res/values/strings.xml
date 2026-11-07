@@ -193,8 +193,27 @@
     <string name="record_estimate">Estimate record</string>
     <string name="record_reps">Rep record</string>
     <string name="records_title">Records</string>
+    <string name="record_new">New record</string>
     <string name="done_when">Started %1$s, %2$d min</string>
     <string name="done_close">Done</string>
+    <plurals name="done_sets">
+        <item quantity="one">%1$d set</item>
+        <item quantity="other">%1$d sets</item>
+    </plurals>
+    <plurals name="done_lifts_up">
+        <item quantity="one">%1$d of %2$d lift up</item>
+        <item quantity="other">%1$d of %2$d lifts up</item>
+    </plurals>
+    <plurals name="done_records">
+        <item quantity="one">%1$d record</item>
+        <item quantity="other">%1$d records</item>
+    </plurals>
+    <plurals name="done_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="done_week">Week %1$d done</string>
+    <string name="done_week_line">%1$s · %2$s</string>
     <string name="finish_title">Finish the session?</string>
     <string name="finish_body">Exercises with nothing logged are left out. You can resume it from Session done.</string>
     <string name="finish_body_empty">Nothing is logged yet, so the session is dropped, and nothing goes to History.</string>

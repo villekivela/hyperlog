@@ -53,6 +53,7 @@ import com.hyperlog.app.progression.Performance
 import com.hyperlog.app.progression.Progression
 import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.progression.WorkSet
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -190,6 +191,16 @@ class SessionLogger(
                 namedFor(exercise, items) ?: items.takeIf { exercise.equipment == Equipment.Cable }?.firstOrNull { it.cableStation && !it.archived }
             }?.id?.also { gyms.remember(gymId, exerciseId, it) }
         remembered?.let { dao.setEquipmentItem(sessionExerciseId, it) }
+    }
+
+    /** The program week [week] as trained, if session [sessionId] finished it: what comes next is in a later one, or there is none. */
+    private suspend fun weekDone(sessionId: Long, week: Int): WeekDone? {
+        val next = programs.active.first()?.next?.day
+        if (next != null && next.position.week <= week) return null
+        val programId = dao.session(sessionId)?.programId ?: return null
+        val trained = dao.finishedSessions().filter { it.programId == programId && it.week == week }
+        val sets = trained.flatMap { dao.sessionExercises(it.id) }.filterNot { it.removed }.sumOf { dao.sets(it.id).size }
+        return WeekDone(week, trained.mapNotNull { it.dayIndex }.distinct().size, sets)
     }
 
     /** Adds [exerciseId] after the others and makes it the one on screen. */
@@ -991,8 +1002,9 @@ class SessionLogger(
         val ended = if (now - lastSet > RestOverLimitMs) lastSet else now
         dao.updateSession(dao.session(session.id)!!.copy(finishedAt = ended, entry = null, restEndsAt = null))
         session.day?.let { day -> dao.session(session.id)?.programId?.let { programs.advance(it, day.position) } }
+        val week = session.day?.let { weekDone(session.id, it.position.week) }
         _state.value = null
-        SessionSummary(session.id, session.startedAt, ended, logged.map { it.summary })
+        SessionSummary(session.id, session.startedAt, ended, logged.map { it.summary }, week)
     }
 
     /**

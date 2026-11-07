@@ -1367,6 +1367,20 @@ gallery (Technique videos).
 - **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
   its own. The navigation bar's symbols read without their labels at 24 dp: a calendar, a dumbbell, a
   conversation, a clock and a gear.
+- **Moments** (#272): a record, a finished session and a finished week each have a moment, and none
+  holds anything up.
+  - **A record**, as it is logged: a pill over the table, `New record` with the record's name, in ink
+    like the record's mark. It goes by itself after 2.5 seconds, takes no touches and sits clear
+    of the pad. TalkBack reads it politely.
+  - **A finished session**: Session done brings the session's rep marks in one by one, then says what
+    it came to: its sets, the lifts up on last time (`2 of 3 lifts up`, a lift being up if its top set
+    is heavier, or as heavy for more reps) and its records. A first session has nothing to compare,
+    so it says nothing of the lifts. Done and Resume work from the first frame.
+  - **A finished week**: a session that closes a program week adds `Week 8 done` and `4 days · 42 sets`.
+  - **Feel**: logging a set is felt as a confirm, by the pad or the check, and opening a session or
+    taking a set back is not. Rest ending buzzes, as it did.
+  - **The system's animation setting** is followed everywhere: Compose's animations stop with it, a
+    moment just appears and goes, and the rep marks are all there at once. The mannequin holds a still.
 - **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
   with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
   tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.
