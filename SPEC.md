@@ -1358,15 +1358,16 @@ gallery (Technique videos).
   leave. A short table sits on the pad, its rows in reach of the thumb; a long one fills the screen
   and scrolls.
 - **The rep mark is Hyperlog's signature** (#271): an exercise's rep drawn flat, its end in full ink
-  over its start as a ghost, on a tonal tile, so a screenshot with the title cropped still reads as
-  Hyperlog and a list shows how each lift moves. It is on every exercise row on Today, on Progress
-  and in a past session, in the colours of the tile, so it adds no colour of its own. The figures
+  over its start as a ghost and cut out of it by a halo in the tile's colour, on a tonal tile, so a screenshot with the title cropped still reads as
+  Hyperlog and a list shows how each lift moves. It is wherever exercises are listed: Today, Program's days, the exercise library, the session
+  list, the add and swap pickers, Progress and a past session, in the colours of the tile, so it adds no colour of its own. The figures
   are baked from the mannequin's clips by `tools/exercise-poses/bake.py` into a small table the
   app draws, so a list scrolls with no 3D view in it. An exercise not yet posed takes its movement
   pattern's figure, muted and with no ghost, so it reads as a stand-in.
 - **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
   its own. The navigation bar's symbols read without their labels at 24 dp: a calendar, a dumbbell, a
-  conversation, a clock and a gear.
+  conversation, a clock and a gear. One symbol, one meaning: the dumbbell is the program and nothing
+  else, a bolt is a workout from Claude, and a storefront is a gym.
 - **Moments** (#272): a record, a finished session and a finished week each have a moment, and none
   holds anything up.
   - **A record**, as it is logged: a pill over the table, `New record` with the record's name, in ink

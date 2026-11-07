@@ -656,7 +656,7 @@ private fun AdHocRow(onAdHoc: () -> Unit) {
             Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
+            SymbolIcon(Symbol.AddCircle, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
             Spacer(Modifier.width(16.dp))
             Text(stringResource(R.string.today_ad_hoc), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
             SymbolIcon(Symbol.ChevronRight, null, tint = cs.onSurfaceVariant)

@@ -82,8 +82,11 @@ private fun rememberFigure(exercise: Exercise?): Pair<RepFigure, Boolean>? {
     }
 }
 
-/** [figure] on the canvas: its [points] in [ink], the far side fainter and the torso heavier. */
-private fun DrawScope.drawPoints(figure: RepFigure, points: List<Int>, ink: Color) {
+/**
+ * [figure] on the canvas: its [points] in [ink], the far side fainter and the torso heavier, each
+ * limb [grow] wider. With [solid] the far side keeps its ink, for a halo.
+ */
+private fun DrawScope.drawPoints(figure: RepFigure, points: List<Int>, ink: Color, grow: Float = 0f, solid: Boolean = false) {
     val box = size.minDimension
     val inner = box * (1 - 2 * Inset)
     val left = (size.width - inner) / 2
@@ -93,15 +96,21 @@ private fun DrawScope.drawPoints(figure: RepFigure, points: List<Int>, ink: Colo
     fun bones(pairs: IntArray, color: Color, width: Float) {
         for (i in pairs.indices step 2) drawLine(color, joint(pairs[i]), joint(pairs[i + 1]), strokeWidth = width, cap = StrokeCap.Round)
     }
-    bones(figure.far, ink.copy(alpha = ink.alpha * 0.45f), stroke)
-    bones(figure.torso, ink, stroke * 1.5f)
-    bones(figure.near, ink, stroke)
-    drawCircle(ink, radius = stroke * 1.35f, center = joint(figure.head))
+    bones(figure.far, if (solid) ink else ink.copy(alpha = ink.alpha * 0.45f), stroke + grow)
+    bones(figure.torso, ink, stroke * 1.5f + grow)
+    bones(figure.near, ink, stroke + grow)
+    drawCircle(ink, radius = stroke * 1.35f + grow / 2, center = joint(figure.head))
 }
 
-/** The rep: its end in full ink over its start as a ghost, so the mark shows how the lift moves. */
-private fun DrawScope.drawRep(figure: RepFigure, ink: Color, ghost: Boolean) {
-    if (ghost) drawPoints(figure, figure.start, ink.copy(alpha = 0.22f))
+/**
+ * The rep: its end in full ink over its start as a ghost, so the mark shows how the lift moves. A
+ * halo in the [ground]'s colour cuts the end pose out of the ghost, or at list size the two muddy.
+ */
+private fun DrawScope.drawRep(figure: RepFigure, ink: Color, ghost: Boolean, ground: Color) {
+    if (ghost) {
+        drawPoints(figure, figure.start, ink.copy(alpha = 0.2f))
+        drawPoints(figure, figure.end, ground, grow = size.minDimension * 0.05f, solid = true)
+    }
     drawPoints(figure, figure.end, ink)
 }
 
@@ -110,7 +119,7 @@ private fun DrawScope.drawRep(figure: RepFigure, ink: Color, ghost: Boolean) {
  * has its movement pattern's figure, muted and with no ghost, so it reads as a stand-in.
  */
 @Composable
-internal fun RepMark(exercise: Exercise?, modifier: Modifier = Modifier, size: Dp = 40.dp) {
+internal fun RepMark(exercise: Exercise?, modifier: Modifier = Modifier, size: Dp = 48.dp) {
     val cs = MaterialTheme.colorScheme
     val figure = rememberFigure(exercise)
     val exact = figure?.second == true
@@ -119,12 +128,12 @@ internal fun RepMark(exercise: Exercise?, modifier: Modifier = Modifier, size: D
         // Its own layer: the mark is recorded once, and a list scrolling only moves it.
         modifier.size(size).graphicsLayer().clip(RoundedCornerShape(size * 0.3f)).background(cs.secondaryContainer)
             .testTag(if (exact) RepMarkTag else RepMarkFallbackTag),
-    ) { figure?.let { drawRep(it.first, ink, ghost = exact) } }
+    ) { figure?.let { drawRep(it.first, ink, ghost = exact, ground = cs.secondaryContainer) } }
 }
 
 /** [RepMark] for the exercise with this [id] in the library. */
 @Composable
-internal fun RepMark(id: String, modifier: Modifier = Modifier, size: Dp = 40.dp) = RepMark(LocalExercises.current[id], modifier, size)
+internal fun RepMark(id: String, modifier: Modifier = Modifier, size: Dp = 48.dp) = RepMark(LocalExercises.current[id], modifier, size)
 
 /**
  * The band a short exercise leaves above its table: the rep, large, with its [cue]. A tap opens the
@@ -144,7 +153,7 @@ internal fun RepStage(exercise: Exercise, cue: String?, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val ink = if (figure.second) cs.onSurface else cs.onSurfaceVariant.copy(alpha = 0.6f)
-            Canvas(Modifier.size(figureSize)) { drawRep(figure.first, ink, ghost = figure.second) }
+            Canvas(Modifier.size(figureSize)) { drawRep(figure.first, ink, ghost = figure.second, ground = cs.surface) }
             if (cue != null) {
                 Spacer(Modifier.width(16.dp))
                 Text(cue, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)

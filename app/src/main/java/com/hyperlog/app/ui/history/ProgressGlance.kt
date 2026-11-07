@@ -2,6 +2,7 @@ package com.hyperlog.app.ui.history
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,14 +58,27 @@ internal const val MusclesFoldTag = "muscles-fold"
 /** The muscles a glance lists before its toggle: enough to read, and the rest of Progress still fits. */
 private const val MusclesShown = 4
 
-/** A section head's short note, ending on the rows' edge. */
+/** A section head with a short note ending on the rows' edge, or under the title once they can't share a line. */
 @Composable
-private fun HeadNote(text: String) = Text(
-    text,
-    Modifier.padding(start = 8.dp, end = TextEdge - 8.dp),
-    style = MaterialTheme.typography.bodyMedium,
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-)
+private fun HeadWithNote(title: String, note: String) {
+    val measurer = rememberTextMeasurer()
+    val titleStyle = MaterialTheme.typography.titleSmall
+    val noteStyle = MaterialTheme.typography.bodyMedium
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val words = measurer.measure(title, titleStyle, maxLines = 1, softWrap = false).size.width +
+            measurer.measure(note, noteStyle, maxLines = 1, softWrap = false).size.width
+        val room = with(LocalDensity.current) { (maxWidth - TextEdge * 2 - 16.dp).toPx() }
+        if (words <= room) {
+            SectionHead(title) { Text(note, Modifier.padding(start = 8.dp, end = TextEdge - 8.dp), style = noteStyle, color = color) }
+        } else {
+            Column(Modifier.padding(horizontal = TextEdge, vertical = 8.dp)) {
+                Text(title, style = titleStyle, color = MaterialTheme.colorScheme.primary)
+                Text(note, style = noteStyle, color = color)
+            }
+        }
+    }
+}
 
 /** The week's muscles against their ranges, the ones furthest short first, on one scale. */
 @Composable
@@ -76,13 +90,14 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
         return
     }
     val thisWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    SectionHead(
+    HeadWithNote(
         when (week) {
             thisWeek -> stringResource(R.string.history_sets_week)
             thisWeek.minusWeeks(1) -> stringResource(R.string.history_sets_last_week)
             else -> weekRange(week)
         },
-    ) { HeadNote(stringResource(R.string.history_on_target, glance.onTarget, glance.muscles.size)) }
+        stringResource(R.string.history_on_target, glance.onTarget, glance.muscles.size),
+    )
     var all by rememberSaveable { mutableStateOf(false) }
     val rows = glance.shortFirst
     if (rows.isNotEmpty()) {
@@ -91,8 +106,19 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
         val style = MaterialTheme.typography.labelLarge
         val measurer = rememberTextMeasurer()
         val figure = with(LocalDensity.current) { rows.maxOf { measurer.measure(formatSets(it.sets), style, maxLines = 1, softWrap = false).size.width }.toDp() }
-        MuscleScale(glance.muscles.map { it.range }.distinct().singleOrNull(), most, figure)
-        (if (all) rows else rows.take(MusclesShown)).forEach { MuscleRow(it, most, figure) }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val inner = maxWidth - TextEdge * 2
+            // Wide enough for the longest word, so a name wraps only between words.
+            val body = MaterialTheme.typography.bodyMedium
+            val word = with(LocalDensity.current) {
+                rows.flatMap { it.muscle.split(' ') }.maxOf { measurer.measure(it, body, maxLines = 1, softWrap = false).size.width }.toDp()
+            }
+            val name = maxOf(inner * NameShare, word + 8.dp).coerceAtMost(inner - figure - 8.dp - TrackMinimum)
+            Column {
+                MuscleScale(glance.muscles.map { it.range }.distinct().singleOrNull(), most, figure, name)
+                (if (all) rows else rows.take(MusclesShown)).forEach { MuscleRow(it, most, figure, name) }
+            }
+        }
     }
     if (rows.size > MusclesShown) {
         Row(
@@ -117,13 +143,18 @@ internal fun MusclesCard(glance: TrainingGlance, standing: NumberRange, today: L
 
 /** The rows' scale, over the tracks: zero, the target's ends (or the top, when ranges differ) and the target in words. */
 @Composable
-private fun MuscleScale(range: NumberRange?, most: Double, figure: Dp) {
+private fun MuscleScale(range: NumberRange?, most: Double, figure: Dp, name: Dp) {
     val style = MaterialTheme.typography.labelSmall
     val color = MaterialTheme.colorScheme.onSurfaceVariant
+    val target = range?.let { stringResource(R.string.history_target, it.low, it.high) }.orEmpty()
+    val measurer = rememberTextMeasurer()
+    // Beside the ticks while it fits the name column, over them once large text outgrows it.
+    val beside = with(LocalDensity.current) { measurer.measure(target, style, maxLines = 1, softWrap = false).size.width.toDp() } <= name
+    if (!beside) Text(target, Modifier.padding(horizontal = TextEdge), style = style, color = color)
     Row(Modifier.fillMaxWidth().padding(horizontal = TextEdge), verticalAlignment = Alignment.CenterVertically) {
-        Text(range?.let { stringResource(R.string.history_target, it.low, it.high) }.orEmpty(), Modifier.weight(NameShare), style = style, color = color)
+        if (beside) Text(target, Modifier.width(name), style = style, color = color) else Spacer(Modifier.width(name))
         val ticks = if (range != null) listOf(0.0, range.low.toDouble(), range.high.toDouble()) else listOf(0.0, most)
-        Layout({ ticks.forEach { Text(formatSets(it), style = style, color = color) } }, Modifier.weight(1 - NameShare)) { items, constraints ->
+        Layout({ ticks.forEach { Text(formatSets(it), style = style, color = color) } }, Modifier.weight(1f)) { items, constraints ->
             val placed = items.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
             layout(constraints.maxWidth, placed.maxOf { it.height }) {
                 placed.forEachIndexed { i, tick ->
@@ -139,7 +170,7 @@ private fun MuscleScale(range: NumberRange?, most: Double, figure: Dp) {
 
 /** One muscle: its name, its sets along the track with its range's band on it, and the figure. */
 @Composable
-private fun MuscleRow(week: MuscleWeek, most: Double, figure: Dp) {
+private fun MuscleRow(week: MuscleWeek, most: Double, figure: Dp, name: Dp) {
     val status = stringResource(
         when (week.status) {
             VolumeStatus.Under -> R.string.history_status_under
@@ -153,8 +184,8 @@ private fun MuscleRow(week: MuscleWeek, most: Double, figure: Dp) {
         Modifier.fillMaxWidth().heightIn(min = 26.dp).padding(horizontal = TextEdge).clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(week.muscle, Modifier.weight(NameShare), style = MaterialTheme.typography.bodyMedium)
-        TargetBar(week.sets, week.range.low, week.range.high, most, Modifier.weight(1 - NameShare))
+        Text(week.muscle, Modifier.width(name), style = MaterialTheme.typography.bodyMedium)
+        TargetBar(week.sets, week.range.low, week.range.high, most, Modifier.weight(1f))
         Text(
             formatSets(week.sets),
             Modifier.padding(start = 8.dp).width(figure),
@@ -168,6 +199,9 @@ private fun MuscleRow(week: MuscleWeek, most: Double, figure: Dp) {
 }
 
 private const val NameShare = 0.55f
+
+/** The least a muscle's track shrinks to, for the name column's sake. */
+private val TrackMinimum = 64.dp
 
 /** The work sets of each week, read by touch; a week picked here is the one [MusclesCard] shows. */
 @Composable
@@ -196,7 +230,7 @@ internal fun TrendCard(glance: TrainingGlance, onPick: (LocalDate) -> Unit) {
 /** The lifts moving most, or what will show here. */
 @Composable
 internal fun MovingCard(moving: List<MovingLift>, onOpen: (String) -> Unit) {
-    SectionHead(stringResource(R.string.history_moving)) { HeadNote(stringResource(R.string.history_moving_period)) }
+    HeadWithNote(stringResource(R.string.history_moving), stringResource(R.string.history_moving_period))
     if (moving.isEmpty()) Muted(stringResource(R.string.history_moving_none))
     moving.forEach { MovingRow(it, onOpen) }
 }
@@ -214,7 +248,7 @@ private fun MovingRow(lift: MovingLift, onOpen: (String) -> Unit) {
             .clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RepMark(lift.exercise)
+        RepMark(lift.exercise, size = 40.dp)
         Spacer(Modifier.width(12.dp))
         Text(lift.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(8.dp))

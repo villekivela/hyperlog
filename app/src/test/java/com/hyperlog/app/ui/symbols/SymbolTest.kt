@@ -34,6 +34,17 @@ class SymbolTest {
         assertEquals(setOf("symbol_insights.xml", "symbol_push_pin.xml"), others.toSet())
     }
 
+    /** One icon, one meaning: the dumbbell is the program, and nothing else (round 3). */
+    @Test
+    fun theDumbbellMeansTheProgram() {
+        val program = setOf("MainActivity.kt", "StarterOffer.kt", "ProgramScreen.kt", "TodayScreen.kt", "SessionScreen.kt", "Symbol.kt")
+        val others = File("src/main/java/com/hyperlog/app").walkTopDown()
+            .filter { it.extension == "kt" && "Symbol.FitnessCenter" in it.readText() }.map { it.name }.toSet() - program
+        assertEquals(emptySet<String>(), others)
+        val today = File("src/main/java/com/hyperlog/app/ui/today/TodayScreen.kt").readLines().filter { "Symbol.FitnessCenter" in it }
+        assertEquals("Only Today's empty state, with no program yet", 1, today.size)
+    }
+
     @Test
     fun theAppBundlesNoSymbolFont() {
         // The Material Symbols variable font is 15 MB; icons ship as vector drawables instead.

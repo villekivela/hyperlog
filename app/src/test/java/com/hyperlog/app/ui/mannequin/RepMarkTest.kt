@@ -28,7 +28,10 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.history.HistoryScreen
+import com.hyperlog.app.ui.library.LibraryRow
+import com.hyperlog.app.ui.session.ExercisePicker
 import com.hyperlog.app.ui.session.Recording
+import com.hyperlog.app.ui.session.SessionList
 import com.hyperlog.app.ui.session.SessionScreen
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.today.SlotRows
@@ -67,6 +70,33 @@ class RepMarkTest {
     @Test
     fun anExerciseOnTodayWearsItsMark() {
         compose.setContent { HyperlogTheme { CompositionLocalProvider(LocalExercises provides library) { SlotRows(listOf(slot("hack_squat")), mapOf("hack_squat" to "Hack Squat")) } } }
+        compose.onNodeWithTag(RepMarkTag, useUnmergedTree = true).assertExists()
+    }
+
+    /** The library is the main place exercises are listed (round 3). */
+    @Test
+    fun anExerciseInTheLibraryWearsItsMark() {
+        compose.setContent { HyperlogTheme { LibraryRow(hack) } }
+        compose.onNodeWithTag(RepMarkTag, useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun anExerciseNotYetPosedWearsTheFallbackInTheLibrary() {
+        compose.setContent { HyperlogTheme { LibraryRow(unposed) } }
+        compose.onNodeWithTag(RepMarkFallbackTag, useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theAddAndSwapPickersShowEachExercisesMark() {
+        compose.setContent { HyperlogTheme { ExercisePicker(listOf(hack), title = "Add", onPick = {}) } }
+        compose.onNodeWithTag(RepMarkTag, useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theSessionSheetShowsEachExercisesMark() {
+        val exercise = SessionExercise(1, hack, emptyList(), emptyList(), DefaultPlates.ladder(), true)
+        val session = ActiveSession(id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = null, padVisible = true, restEndsAt = null, restTotalMs = 0)
+        compose.setContent { HyperlogTheme { SessionList(session, onStart = {}, onAdd = {}, onFinish = {}) } }
         compose.onNodeWithTag(RepMarkTag, useUnmergedTree = true).assertExists()
     }
 

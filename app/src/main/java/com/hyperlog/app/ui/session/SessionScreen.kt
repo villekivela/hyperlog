@@ -121,6 +121,7 @@ import com.hyperlog.app.ui.library.openTechniqueVideo
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.mannequin.RepStage
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -883,6 +884,8 @@ internal fun SessionList(
                     e.done -> FilledTonalButton(onClick = { onOpen(e.id) }) { Text(stringResource(R.string.session_open_exercise)) }
                     else -> FilledTonalButton(onClick = { onStart(e.id) }) { Text(stringResource(R.string.session_start_exercise)) }
                 }
+                Spacer(Modifier.width(8.dp))
+                RepMark(e.exercise, size = 40.dp)
                 edits?.let { ExerciseEditMenu(e.exercise.name, it(e, blocks)) }
             }
             }
@@ -999,7 +1002,7 @@ private fun gripHow(name: String?): String? = when (name) {
 
 /** The library's exercises, hidden ones left out, with a search field on top. */
 @Composable
-private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
     var query by rememberSaveable { mutableStateOf("") }
     Column(modifier.fillMaxWidth()) {
         Text(
@@ -1019,11 +1022,14 @@ private fun ExercisePicker(exercises: List<Exercise>, title: String, onPick: (St
             val found = exercises.search(query)
             itemsIndexed(found, key = { _, it -> it.id }) { i, e ->
                 com.hyperlog.app.ui.theme.Segment(i, found.size, color = MaterialTheme.colorScheme.surfaceContainerHigh, onClick = { onPick(e.id) }) {
-                    Text(
-                        e.name,
-                        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = com.hyperlog.app.ui.theme.CardPadding, vertical = 16.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = com.hyperlog.app.ui.theme.CardPadding, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RepMark(e)
+                        Spacer(Modifier.width(12.dp))
+                        Text(e.name, style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
             }
             item { Spacer(Modifier.navigationBarsPadding().height(16.dp)) }

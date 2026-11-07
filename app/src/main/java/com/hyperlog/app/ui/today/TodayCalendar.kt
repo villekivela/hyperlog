@@ -635,7 +635,7 @@ internal fun DoneRow(number: Int, exercise: ExerciseSummary) {
 internal fun AdHocButton(onAdHoc: () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
         TextButton(onClick = onAdHoc, Modifier.heightIn(min = 48.dp)) {
-            SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(ButtonDefaults.IconSize))
+            SymbolIcon(Symbol.AddCircle, null, Modifier.size(ButtonDefaults.IconSize))
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.today_ad_hoc))
         }

@@ -163,7 +163,7 @@ fun SettingsScreen(
             val libraryTitle = stringResource(R.string.settings_library)
             val weightsTitle = stringResource(R.string.settings_starting_weights)
             SegmentedList {
-                row(gymsTitle, gyms, Symbol.FitnessCenter, onClick = onGyms, trailing = chevron)
+                row(gymsTitle, gyms, Symbol.Storefront, onClick = onGyms, trailing = chevron)
                 row(libraryTitle, library, Symbol.List, onClick = onLibrary, trailing = chevron)
                 row(
                     weightsTitle, weights, Symbol.History, onClick = onImportStartingWeights,

@@ -130,7 +130,7 @@ fun GymsScreen(
             SectionLabel(stringResource(R.string.gym_shared))
             val barLines = bars.values.map { stringResource(R.string.gym_bar_summary, formatKg(it)) }
             SegmentedList {
-                bars.entries.forEachIndexed { i, (bar, _) -> row(bar.label, barLines[i], Symbol.FitnessCenter, onClick = { weighing = bar }, trailing = chevron) }
+                bars.entries.forEachIndexed { i, (bar, _) -> row(bar.label, barLines[i], Symbol.LinearScale, onClick = { weighing = bar }, trailing = chevron) }
             }
         }
     }
@@ -405,7 +405,7 @@ internal val com.hyperlog.app.gym.EquipmentItem.symbol: Symbol
     get() = when (equipmentKind) {
         com.hyperlog.app.gym.EquipmentKind.Stack -> if (cableStation) Symbol.Cable else Symbol.Stacks
         com.hyperlog.app.gym.EquipmentKind.PlateLoaded -> Symbol.Album
-        com.hyperlog.app.gym.EquipmentKind.Bar -> Symbol.FitnessCenter
+        com.hyperlog.app.gym.EquipmentKind.Bar -> Symbol.LinearScale
         com.hyperlog.app.gym.EquipmentKind.RackBench -> Symbol.AirlineSeatFlat
     }
 

@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.search
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.TextEdge
@@ -139,7 +140,7 @@ fun LibraryScreen(
 
 /** Name, then equipment and primary muscles. */
 @Composable
-private fun LibraryRow(exercise: Exercise) {
+internal fun LibraryRow(exercise: Exercise) {
     val cs = MaterialTheme.colorScheme
     val muted = exercise.hidden
     Row(
@@ -147,13 +148,13 @@ private fun LibraryRow(exercise: Exercise) {
             .padding(start = CardPadding, end = CardPadding, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        RepMark(exercise)
+        Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 exercise.name,
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (muted) cs.outline else cs.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 exercise.summary,

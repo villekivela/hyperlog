@@ -334,6 +334,35 @@ class LargeTextTest {
         }
     }
 
+    /** Each line of [this] ends on a whole word. */
+    private fun SemanticsNodeInteraction.assertWholeWords(what: String) {
+        val layout = layout()
+        val text = layout.layoutInput.text.text
+        (0 until layout.lineCount).forEach {
+            val end = layout.getLineEnd(it)
+            assertFalse("$what splits a word: `${text.substring(layout.getLineStart(it), end)}`", end in 1 until text.length && text[end - 1].isLetter() && text[end].isLetter())
+        }
+    }
+
+    /** Round 3: `Gastrocnemi/us`, `Target 10–16` over `sets` and `Sets last` over `week` at 200 %. */
+    @Test
+    @Config(qualifiers = "w448dp-h1000dp-xxhdpi")
+    fun progressHoldsItsWordsOnAPhonesScreen() {
+        val monday = LocalDate.of(2026, 11, 2)
+        val weeks = listOf(WeekSets(monday, emptyMap()), WeekSets(monday.minusWeeks(1), mapOf("Gastrocnemius" to 1.5, "Triceps Lateral Head" to 3.0), 4))
+        atEveryScale({
+            HistoryScreen(
+                emptyList(), weeks, emptyList(), emptyList(), tab = 1, onTab = {}, onOpenSession = {}, onOpenExercise = {},
+                onBodyweight = {}, onLogBodyweight = {}, onBack = {}, today = LocalDate.of(2026, 11, 5),
+            )
+        }) { scale ->
+            compose.onNodeWithText("Gastrocnemius", useUnmergedTree = true).assertWholeWords("Gastrocnemius at $scale")
+            compose.onNodeWithText("Triceps Lateral Head", useUnmergedTree = true).assertWholeWords("Triceps at $scale")
+            assertEquals("The target wraps at $scale", 1, compose.onNodeWithText("Target 8–14 sets", useUnmergedTree = true).layout().lineCount)
+            assertEquals("The head wraps at $scale", 1, compose.onNodeWithText("Sets last week", useUnmergedTree = true).layout().lineCount)
+        }
+    }
+
     /** Round 2: `0 of 14 on target` ended 12 dp past the rows. */
     @Test
     fun theOnTargetCountEndsWithTheRows() {
