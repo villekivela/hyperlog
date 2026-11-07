@@ -5,11 +5,11 @@ import androidx.test.core.app.ApplicationProvider
 import com.hyperlog.app.data.HyperlogDatabase
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
+import com.hyperlog.app.domain.LoggedSet
+import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.domain.WeightUnit
 import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
-import com.hyperlog.app.domain.LoggedSet
-import com.hyperlog.app.domain.PadKey
 import com.hyperlog.app.library.ExerciseLibrary
 import com.hyperlog.app.library.LibrarySeed
 import kotlinx.coroutines.test.runTest
@@ -246,6 +246,52 @@ class SessionLoggerTest {
         assertEquals("60", logger.session.entry!!.weight)
     }
 
+    /** Finished days later it read 5192 min: a session left open ended at its last set (round 2). */
+    @Test
+    fun aSessionLeftOpenEndsAtItsLastSet() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        logger.type("60"); logger.done(); logger.type("12"); logger.selectRir(1); logger.done()
+        val lastSet = now
+        now += 3 * 24 * 3_600_000L
+
+        val summary = logger.finish()!!
+
+        assertEquals(lastSet, summary.finishedAt)
+    }
+
+    /** Left open and picked up days later read 5256 min on a build: only the time training counts. */
+    @Test
+    fun aSessionResumedAfterDaysCountsOnlyItsTimeTraining() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        val started = now
+        now += 5 * 60_000L
+        logger.type("60"); logger.done(); logger.type("12"); logger.selectRir(1); logger.done()
+        now += 3 * 24 * 3_600_000L
+        logger.type("12"); logger.selectRir(1); logger.done()
+        now += 10 * 60_000L
+
+        val summary = logger.finish()!!
+
+        assertEquals(started + 15 * 60_000L, summary.finishedAt)
+    }
+
+    @Test
+    fun aSessionFinishedSoonAfterItsLastSetEndsWhenFinished() = runTest {
+        val logger = logger()
+        logger.start()
+        logger.addExercise("leg_extension")
+        logger.type("60"); logger.done(); logger.type("12"); logger.selectRir(1); logger.done()
+        now += 10 * 60_000L
+
+        val summary = logger.finish()!!
+
+        assertEquals(now, summary.finishedAt)
+    }
+
     @Test
     fun finishingEndsTheSessionAndSummarisesIt() = runTest {
         val logger = logger()
@@ -259,7 +305,7 @@ class SessionLoggerTest {
         assertNull(logger.state.value)
         assertNull(logger().state.value)
         // Exercises with nothing logged are left out.
-        assertEquals(listOf(ExerciseSummary("Leg Extension", listOf(LoggedSet(60.0, 12, 0, 1)), records = listOf(null))), summary.exercises)
+        assertEquals(listOf(ExerciseSummary("Leg Extension", listOf(LoggedSet(60.0, 12, 0, 1)), records = listOf(null), exerciseId = "leg_extension")), summary.exercises)
     }
 
     @Test

@@ -2,6 +2,11 @@ package com.hyperlog.app.ui.session
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import com.hyperlog.app.program.TechniqueKind
+import com.hyperlog.app.ui.theme.techniqueColor
+import com.hyperlog.app.ui.today.FitChipFill
+import com.hyperlog.app.ui.today.FitChipInk
 import com.hyperlog.app.ui.theme.GraphiteDark
 import com.hyperlog.app.ui.theme.GraphiteLight
 import org.junit.Assert.assertTrue
@@ -28,6 +33,25 @@ class FixedColoursTest {
         add("trend Up on light" to Direction.upOnLight)
         listOf(25.0, 20.0, 15.0, 10.0, 5.0, 1.25).forEach { add("$it kg plate" to plateColor(it)) }
         listOf(GraphiteLight, GraphiteDark).forEach { add("error" to it.error); add("errorContainer" to it.errorContainer) }
+        add("fit chip" to FitChipFill)
+    }
+
+    /** The fit chip has a hue of its own: 30° from every other meaning's. Plates follow the kg standard, so they don't count. */
+    @Test
+    fun theFitChipsHueIsItsOwn() {
+        val others = fixed.filter { it.first != "fit chip" && "plate" !in it.first } +
+            TechniqueKind.entries.flatMap { k -> listOf(false, true).map { "$k" to techniqueColor(k, it) } }
+        others.filter { chroma(it.second) >= 0.15f }.forEach { (name, c) ->
+            val apart = abs(hue(c) - hue(FitChipFill)).let { minOf(it, 360 - it) }
+            assertTrue("The fit chip is $apart° from $name", apart >= 30f)
+        }
+    }
+
+    /** Its ink reads at 4.5:1 or more on it, in both themes, as the chip is the same in both. */
+    @Test
+    fun theFitChipsInkReads() {
+        val ratio = (FitChipFill.luminance() + 0.05f) / (FitChipInk.luminance() + 0.05f)
+        assertTrue("The fit chip's ink reads at $ratio:1", ratio >= 4.5f)
     }
 
     private fun accents(s: ColorScheme) = listOf(s.primary, s.primaryContainer, s.secondaryContainer)

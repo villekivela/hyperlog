@@ -278,8 +278,8 @@ Research behind these rules: `docs/research/progression-and-partials.md`.
     one short muted line led by a direction symbol (`trending_up`, `trending_flat`,
     `trending_down`) in a fixed colour scale like RIR's, the same on every phone: calm green for
     up, neutral for the same weight, amber for down (a deload or back-off isn't a failure, so never
-    red). It is short (`↑ 62.5 · hit the top of 8–10 last time`); the full sentence is in the
-    exercise sheet. A set that just follows the one before has no line.
+    red). It is short (`↑ 62.5 · hit the top of 8–10 last time`) and wraps at large text; the full
+    sentence is in the exercise sheet. A set that just follows the one before has no line.
 - Coaching changes (e.g. `adjust_load -10%` after time off) apply on top of the suggestion for their
   scope; progression then continues from what you actually lift.
 
@@ -609,9 +609,9 @@ each planned day with the training day it lands on, and never changes the day:
 - **Time.** When a day's `~N minutes` is more than 5 minutes over its training day's, the card
   shows it as a chip, `~58 min · Saturday has 50`, and tapping it starts a check-in whose first
   answer is "Day C runs ~58 minutes but Saturday has 50." A training day without minutes is never
-  checked. The chip is its own line under the card's numbers: the amber of the progression's
-  weight-down mark behind dark ink (owner, 2026-10-27; amber text alone read at 2.1 to 3.3:1 on
-  the hero and light cards, the chip's ink 8:1), the same on every card and in both themes, on
+  checked. The chip is its own line under the card's numbers: an orchid of its own, `#E58FD0`,
+  behind dark ink (owner, #271: amber means only a falling weight; the chip's ink reads at 7.7:1),
+  the same on every card and in both themes, on
   every card that has a date: Today's hero and planned days, and Program's days with dates. It is
   a 48 dp tap target ending in a chevron (`›`, in the ink, as the Training days row has; owner,
   2026-10-27), which the review's read-only chip leaves out; with no Claude key the tap hands the same words to Ask Claude to share.
@@ -723,7 +723,7 @@ each planned day with the training day it lands on, and never changes the day:
      - The update and time-off banners show only while today is selected, and so does the "Set
        how you train" card until the training style is set (Coaching → Training style). A
        workout from Claude and a running session keep their own layout on today, with their Start
-       or Resume floating.
+       or Resume in its lane under the list.
      - With no program, today keeps the starter offer (or the empty state) under the calendar, and
        a finished program says so and offers an ad-hoc session.
    - A **workout** added from Coach comes first, for the day it was added, as today's main
@@ -864,8 +864,9 @@ each planned day with the training day it lands on, and never changes the day:
        rest the whole row drains from full to empty with the time left in large digits, and the set
        table stays visible, with the pad shown or hidden. A tap on the digits opens the rest sheet
        (−15, +15, End rest); a tap on the rest of the row goes to the next exercise. After rest the row
-       is muted and counts up in large digits (`+0:12`) until the next set is logged, and the phone
-       still vibrates when rest ends. The myo breathing countdown and the iso hold use the same
+       is muted and counts up in large digits (`+0:12`) until the next set is logged or an hour has
+       passed (#269), and the phone still vibrates when rest ends. Past the hour the clock has
+       stopped saying anything about rest, so it leaves the row, which goes back to plain Next. The myo breathing countdown and the iso hold use the same
        row; the hold fills toward its target instead of draining and, at the target, turns the row solid
        with the digits stopped (owner, 2026-11-06). The breathing countdown is tinted in myo-reps'
        violet and the hold in iso hold's blue, from the technique colours; the fill's moving edge is
@@ -915,7 +916,7 @@ each planned day with the training day it lands on, and never changes the day:
        Live Update, so the countdown also sits in the status bar as a chip.
      - When rest runs out the phone buzzes twice with alarm-class vibration (through vibrate and
        silent mode), and the notification reads `Rest over` and counts up, with End rest, until the
-       next set is logged. Out of the app it also pops up, vibrating only: no sound by default.
+       next set is logged or the hour is up, when it goes with the row's clock. Out of the app it also pops up, vibrating only: no sound by default.
        The sound can be turned on in the system's settings for the "Rest over" channel. With the app on
        screen it only buzzes, once.
      - A myo-reps breathing pause shows as `Breathe` counting down to `Mini-set 2` (`25 kg × 4`),
@@ -1246,10 +1247,34 @@ each planned day with the training day it lands on, and never changes the day:
      editable, below). An open session's top bar holds only Back; its name is the headline under
      it, two lines at most, so a long day name (`Day C — Bench volume, leg press, pulldown`)
      isn't cut at large text sizes.
-   - **Progress** shows the bodyweight (latest value, its date, a small line of the last 90 days;
-     a tap opens the log, + logs today's), sets per muscle for this week (chevrons step back up to
-     8 weeks), and every exercise trained, the one done last first, with a sparkline of its
-     estimate and the latest value (a machine exercise says "2 machines" instead).
+   - **Progress** opens on the training glance (#270), everything on one screen at 115 % text, under the
+     next action, the same card as Program's.
+     - **Sets per muscle against targets**: `Sets this week`, `4 of 11 on target`, then the four muscles
+       furthest short of their range, on one track from zero with the band of their range on it, under a labelled
+       scale (`Target 8–14 sets`, 0, 8, 14; zero and the top when a focus gives muscles different ranges),
+       with the rest on a tap.
+       The muscles are the ones the program trains as a primary muscle, as Coach counts them (with no
+       program, every muscle of the last 8 weeks), and the range is Coach's too: the training
+       targets', the program's own if it has one, raised or maintenance with a focus. A muscle with
+       no sets yet isn't a row of zeros: they share one line of whole names (`No sets yet: Chest ·
+       Front Delts · +5 more`). Being short shows in tone and never in error colour, because midweek
+       most muscles are. A week with no sets shows the latest that has them
+       (`Sets last week`), and with none in 8 weeks it says what to aim for.
+     - **Work sets by week**: the work sets of each of the last 8 weeks as bars from zero, each set counted
+       once, with zero and the top on one axis and the first and last weeks on the other. The head
+       reads the week picked (`12 sets, week of 2 Nov`), marked on the axis even with no bar. A tap
+       or drag reads a week, the muscles above follow it, and chevrons step the same weeks for a screen reader, which also
+       gets the chart's summary (`Work sets a week over the last 8 weeks, from 20 to 30, 20 in the
+       latest`).
+     - **Moving** (`Estimate, last 4 weeks`): the three lifts whose estimate moved most by percent, up
+       or down, in the trend colours. A lift moves from its estimate about 4 weeks before its latest (its first, with less
+       history), if it moved 1 % or more and was done in the last 4 weeks. An exercise on two
+       machines isn't compared (ADR 0002). Each reads its latest estimate and the percent, and a tap
+       opens its trend.
+     - Under the glance come the bodyweight (latest value, its date, a small line of the last 90
+       days; a tap opens the log, + logs today's) and every exercise trained, the one done last
+       first, with a sparkline of its estimate and the latest value (a machine exercise says "2
+       machines" instead).
    - **An exercise's trend** shows the latest estimate, a chart of the estimate after each session
      (a line) with each session's top set weight (dots), and the sessions as a table (date, top
      set, estimate), newest first; a row opens that session. A tap or drag on the chart reads the
@@ -1328,6 +1353,111 @@ gallery (Technique videos).
   - **Text that leaves the app keeps `@ N`:** the Claude prompts (`@ N RIR` in the legend), backups,
     the rest notification (system UI, `25 kg × 8–10 @ 1`) and anything copied as plain text. The
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
+- **The session has a visible way out** (#269): an arrow left of the exercise's name, the same step as
+  system Back. It steps out of a correction or a finished exercise first, and only then asks to
+  leave.
+- **Exercises are listed by name** (#271): a list's rows are plain, with no drawing of the lift. The
+  3D mannequin in the exercise's sheet is the only figure in the app.
+- **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
+  its own. The navigation bar's symbols read without their labels at 24 dp: a calendar, a dumbbell, a
+  conversation, a clock and a gear. One symbol, one meaning: the dumbbell is the program and nothing
+  else, a bolt is a workout from Claude, a storefront is Gyms and equipment, and the clock with an arrow is the History tab: the old app's
+  weights have an inbox, a past program an archive box and time off a crossed-out calendar.
+- **Moments** (#272): a record, a finished session and a finished week each have a moment, and none
+  holds anything up.
+  - **A record**, as it is logged: a pill over the table, `New record` and `Rep record · 50 × 30`, in
+    ink like the record's mark. It goes by itself after 3 seconds,
+    takes no touches and sits clear of the pad. TalkBack reads it politely.
+  - **A finished session**: Session done leads with the shaped check, then a rating in a word, `Strong session`, `Solid session` or `In the bank`, and the measures behind it: sets of the
+    plan done, sets within 1 RIR of target, and lifts up on last time (a lift being up if its top set
+    is heavier, or as heavy for more reps; held counts half). A measure that can't be read doesn't
+    count against a session, so a first session is judged on what it has, and a deload or eased day
+    isn't compared with last time at all. A lift after a deload or eased day compares with the last
+    session that wasn't one, and with nothing if there is none, so a lighter week never reads as a
+    lift up; the Last column still shows the real last time. The measures are averaged: 85 % is
+    Strong, 55 % Solid. The plan comes first: under half of it is `In the bank`, and under 85 % of
+    it is never Strong, however the sets went. An exercise left with nothing logged still counts
+    against the plan. All of this is worked out when the session finishes; reading the session
+    back refreshes its sets alone, and a corrected set is read against the same last time. Under them come the
+    records and the best lift (`Best lift: Hack Squat, 100 × 6 → 105 × 6`). Done and Resume work from
+    the first frame.
+  - **A finished week**: a session that closes a program week adds `Week 8 done`, a dot filling in for
+    each day trained, `4 days · 42 sets`, the change on last week (`3 more than last week`) and, from
+    two weeks up, the run (`3 weeks in a row`). A deload week isn't compared with the week before. Run
+    as a sequence, a week is the program's, done when what comes next is in a later one, and a gap
+    of more than a fortnight ends the run. On a rotation a program week is a calendar week (ADR
+    0006) and can run twice, so the card counts the calendar week: it comes on the last training
+    day, whatever comes next, its days and sets are that week's alone, and an empty week ends the run.
+  - **Feel**: logging a set, a drop, a mini-set or a hold is a confirm, by the pad or the check, and
+    opening a session or taking a set back is nothing. Session done is a confirm too, once. A record,
+    and a finished week, are felt more strongly. Rest ending buzzes,
+    as it did.
+  - **The system's animation setting** is followed everywhere: Compose's animations stop with it, a
+    moment just appears and goes, dots are there at once, and the mannequin holds a still.
+- **The cue band** (#271): the exercise's cue in words (the slot's note, else the exercise's own),
+  under its name and before the table, always shown and wrapping: it is part of the exercise, so it
+  shows from the first warm-up. Only when the whole of it would leave the table less than its heads
+  and two rows is it cut to its first lines, and a tap opens the exercise, where it is whole.
+- **The table sits under the cue** (#269), or under the name with no cue, whatever the pad is doing:
+  up, hidden, resting, under Day done, in a drop or a hold. A long table scrolls in what the cue
+  leaves it.
+- **The lift trend** (#269), in the exercise's sheet under its plan: how the lift has moved, led by
+  its trend symbol, the e1RM now (`e1RM 126 kg`), the trend in words (`e1RM up 5% in 4 weeks, to
+  126 kg`, `e1RM steady over 4 weeks, at 100 kg` or `Hasn't moved in 3 sessions`) and the e1RM
+  session by session as a smooth curve on a time axis. It measures nothing of its own: up, down
+  and steady are Progress's Moving (the estimate over about 4 weeks, 1 % or more), the last the
+  coach line's stall, and a lift that moved says so first, so the numbers agree everywhere. It
+  reads the line Progress draws, per machine for machines and cables (ADR 0002), and leaves out a
+  deload, an eased day or an easy week, as the coach line does. Under 2 sessions left, or none in
+  the last 4 weeks, there is none. With a lift goal it joins the goal's block, its chart the goal's
+  one. (Owner: a list of the last sessions repeated the Last column, and a line on the logging
+  screen took the table's room; the sheet already holds the lift's story.)
+
+- **The plate line names the bar** while no weight is typed: `On a 20 kg bar`, `On a 15 kg machine,
+  empty`, or with no base `Type a weight to see its plates`, never the drawing alone.
+- **A session's length is its time training** (#273): a gap of more than an hour between sets, or
+  after the last one, doesn't count, so a session forgotten for days, or left open and picked up
+  again, reads the time it took, not `5192 min`. Every screen rounds it the same way.
+- **Today's one action has a lane of its own** (#269): Start and Resume sit under the list, not over
+  it, so they never cover an exercise at any text size, and the list fades out above them.
+- **The set table reads aloud** (#268): every value on a row says which row it belongs to and its
+  unit, so TalkBack never reads a bare `50`: `Set 1 weight, 50 kg`, `Set 1 reps, 10`, `Set 1, 2 RIR`,
+  `Set 1 last time, 50 kg × 10 + 5`. A warm-up, drop, mini-set or hold names itself the same way
+  (`Drop 1 of set 1 weight, 17.5 kg`). An empty cell says so and gives the target
+  (`Set 1 reps, empty, target 4–6`), and a target RIR says it's a target. The figure in a set's circle is
+  silent, because the circle's own description already names the set.
+- **The next action leads Program** (#273): the next day sits at the top of Program in an accent
+  card, the strongest thing on the screen. Its button is only there when there is something to do:
+  **Start**, when Today has a Start, opens the gym sheet at once; **Resume** goes back to a running
+  session. On any other day the card names the date (`Next · Mon 9 Nov`) with no button, so it never
+  leads to a day with nothing on it. At large text the button sits under the day.
+- **Large text** (#268): every main screen holds at every system text size up to 200 %, with no
+  clipped label and no word split in two. What can grow, grows: a primary name wraps and is never
+  cut (an exercise on Progress, the Next row, the program's next day). What shares a fixed width
+  steps down, and together: labels that sit side by side take one size, the largest at which all of
+  them fit, so the navigation bar's five match at every size, and so do the set table's heads
+  (down to 11 sp) and its Last column (down to 12 sp, one size for the whole table, then wrapping
+  before its `+`). A weight never loses a digit: the kg column takes one size for the whole table,
+  down to 12 sp, and past that it widens and Last gives way. A set that can't fit a line at Last's
+  floor is written without its spaces (`50×10+5`) and breaks before its `×` or `+`; only what two
+  lines can't hold takes Last under the floor, to 8 sp, and a weight that still can't fit leaves
+  Last empty on screen, while a screen reader still says it. Reps past the same 12 sp widen their
+  column the same way, and a value keeps 8 dp from the one beside it, so two never read as one. A drop's Last keeps to one line. The pad's strip holds its height until its
+  text needs more, then grows: its weights share one size down to 12 sp, then show three rungs in
+  place of five; the check's reason sits beside its weights while two lines hold it, then above
+  them; a follow-up's progress goes above its buttons when they leave it no room. The why-line
+  wraps, since it gives the reason for the weight, and so do the header chips, a machine's name in
+  Which machine, a plan's rows on the exercise sheet, the set summary, and a Library row's line. In
+  the session list the action goes under the name from 130 %. Search fields grow with their text.
+  The bench row's label gives way like Last. A weight on the pad keeps at most two decimals. A connected choice stacks its options
+  when their labels no longer fit side by side. The program's phases go to one row of chips instead, the picked one scrolled into view
+  and a chip at the edge fading out, so the weeks under them stay on screen. Past its floor a set
+  table head runs over its column into the room around it, whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip
+  with the F / P toggle. A row's title and supporting text wrap, a session's title in History, an
+  exercise on Today and a Coach tile too, and a set prescription's parts are joined by no-break spaces
+  as a logged set's are, so a line never ends on `1 ×`. A session in History has one line of
+  preview, whole names ending in a count (`Kalliokoski · Barbell RDL · +3 more`), and its date on
+  its title's first line.
 - **Scheduling**: with training days (below), the program's days take turns on them, and a missed
   day is skipped (Domain → Training days and the rotation, ADR 0006). Without them the program runs
   as a sequence (next day is whatever comes next, whenever you train). Training days also set the
@@ -2688,10 +2818,10 @@ program at all.
   keeps it; Reject, × and Back drop it.
 - **On Today, it's today's main Start** (tester's report, 2026-10-16). It comes first as a card:
   "Workout" over its name, summary and gym line on the secondaryContainer head (decided, owner
-  2026-10-16), with ⋮, then its exercises with their rest. The floating button reads **Start
+  2026-10-16), with ⋮, then its exercises with their rest. The button under the list reads **Start
   workout** and starts it, through the start sheet. The program day follows as the second card,
   its head holding week and block over the day's name with a tonal **Start**, so its heading and
-  its Start show together and the floating button never covers them; then its exercises and the
+  its Start show together; then its exercises and the
   Ad-hoc session row. With no program the card is followed by the Ad-hoc row. While another
   session runs, Today shows that session's day and not the workout. It holds for the day it was
   added and is gone the next day if it wasn't started. Adding another replaces it, asking first

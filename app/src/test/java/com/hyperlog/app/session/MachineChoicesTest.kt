@@ -29,6 +29,15 @@ class MachineChoicesTest {
         assertEquals(listOf("Leg press", "Hack squat"), other.map { it.name })
     }
 
+    /** Nothing but an exact name is taken without asking, so a gym's one machine never collects its other exercises (#269). */
+    @Test
+    fun onlyAMachineNamedForTheExerciseIsTakenWithoutAsking() {
+        val press = listOf(EquipmentItem(2, 1, "Machine Shoulder Press", plates))
+        assertEquals(null, namedFor(exercise("Hack Squat"), press))
+        assertEquals(null, namedFor(exercise("2-Grip Lat Pulldown"), press))
+        assertEquals("Machine Shoulder Press", namedFor(exercise("machine shoulder-press"), press)?.name)
+    }
+
     @Test
     fun aPlateLoadedExerciseGetsPlateLoadedMachinesFirst() {
         val (fit, other) = machineChoices(exercise("Leg Press"), items)

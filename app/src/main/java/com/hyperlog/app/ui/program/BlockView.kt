@@ -1,12 +1,9 @@
 package com.hyperlog.app.ui.program
 
-import com.hyperlog.app.ui.theme.interFigures
 import androidx.compose.foundation.clickable
-import com.hyperlog.app.ui.session.setText
-import com.hyperlog.app.ui.session.RirText
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -20,13 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,14 +44,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.SlotDiff
-import com.hyperlog.app.domain.summary
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.Block
 import com.hyperlog.app.program.BlockReviews
 import com.hyperlog.app.program.Program
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.shortDate
+import com.hyperlog.app.ui.session.RirText
 import com.hyperlog.app.ui.session.day
+import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardMargin
@@ -59,6 +60,9 @@ import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.ConnectedChoice
 import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.connectedChoiceFits
+import com.hyperlog.app.ui.theme.fadingSides
+import com.hyperlog.app.ui.theme.interFigures
 import com.hyperlog.app.ui.theme.selectedChipColors
 import com.hyperlog.app.ui.today.FitLines
 import com.hyperlog.app.ui.today.SlotRows
@@ -90,7 +94,7 @@ internal fun LazyListScope.blockItems(
     /** Review on a finished block's card, with its id. */
     onReview: (String) -> Unit = {},
 ) {
-    item(key = "blocks") { BlockChoice(program, program.blocks.indexOf(block), onBlock) }
+    item(key = "blocks") { BlockChoice(program.blocks.map { it.name }, program.blocks.indexOf(block), onBlock) }
     val finished = block in BlockReviews.finished(program, active.position)
     item(key = "block") { BlockCard(block, active, comparison, week, names, onWeek, onReview = if (finished) ({ onReview(block.id) }) else null) }
     days.forEach { day ->
@@ -130,24 +134,30 @@ internal fun LazyListScope.blockItems(
 
 /** The blocks, the picked one filled: a connected group while they fit, else a row of chips. */
 @Composable
-private fun BlockChoice(program: Program, picked: Int, onBlock: (Int) -> Unit) {
-    val names = program.blocks.map { it.name }
-    Column(Modifier.padding(top = 16.dp)) {
-        if (names.size <= MaxConnected && names.sumOf { it.length } <= MaxConnectedChars) {
+internal fun BlockChoice(names: List<String>, picked: Int, onBlock: (Int) -> Unit) {
+    BoxWithConstraints(Modifier.padding(top = 16.dp)) {
+        val padding = PaddingValues(horizontal = 8.dp)
+        val fits = connectedChoiceFits(names, maxWidth - CardMargin * 2, padding, fitLabels = true)
+        if (fits && names.size <= MaxConnected && names.sumOf { it.length } <= MaxConnectedChars) {
             ConnectedChoice(
                 names, picked, onBlock,
                 Modifier.padding(horizontal = CardMargin),
                 // On the screen between the cards, not on one.
                 color = com.hyperlog.app.ui.theme.Tones.screen,
-                contentPadding = PaddingValues(horizontal = 8.dp),
+                contentPadding = padding,
                 fitLabels = true,
             )
         } else {
-            Row(
-                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = CardMargin),
+            // One row whatever the text size, so the weeks under it stay on screen.
+            val list = rememberLazyListState(picked)
+            LaunchedEffect(picked) { list.animateScrollToItem(picked) }
+            LazyRow(
+                Modifier.fillMaxWidth().fadingSides(list),
+                state = list,
+                contentPadding = PaddingValues(horizontal = CardMargin),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                names.forEachIndexed { i, name ->
+                itemsIndexed(names) { i, name ->
                     FilterChip(selected = i == picked, onClick = { onBlock(i) }, label = { Text(name) }, colors = selectedChipColors())
                 }
             }
@@ -377,7 +387,7 @@ private fun DoneDay(session: PastSessionItem) {
             session.exercises.forEach { e ->
                 val top = e.sets.maxWithOrNull(compareBy({ it.weightKg }, { it.fullReps })) ?: return@forEach
                 Row {
-                    Text(e.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(e.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     Spacer(Modifier.width(16.dp))
                     RirText(top.copy(extensions = emptyList()).setText(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }

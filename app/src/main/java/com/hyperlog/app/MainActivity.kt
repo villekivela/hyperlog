@@ -1,70 +1,19 @@
 package com.hyperlog.app
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
-import com.hyperlog.app.rest.AppVisibility
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.res.stringResource
-import com.hyperlog.app.domain.LadderSpec
-import com.hyperlog.app.gym.EquipmentItem
-import com.hyperlog.app.ui.gym.GymScreen
-import com.hyperlog.app.ui.gym.GymsScreen
-import com.hyperlog.app.ui.gym.GymsViewModel
-import com.hyperlog.app.ui.gym.LadderEditor
-import com.hyperlog.app.ui.gym.ItemEditor
-import com.hyperlog.app.ui.gym.LadderKind
-import com.hyperlog.app.ui.library.ExerciseEditor
-import com.hyperlog.app.ui.library.LibraryScreen
-import com.hyperlog.app.ui.library.LibraryViewModel
-import com.hyperlog.app.ui.program.ProgramScreen
-import com.hyperlog.app.ui.program.ProgramView
-import com.hyperlog.app.ui.coach.ChangeReviewScreen
-import com.hyperlog.app.ui.coach.WorkoutReviewScreen
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import com.hyperlog.app.ui.coach.AskClaudeShare
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import com.hyperlog.app.ui.program.ProgramViewModel
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.hyperlog.app.ui.session.SessionDoneScreen
-import com.hyperlog.app.ui.session.PastExerciseScreen
-import com.hyperlog.app.ui.session.PastSessionScreen
-import com.hyperlog.app.ui.session.PastSessionsViewModel
-import com.hyperlog.app.ui.history.BodyweightScreen
-import com.hyperlog.app.ui.history.ExerciseTrendScreen
-import com.hyperlog.app.ui.history.HistoryScreen
-import com.hyperlog.app.ui.history.HistoryViewModel
-import com.hyperlog.app.ui.session.SessionScreen
-import com.hyperlog.app.ui.session.SessionViewModel
-import com.hyperlog.app.ui.settings.SettingsScreen
-import com.hyperlog.app.ui.settings.StartingWeightsViewModel
-import com.hyperlog.app.ui.settings.BackupState
-import com.hyperlog.app.ui.settings.BackupViewModel
-import com.hyperlog.app.ui.settings.ClaudeKeyViewModel
-import android.app.Activity
-import android.content.Intent
-import com.hyperlog.app.ui.theme.HyperlogTheme
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.symbols.SymbolIcon
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,11 +25,66 @@ import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hyperlog.app.coach.ProgramVolume
+import com.hyperlog.app.rest.AppVisibility
+import com.hyperlog.app.ui.coach.AskClaudeShare
+import com.hyperlog.app.ui.coach.ChangeReviewScreen
+import com.hyperlog.app.ui.coach.WorkoutReviewScreen
+import com.hyperlog.app.ui.gym.GymScreen
+import com.hyperlog.app.ui.gym.GymsScreen
+import com.hyperlog.app.ui.gym.GymsViewModel
+import com.hyperlog.app.ui.gym.ItemEditor
+import com.hyperlog.app.ui.gym.LadderEditor
+import com.hyperlog.app.ui.gym.LadderKind
+import com.hyperlog.app.ui.history.BodyweightScreen
+import com.hyperlog.app.ui.history.ExerciseTrendScreen
+import com.hyperlog.app.ui.history.HistoryScreen
+import com.hyperlog.app.ui.history.HistoryViewModel
+import com.hyperlog.app.ui.library.ExerciseEditor
+import com.hyperlog.app.ui.library.LibraryScreen
+import com.hyperlog.app.ui.library.LibraryViewModel
+import com.hyperlog.app.ui.program.ProgramScreen
+import com.hyperlog.app.ui.program.ProgramView
+import com.hyperlog.app.ui.program.ProgramViewModel
+import com.hyperlog.app.ui.session.PastExerciseScreen
+import com.hyperlog.app.ui.session.PastSessionScreen
+import com.hyperlog.app.ui.session.PastSessionsViewModel
+import com.hyperlog.app.ui.session.SessionDoneScreen
+import com.hyperlog.app.ui.session.SessionScreen
+import com.hyperlog.app.ui.session.SessionViewModel
+import com.hyperlog.app.ui.settings.BackupState
+import com.hyperlog.app.ui.settings.BackupViewModel
+import com.hyperlog.app.ui.settings.ClaudeKeyViewModel
+import com.hyperlog.app.ui.settings.SettingsScreen
+import com.hyperlog.app.ui.settings.StartingWeightsViewModel
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.ui.theme.NextAction
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.sharedFontSize
 import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.update.UpdateViewModel
 import com.hyperlog.app.update.Updates
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val sessions: SessionViewModel by viewModels()
@@ -154,7 +158,7 @@ private fun AskForNotifications(once: String? = null) {
     }
 }
 
-private enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach, Mannequins, TrainingStyle }
+internal enum class Screen { Today, Settings, Library, Gyms, Program, History, Coach, Mannequins, TrainingStyle }
 
 /** Where a check-in started outside Coach: the [screen], and the review open over it ([reviewProgram]'s [reviewBlock]; null: its program review). */
 private data class CheckInFrom(val screen: Screen, val reviewProgram: Long? = null, val reviewBlock: String? = null) {
@@ -201,8 +205,8 @@ internal const val NavigationBarTag = "navigation-bar"
 /** The five destinations, in the bar's order, with their symbols (outlined, filled when selected). */
 private val Tabs = listOf(
     Triple(Screen.Today, Symbol.Today, Symbol.TodayFill),
-    Triple(Screen.Program, Symbol.ViewTimeline, Symbol.ViewTimelineFill),
-    Triple(Screen.Coach, Symbol.Sports, Symbol.SportsFill),
+    Triple(Screen.Program, Symbol.FitnessCenter, Symbol.FitnessCenterFill),
+    Triple(Screen.Coach, Symbol.Forum, Symbol.ForumFill),
     Triple(Screen.History, Symbol.History, Symbol.History),
     Triple(Screen.Settings, Symbol.Settings, Symbol.SettingsFill),
 )
@@ -213,24 +217,30 @@ private val Tabs = listOf(
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
+internal fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val labels = Tabs.map { (tab) ->
+        stringResource(
+            when (tab) {
+                Screen.Program -> R.string.program_title
+                Screen.Coach -> R.string.coach_title
+                Screen.History -> R.string.history_title
+                Screen.Settings -> R.string.settings
+                else -> R.string.today_title
+            },
+        )
+    }
+    BoxWithConstraints {
+    // Five items share the width: at large text all five step down together.
+    val labelSize = sharedFontSize(labels.map { it to maxWidth / Tabs.size - 8.dp }, MaterialTheme.typography.labelMedium, floor = 8.sp)
     ShortNavigationBar(Modifier.testTag(NavigationBarTag), containerColor = Tones.bar) {
-        Tabs.forEach { (tab, symbol, filled) ->
-            val label = stringResource(
-                when (tab) {
-                    Screen.Program -> R.string.program_title
-                    Screen.Coach -> R.string.coach_title
-                    Screen.History -> R.string.history_title
-                    Screen.Settings -> R.string.settings
-                    else -> R.string.today_title
-                },
-            )
+        Tabs.forEachIndexed { i, (tab, symbol, filled) ->
+            val label = labels[i]
             ShortNavigationBarItem(
                 selected = tab == selected,
                 onClick = { onSelect(tab) },
                 icon = { SymbolIcon(if (tab == selected) filled else symbol, null) },
-                label = { Text(label) },
+                label = { Text(label, fontSize = labelSize, maxLines = 1) },
                 colors = ShortNavigationBarItemDefaults.colors(
                     selectedIndicatorColor = cs.primaryContainer,
                     selectedIconColor = cs.onPrimaryContainer,
@@ -238,6 +248,7 @@ private fun AppNavigationBar(selected: Screen, onSelect: (Screen) -> Unit) {
                 ),
             )
         }
+    }
     }
 }
 
@@ -333,6 +344,8 @@ private fun App(
     var programView by rememberSaveable(stateSaver = ProgramView.Saver) { mutableStateOf(ProgramView()) }
     // The day picked on Today's calendar (epoch day; null: today), kept while a session opened from it is looked at.
     var todayDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    var startOnToday by rememberSaveable { mutableStateOf(false) }
+    var doneFelt by rememberSaveable { mutableStateOf<Long?>(null) }
     // Today's own saved state (each day's scroll), kept while another screen is up.
     val todayState = rememberSaveableStateHolder()
     // A session opened from Program or Today goes back there.
@@ -494,6 +507,7 @@ private fun App(
     val reviewingCheckIn = checkInStep is com.hyperlog.app.coach.CheckInStep.ChangeReview || checkInStep is com.hyperlog.app.coach.CheckInStep.WorkoutReview ||
         checkInStep is com.hyperlog.app.coach.CheckInStep.ProgramReview
     if (running != null) AskForNotifications()
+    val standingVolume = trainingStyle?.targets?.volume ?: com.hyperlog.app.coach.TrainingTargets().volume
     // Its notifications say when Claude's reply is ready while you're away; asked at the first check-in only.
     if (checkIn != null) AskForNotifications(once = "check_in")
     // A Change under review covers whatever proposed it: the Program screen or the session.
@@ -551,6 +565,20 @@ private fun App(
     }
     // A workout's date is the program's today, or the phone's with no program.
     val todayWorkout = waitingWorkouts.firstOrNull { it.addedOn == (program?.today ?: java.time.LocalDate.now()) }
+    // The next action on Program and Progress, from the same state as Today, so it offers Start
+    // only where Today has one, and Start opens Today's gym sheet.
+    val nextState = program?.let {
+        com.hyperlog.app.today.TodayState(it, pastSessions.orEmpty(), weekdayPlan, lastTrained, todayWorkout != null, running != null, running?.day, it.today, it.today)
+    }
+    val nextAction = nextState?.nextDay?.let { day ->
+        val title = stringResource(R.string.program_week_day, day.position.week, day.day.name)
+        when (val offer = nextState.nextOffer) {
+            com.hyperlog.app.today.NextOffer.Resume -> NextAction(title, stringResource(R.string.next_resume)) { screen = Screen.Today; left = false }
+            com.hyperlog.app.today.NextOffer.Start -> NextAction(title, stringResource(R.string.next_start)) { screen = Screen.Today; startOnToday = true }
+            is com.hyperlog.app.today.NextOffer.On -> NextAction(title, date = com.hyperlog.app.ui.history.long(offer.date))
+            null -> null
+        }
+    }
     // A check-in's workout starts at the gym answered in it (none: Elsewhere); a pasted one at the usual gym.
     val workoutGym = checkIn?.checkIn?.let { it.gym ?: if (it.elsewhere) null else usualGym?.id } ?: usualGym?.id
     // A workout from Claude, before it goes on Today.
@@ -682,7 +710,9 @@ private fun App(
     when {
         finished != null && done?.shown != null -> PastExerciseScreen(done, pastModel, onBack = { pastModel.show(null) })
         finished != null -> SessionDoneScreen(
-            done?.summary ?: finished,
+            done?.let { finished.refreshedBy(it.summary) } ?: finished,
+            firstShown = finished.sessionId != doneFelt,
+            onShown = { doneFelt = it },
             onResume = { pastModel.close(); sessions.resumeFinished(); left = false },
             onClose = { pastModel.close(); sessions.dismissSummary(); left = false },
             onOpen = done?.let { d -> { i: Int -> pastModel.show(d.exercises[i].id) } },
@@ -784,6 +814,7 @@ private fun App(
             exerciseNames = exercises.associate { it.id to it.name },
             sessions = pastSessions.orEmpty(),
             onOpenSession = { id -> pastModel.open(id); sessionFrom = Screen.Program; screen = Screen.History },
+            next = nextAction,
             view = programView,
             onView = { programView = it },
             weekdayPlan = weekdayPlan,
@@ -905,6 +936,10 @@ private fun App(
             onBodyweight = { bodyweightOpen = true },
             onLogBodyweight = historyModel::logBodyweight,
             onBack = { screen = Screen.Today },
+            standing = standingVolume,
+            range = { ProgramVolume.range(program?.program, it, standingVolume) },
+            muscles = program?.let { active -> ProgramVolume.of(active.program, exercises.associateBy { it.id }, standingVolume).map { it.muscle }.toSet() },
+            next = nextAction,
         )
         screen == Screen.Mannequins -> com.hyperlog.app.ui.mannequin.MannequinGallery(
             com.hyperlog.app.ui.mannequin.rememberMannequins(),
@@ -1009,6 +1044,8 @@ private fun App(
             onProgramDayShown = { showProgramDay = false },
             selectedDay = todayDay,
             onSelectDay = { todayDay = it },
+            startOnOpen = startOnToday,
+            onStartOpened = { startOnToday = false },
         ) }
     }
     }

@@ -1,28 +1,19 @@
 package com.hyperlog.app.ui.library
 
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.foundation.lazy.itemsIndexed
-import com.hyperlog.app.ui.theme.Segment
-import com.hyperlog.app.ui.theme.CardPadding
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -34,24 +25,26 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.search
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 
 const val LibraryListTag = "library-list"
 
@@ -139,7 +132,7 @@ fun LibraryScreen(
 
 /** Name, then equipment and primary muscles. */
 @Composable
-private fun LibraryRow(exercise: Exercise) {
+internal fun LibraryRow(exercise: Exercise) {
     val cs = MaterialTheme.colorScheme
     val muted = exercise.hidden
     Row(
@@ -152,15 +145,11 @@ private fun LibraryRow(exercise: Exercise) {
                 exercise.name,
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (muted) cs.outline else cs.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 exercise.summary,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (muted) cs.outline else cs.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -173,8 +162,8 @@ fun SearchField(query: String, onChange: (String) -> Unit, placeholder: String, 
     TextField(
         value = query,
         onValueChange = onChange,
-        modifier = modifier.fillMaxWidth().height(56.dp),
-        placeholder = { Text(placeholder, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
+        placeholder = { Text(placeholder) },
         leadingIcon = { SymbolIcon(Symbol.Search, null, tint = cs.onSurfaceVariant) },
         trailingIcon = if (query.isEmpty()) null else {
             {

@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
-import com.hyperlog.app.ui.session.Direction
 import com.hyperlog.app.ui.session.color
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
@@ -39,8 +38,11 @@ internal const val FitSwapsTag = "fit-swaps"
 internal const val FitChipTag = "fit-chip"
 internal const val FitChevronTag = "fit-chevron"
 
-/** The time line's chip (owner, 2026-10-27): the progression's weight-down amber behind dark ink, so it reads on every card in both themes. */
-internal val FitChipFill: Color = Direction.Down.color
+/**
+ * The time line's chip: an orchid of its own (owner, #271), 45° of hue from every other meaning, so
+ * amber is only a falling weight. Dark ink on it reads at 7.7:1, the same on every card in both themes.
+ */
+internal val FitChipFill: Color = Color(0xFFE58FD0)
 internal val FitChipInk = Color(0xFF19191B)
 
 /** The words a weekday goes by in the fit lines: `Saturday`. */

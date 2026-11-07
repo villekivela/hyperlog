@@ -37,8 +37,8 @@ class SegmentedListScope internal constructor() {
     internal val labels = mutableListOf<String?>()
 
     /**
-     * A standard row: [symbol] in a tonal circle, [title], one line of [supporting] (or up to
-     * [supportingLines] where every word counts, as a gym's plates), and [trailing].
+     * A standard row: [symbol] in a tonal circle, [title], [supporting] (held to [supportingLines]
+     * where a long text would crowd the list), and [trailing].
      */
     fun row(
         title: String,
@@ -47,7 +47,7 @@ class SegmentedListScope internal constructor() {
         onClick: (() -> Unit)? = null,
         supportingColor: Color? = null,
         titleColor: Color? = null,
-        supportingLines: Int = 1,
+        supportingLines: Int = Int.MAX_VALUE,
         trailing: (@Composable () -> Unit)? = null,
     ) = item(onClick) { SegmentedRow(title, supporting, symbol, supportingColor, titleColor, supportingLines, trailing = trailing) }
 
@@ -78,7 +78,7 @@ val GroupGap = 16.dp
 
 /**
  * One row's content: a leading Material Symbol in a tonal circle (or its 40 dp column kept empty),
- * a title and one line of supporting text, and an optional trailing control. A [selected] row
+ * a title and supporting text, both wrapping at large text, and an optional trailing control. A [selected] row
  * (the program running) fills its circle with the accent, primaryContainer.
  */
 @Composable
@@ -88,7 +88,7 @@ fun SegmentedRow(
     symbol: Symbol? = null,
     supportingColor: Color? = null,
     titleColor: Color? = null,
-    supportingLines: Int = 1,
+    supportingLines: Int = Int.MAX_VALUE,
     selected: Boolean = false,
     trailing: (@Composable () -> Unit)? = null,
 ) {
@@ -106,7 +106,7 @@ fun SegmentedRow(
         }
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = titleColor ?: cs.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = titleColor ?: cs.onSurface)
             if (supporting != null) {
                 Text(
                     supporting,

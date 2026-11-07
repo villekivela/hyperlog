@@ -32,7 +32,7 @@ class FitChipTest {
     val compose = createComposeRule()
 
     /** The amber the spec names, the progression's weight-down mark: written out, so the chip can't drift with the constant. */
-    private val Amber = Color(0xFFE0A84E)
+    private val Orchid = Color(0xFFE58FD0)
 
     private val fit = DayFit(TimeOver(58, 50, DayOfWeek.SATURDAY), null)
 
@@ -58,18 +58,18 @@ class FitChipTest {
     }
 
     @Test
-    fun theChipIsAmberInLightAndDark() {
-        assertEquals(Amber.toArgb(), chipPixel(night = false))
+    fun theChipIsOrchidInLight() {
+        assertEquals(Orchid.toArgb(), chipPixel(night = false))
     }
 
     @Test
-    fun theChipIsAmberInDarkToo() {
-        assertEquals(Amber.toArgb(), chipPixel(night = true))
+    fun theChipIsOrchidInDarkToo() {
+        assertEquals(Orchid.toArgb(), chipPixel(night = true))
     }
 
     @Test
-    fun itsInkReadsOnTheAmberAtFourAndAHalfToOne() {
-        assertTrue(contrast(FitChipInk, Amber) >= 4.5)
+    fun itsInkReadsOnTheOrchidAtFourAndAHalfToOne() {
+        assertTrue(contrast(FitChipInk, Orchid) >= 4.5)
     }
 
     @Test

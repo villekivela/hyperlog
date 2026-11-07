@@ -1,20 +1,20 @@
 package com.hyperlog.app.ui.session
 
-import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,9 +29,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -39,26 +40,22 @@ import com.hyperlog.app.domain.summary
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.session.sessionMinutes
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.BottomActions
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.Sheet
-import com.hyperlog.app.ui.theme.ShapedSymbol
+import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.cardBehind
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.layout.height
+import com.hyperlog.app.ui.theme.interFigures
 import java.text.DateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
-import kotlin.math.roundToInt
-import com.hyperlog.app.ui.theme.TextEdge
 
 // Past sessions (SPEC, Past sessions are editable): the list, a session's summary, and an
 // exercise's table where any logged row can be corrected. History (#19) hosts the list.
@@ -91,26 +88,19 @@ fun SessionList(sessions: List<PastSessionItem>?, onOpen: (Long) -> Unit, modifi
             Segment(i, list.size, onClick = { onOpen(s.id) }) {
             Column(
                 Modifier.fillMaxWidth().heightIn(min = 72.dp)
-                    .padding(horizontal = CardPadding, vertical = 12.dp),
+                    .padding(horizontal = CardPadding, vertical = 8.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row {
                     Text(
                         s.title ?: stringResource(R.string.past_ad_hoc),
-                        Modifier.weight(1f),
+                        Modifier.weight(1f).alignByBaseline(),
                         style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.width(16.dp))
-                    Text(day(s.startedAt), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    // On the title's first line, however far a long title wraps.
+                    Text(day(s.startedAt), Modifier.alignByBaseline(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
-                Text(
-                    (listOfNotNull(s.gym) + s.exercises.map { it.name }).joinToString(" · "),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = cs.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                SessionPreview(listOfNotNull(s.gym) + s.exercises.map { it.name })
             }
             }
         }
@@ -183,7 +173,7 @@ fun PastSessionScreen(session: PastSession, onOpen: (Long) -> Unit, onBack: () -
                     listOfNotNull(
                         day(session.startedAt),
                         DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(session.startedAt)),
-                        stringResource(R.string.past_minutes, ((session.finishedAt - session.startedAt) / 60_000.0).roundToInt()),
+                        stringResource(R.string.past_minutes, sessionMinutes(session.startedAt, session.finishedAt)),
                         session.gym,
                     ).joinToString(" · "),
                     Modifier.padding(horizontal = TextEdge),
@@ -248,5 +238,27 @@ fun PastExerciseScreen(session: PastSession, actions: PastSessionActions, onBack
                 onClose = { correctingBenchAngle = false },
             )
         }
+    }
+}
+
+/** The start of [parts] as one line that [fits], whole names only, ending with [more] of how many it left out. */
+internal fun previewLine(parts: List<String>, more: (Int) -> String, fits: (String) -> Boolean): String {
+    fun line(shown: Int) = (parts.take(shown) + listOfNotNull(more(parts.size - shown).takeIf { shown < parts.size })).joinToString(" · ")
+    return (parts.size downTo 1).map(::line).firstOrNull(fits) ?: line(1)
+}
+
+/** [parts] on one line of whole names, after [lead]: where a session was and what it held, or the muscles it missed. */
+@Composable
+internal fun SessionPreview(parts: List<String>, lead: String = "") {
+    val style = MaterialTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val room = constraints.maxWidth
+        val format = stringResource(R.string.past_preview_more)
+        Text(
+            lead + previewLine(parts, { format.format(it) }) { measurer.measure(lead + it, style, maxLines = 1, softWrap = false).size.width <= room },
+            style = style,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

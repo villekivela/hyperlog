@@ -1,15 +1,5 @@
 package com.hyperlog.app.ui.history
 
-import com.hyperlog.app.ui.theme.interFigures
-import com.hyperlog.app.ui.theme.figureHeadline
-import com.hyperlog.app.ui.theme.cardBehind
-import com.hyperlog.app.ui.session.setText
-import com.hyperlog.app.ui.session.RirText
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.foundation.lazy.itemsIndexed
-import com.hyperlog.app.ui.theme.Segment
-import com.hyperlog.app.ui.theme.CardPadding
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -25,9 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,27 +32,36 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.domain.formatKg
-import com.hyperlog.app.domain.summary
 import com.hyperlog.app.history.Bodyweight
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.TrendLine
 import com.hyperlog.app.history.TrendPoint
 import com.hyperlog.app.history.takesGoal
-import java.time.LocalDate
 import com.hyperlog.app.library.Equipment
+import com.hyperlog.app.ui.session.RirText
+import com.hyperlog.app.ui.session.setText
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import kotlin.math.roundToInt
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.figureHeadline
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
+import com.hyperlog.app.ui.theme.interFigures
+import java.time.LocalDate
+import kotlin.math.roundToInt
 
 /**
  * An exercise's top sets and estimate over time (docs/design/history.md): the figure, the chart
@@ -251,7 +250,7 @@ private fun PointRow(trend: ExerciseTrend, p: TrendPoint) {
 
 @Composable
 private fun figure(v: Double, byReps: Boolean) =
-    if (byReps) stringResource(R.string.history_reps, v.roundToInt()) else stringResource(R.string.weight_kg, estimateText(v))
+    if (byReps) pluralStringResource(R.plurals.history_reps, v.roundToInt(), v.roundToInt()) else stringResource(R.string.weight_kg, estimateText(v))
 
 /** The bodyweight log: the figure and its line, then every day logged, newest first, each deletable. */
 @OptIn(ExperimentalMaterial3Api::class)

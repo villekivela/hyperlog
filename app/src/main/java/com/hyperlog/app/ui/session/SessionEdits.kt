@@ -1,13 +1,5 @@
 package com.hyperlog.app.ui.session
 
-import com.hyperlog.app.ui.theme.interFigures
-import androidx.compose.foundation.lazy.itemsIndexed
-import com.hyperlog.app.ui.theme.Segment
-import com.hyperlog.app.ui.theme.CardPadding
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.figureLarge
-import com.hyperlog.app.ui.theme.cardBehind
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,8 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -41,19 +32,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.search
-import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.interFigures
 
 // Editing the session on the fly (SPEC, Today → Edit on the fly; docs/design/logging-screen.md,
 // Edit on the fly). Every edit is for this session only.
@@ -77,8 +73,6 @@ internal fun SwapPicker(exercise: SessionExercise, library: List<Exercise>, onPi
             interFigures(stringResource(R.string.edit_swap_title, exercise.exercise.name)),
             Modifier.padding(start = TextEdge, end = TextEdge, top = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineSmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
         )
         SearchField(
             query,
@@ -124,7 +118,7 @@ private fun PickRow(exercise: Exercise, tag: String?) {
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = CardPadding, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         tag?.let {
             Spacer(Modifier.width(16.dp))
             Text(it, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)

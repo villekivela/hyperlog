@@ -1,61 +1,69 @@
 package com.hyperlog.app.ui.theme
 
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
-import androidx.compose.material3.ToggleButtonColors
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonColors
+import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.draw.clip
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.ButtonColors
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hyperlog.app.R
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 
@@ -301,22 +309,56 @@ fun ConnectedChoice(
     /** It sits on the accent card (primaryContainer): the picked one in white (choiceColors). */
     onAccent: Boolean = false,
 ) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
-        labels.forEachIndexed { i, label ->
-            ToggleButton(
-                checked = i == selected,
-                onCheckedChange = { onSelect(i) },
-                // Each button's padding counts as a few characters, so short names still get room.
-                modifier = Modifier.weight(if (fitLabels) label.length + 4f else 1f).semantics { role = Role.RadioButton },
-                shapes = when (i) {
-                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                },
-                colors = connectedChoiceColors(color, onAccent),
-                contentPadding = contentPadding,
-            ) { Text(label, maxLines = 1) }
+    val weights = choiceWeights(labels, fitLabels)
+    val gap = ButtonGroupDefaults.ConnectedSpaceBetween
+    @Composable
+    fun Option(i: Int, modifier: Modifier, shapes: ToggleButtonShapes) = ToggleButton(
+        checked = i == selected,
+        onCheckedChange = { onSelect(i) },
+        modifier = modifier.semantics { role = Role.RadioButton },
+        shapes = shapes,
+        colors = connectedChoiceColors(color, onAccent),
+        contentPadding = contentPadding,
+    ) { Text(labels[i], maxLines = 1) }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        if (connectedChoiceFits(labels, maxWidth, contentPadding, fitLabels)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                labels.indices.forEach { i ->
+                    Option(
+                        i, Modifier.weight(weights[i]),
+                        when (i) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            labels.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                    )
+                }
+            }
+        } else {
+            // At large text the words matter more than the row: stacked, every label stays whole.
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                labels.indices.forEach { i -> Option(i, Modifier.fillMaxWidth(), ButtonGroupDefaults.connectedMiddleButtonShapes()) }
+            }
         }
+    }
+}
+
+/** Each button's padding counts as a few characters, so short names still get room. */
+private fun choiceWeights(labels: List<String>, fitLabels: Boolean) = labels.map { if (fitLabels) it.length + 4f else 1f }
+
+/** Whether every label fits its button side by side across [width], inside the button's padding. */
+@Composable
+fun connectedChoiceFits(labels: List<String>, width: Dp, contentPadding: PaddingValues, fitLabels: Boolean): Boolean {
+    val weights = choiceWeights(labels, fitLabels)
+    val room = width - ButtonGroupDefaults.ConnectedSpaceBetween * (labels.size - 1)
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelLarge
+    val direction = LocalLayoutDirection.current
+    val padding = contentPadding.calculateLeftPadding(direction) + contentPadding.calculateRightPadding(direction)
+    val density = LocalDensity.current
+    return labels.indices.all { i ->
+        val width = with(density) { measurer.measure(labels[i], style, maxLines = 1).size.width.toDp() }
+        width + padding <= room * (weights[i] / weights.sum())
     }
 }
 
@@ -366,6 +408,46 @@ data class AccentButton(val fill: Color, val words: Color)
 fun accentButtonColors(): ButtonColors = accentButton(MaterialTheme.colorScheme).let {
     ButtonDefaults.buttonColors(containerColor = it.fill, contentColor = it.words)
 }
+
+/**
+ * The one thing to do next: [title] is the day. With [action] and [onClick] it can be done now;
+ * without, it comes on [date], and no button leads anywhere.
+ */
+data class NextAction(val title: String, val action: String? = null, val date: String? = null, val onClick: () -> Unit = {})
+
+/** [next] as the accent card, the strongest thing on a screen that isn't where training starts. */
+@Composable
+fun NextCard(next: NextAction, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val card = modifier.fillMaxWidth().padding(horizontal = CardMargin).clip(CardShape).background(cs.primaryContainer).padding(CardPadding)
+    val words: @Composable (Modifier) -> Unit = { m ->
+        Column(m) {
+            Text(
+                next.date?.let { stringResource(R.string.next_on, it) } ?: stringResource(R.string.program_next),
+                style = MaterialTheme.typography.labelLarge,
+                color = cs.onPrimaryContainer,
+            )
+            Text(next.title, style = MaterialTheme.typography.titleMedium, color = cs.onPrimaryContainer)
+        }
+    }
+    val action = next.action
+    when {
+        action == null -> Box(card) { words(Modifier) }
+        // At large text the button would squeeze the day into a column of short lines.
+        LocalDensity.current.fontScale >= StackedNextScale -> Column(card) {
+            words(Modifier)
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = next.onClick, Modifier.align(Alignment.End), colors = accentButtonColors()) { Text(action) }
+        }
+        else -> Row(card, verticalAlignment = Alignment.CenterVertically) {
+            words(Modifier.weight(1f))
+            Spacer(Modifier.width(16.dp))
+            Button(onClick = next.onClick, colors = accentButtonColors()) { Text(action) }
+        }
+    }
+}
+
+private const val StackedNextScale = 1.4f
 
 /** Top app bars sit on the screen's tone and lift a tone when content scrolls under them. */
 @OptIn(ExperimentalMaterial3Api::class)
