@@ -3,9 +3,9 @@ package com.hyperlog.app.mannequin
 import android.content.Context
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
+import kotlin.math.roundToInt
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlin.math.roundToInt
 
 /**
  * One rep drawn flat: each joint's place in a 0–1000 box at its [start] and [end], as x, y pairs in

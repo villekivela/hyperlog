@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.hyperlog.app.ui.theme.animationsRemoved
 import com.hyperlog.app.mannequin.MannequinClip
 import com.hyperlog.app.mannequin.Mannequins
 import com.hyperlog.app.mannequin.RepTimeline
@@ -36,10 +35,11 @@ import com.hyperlog.app.ui.session.isDarkSurface
 import com.hyperlog.app.ui.theme.CardShape
 import com.hyperlog.app.ui.theme.ClayColours
 import com.hyperlog.app.ui.theme.Tones
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.hyperlog.app.ui.theme.animationsRemoved
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal const val MannequinStageTag = "mannequin"
 

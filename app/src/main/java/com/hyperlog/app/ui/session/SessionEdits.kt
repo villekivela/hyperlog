@@ -1,15 +1,5 @@
 package com.hyperlog.app.ui.session
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.hyperlog.app.ui.mannequin.RepMark
-import com.hyperlog.app.ui.theme.interFigures
-import androidx.compose.foundation.lazy.itemsIndexed
-import com.hyperlog.app.ui.theme.Segment
-import com.hyperlog.app.ui.theme.CardPadding
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.figureLarge
-import com.hyperlog.app.ui.theme.cardBehind
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -33,9 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -44,14 +37,21 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.search
-import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.RepRange
+import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.library.SearchField
+import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.interFigures
 
 // Editing the session on the fly (SPEC, Today → Edit on the fly; docs/design/logging-screen.md,
 // Edit on the fly). Every edit is for this session only.

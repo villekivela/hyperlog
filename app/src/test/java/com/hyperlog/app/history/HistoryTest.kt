@@ -13,23 +13,23 @@ import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.ExerciseLibrary
-import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.library.LibrarySeed
+import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.Programs
+import com.hyperlog.app.progression.Record
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import com.hyperlog.app.progression.Record
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import kotlin.math.roundToInt
 
 /** History (SPEC, Screens → History): weekly sets per muscle and each exercise's trend. */
 @RunWith(RobolectricTestRunner::class)

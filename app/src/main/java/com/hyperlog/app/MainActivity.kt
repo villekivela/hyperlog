@@ -1,73 +1,19 @@
 package com.hyperlog.app
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.compose.runtime.setValue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import com.hyperlog.app.ui.mannequin.LocalExercises
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
-import com.hyperlog.app.rest.AppVisibility
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.res.stringResource
-import com.hyperlog.app.ui.gym.GymScreen
-import com.hyperlog.app.ui.gym.GymsScreen
-import com.hyperlog.app.ui.gym.GymsViewModel
-import com.hyperlog.app.ui.gym.LadderEditor
-import com.hyperlog.app.ui.gym.ItemEditor
-import com.hyperlog.app.ui.gym.LadderKind
-import com.hyperlog.app.ui.library.ExerciseEditor
-import com.hyperlog.app.ui.library.LibraryScreen
-import com.hyperlog.app.ui.library.LibraryViewModel
-import com.hyperlog.app.ui.program.ProgramScreen
-import com.hyperlog.app.ui.program.ProgramView
-import com.hyperlog.app.ui.coach.ChangeReviewScreen
-import com.hyperlog.app.ui.coach.WorkoutReviewScreen
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import com.hyperlog.app.ui.coach.AskClaudeShare
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import com.hyperlog.app.ui.program.ProgramViewModel
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.hyperlog.app.ui.session.SessionDoneScreen
-import com.hyperlog.app.ui.session.PastExerciseScreen
-import com.hyperlog.app.ui.session.PastSessionScreen
-import com.hyperlog.app.ui.session.PastSessionsViewModel
-import com.hyperlog.app.ui.history.BodyweightScreen
-import com.hyperlog.app.ui.history.ExerciseTrendScreen
-import com.hyperlog.app.ui.history.HistoryScreen
-import com.hyperlog.app.ui.history.HistoryViewModel
-import com.hyperlog.app.ui.session.SessionScreen
-import com.hyperlog.app.ui.session.SessionViewModel
-import com.hyperlog.app.ui.settings.SettingsScreen
-import com.hyperlog.app.ui.settings.StartingWeightsViewModel
-import com.hyperlog.app.ui.settings.BackupState
-import com.hyperlog.app.ui.settings.BackupViewModel
-import com.hyperlog.app.ui.settings.ClaudeKeyViewModel
-import android.app.Activity
-import android.content.Intent
-import com.hyperlog.app.ui.theme.HyperlogTheme
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.symbols.SymbolIcon
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,21 +21,75 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.foundation.layout.BoxWithConstraints
-import com.hyperlog.app.ui.theme.sharedFontSize
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hyperlog.app.coach.ProgramVolume
+import com.hyperlog.app.rest.AppVisibility
+import com.hyperlog.app.ui.coach.AskClaudeShare
+import com.hyperlog.app.ui.coach.ChangeReviewScreen
+import com.hyperlog.app.ui.coach.WorkoutReviewScreen
+import com.hyperlog.app.ui.gym.GymScreen
+import com.hyperlog.app.ui.gym.GymsScreen
+import com.hyperlog.app.ui.gym.GymsViewModel
+import com.hyperlog.app.ui.gym.ItemEditor
+import com.hyperlog.app.ui.gym.LadderEditor
+import com.hyperlog.app.ui.gym.LadderKind
+import com.hyperlog.app.ui.history.BodyweightScreen
+import com.hyperlog.app.ui.history.ExerciseTrendScreen
+import com.hyperlog.app.ui.history.HistoryScreen
+import com.hyperlog.app.ui.history.HistoryViewModel
+import com.hyperlog.app.ui.library.ExerciseEditor
+import com.hyperlog.app.ui.library.LibraryScreen
+import com.hyperlog.app.ui.library.LibraryViewModel
+import com.hyperlog.app.ui.mannequin.LocalExercises
+import com.hyperlog.app.ui.program.ProgramScreen
+import com.hyperlog.app.ui.program.ProgramView
+import com.hyperlog.app.ui.program.ProgramViewModel
+import com.hyperlog.app.ui.session.PastExerciseScreen
+import com.hyperlog.app.ui.session.PastSessionScreen
+import com.hyperlog.app.ui.session.PastSessionsViewModel
+import com.hyperlog.app.ui.session.SessionDoneScreen
+import com.hyperlog.app.ui.session.SessionScreen
+import com.hyperlog.app.ui.session.SessionViewModel
+import com.hyperlog.app.ui.settings.BackupState
+import com.hyperlog.app.ui.settings.BackupViewModel
+import com.hyperlog.app.ui.settings.ClaudeKeyViewModel
+import com.hyperlog.app.ui.settings.SettingsScreen
+import com.hyperlog.app.ui.settings.StartingWeightsViewModel
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.theme.NextAction
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.sharedFontSize
 import com.hyperlog.app.ui.today.TodayScreen
 import com.hyperlog.app.update.UpdateViewModel
 import com.hyperlog.app.update.Updates
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     private val sessions: SessionViewModel by viewModels()
@@ -719,8 +719,8 @@ private fun App(
     when {
         finished != null && done?.shown != null -> PastExerciseScreen(done, pastModel, onBack = { pastModel.show(null) })
         finished != null -> SessionDoneScreen(
-            done?.summary ?: finished,
-            firstShown = (done?.summary ?: finished).sessionId != doneFelt,
+            done?.let { finished.refreshedBy(it.summary) } ?: finished,
+            firstShown = finished.sessionId != doneFelt,
             onShown = { doneFelt = it },
             onResume = { pastModel.close(); sessions.resumeFinished(); left = false },
             onClose = { pastModel.close(); sessions.dismissSummary(); left = false },

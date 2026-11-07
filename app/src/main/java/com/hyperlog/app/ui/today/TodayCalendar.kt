@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -19,9 +20,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.IconButton
@@ -33,6 +33,7 @@ import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
@@ -45,9 +46,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -56,10 +56,9 @@ import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.PlannedSlot
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSessionItem
-import com.hyperlog.app.today.RestDay
 import com.hyperlog.app.session.date
-import com.hyperlog.app.week.DayFit
-import com.hyperlog.app.week.FitAsk
+import com.hyperlog.app.session.sessionMinutes
+import com.hyperlog.app.today.RestDay
 import com.hyperlog.app.ui.mannequin.RepMark
 import com.hyperlog.app.ui.session.RirText
 import com.hyperlog.app.ui.session.setText
@@ -68,14 +67,16 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.CardShape
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.figureHeadline
 import com.hyperlog.app.ui.theme.figureMedium
-import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.FitAsk
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
-import com.hyperlog.app.ui.theme.TextEdge
 
 // Today's calendar of weeks and the cards for the day picked on it (SPEC, Today; design note,
 // Today's calendar).
@@ -320,7 +321,7 @@ internal fun WeekRow(
                 Spacer(Modifier.height(4.dp))
                 val shape = RoundedCornerShape(8.dp)
                 // Two letters (`CA`, `A+`) widen it; one keeps 28 dp.
-                val marker = Modifier.height(20.dp).widthIn(min = 28.dp).clip(shape)
+                val marker = Modifier.heightIn(min = 20.dp).widthIn(min = 28.dp).clip(shape)
                 when {
                     sessions.isNotEmpty() -> {
                         val (fill, letter) = doneFill(cs)
@@ -528,7 +529,7 @@ internal fun DoneCard(session: PastSessionItem, onOpen: () -> Unit) {
             headColor = cs.primary, titleColor = cs.onSurface,
         )
         Spacer(Modifier.height(CardPadding))
-        val minutes = ((session.finishedAt - session.startedAt) / 60_000).toInt()
+        val minutes = sessionMinutes(session.startedAt, session.finishedAt)
         Stats(session.exercises.size, session.exercises.sumOf { it.sets.size }, minutes, estimate = false, color = cs.onSurface)
         Spacer(Modifier.height(CardPadding))
         FilledTonalButton(onClick = onOpen, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.today_open_session)) }

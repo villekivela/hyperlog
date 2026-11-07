@@ -12,14 +12,14 @@ import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.Programs
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 
 /** A finished session as a list shows it: when, which day and gym, and what was logged. */
 data class PastSessionItem(

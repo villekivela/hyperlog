@@ -1,5 +1,8 @@
 package com.hyperlog.app.ui.session
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -18,20 +21,17 @@ import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.program.HoldPosition
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
+import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.SessionExercise
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.luminance
 import com.hyperlog.app.ui.theme.GraphiteDark
 import com.hyperlog.app.ui.theme.GraphiteLight
-import org.junit.Assert.assertTrue
-import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.theme.onTechniqueColor
 import com.hyperlog.app.ui.theme.techniqueColor
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

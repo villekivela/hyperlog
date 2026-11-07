@@ -5,8 +5,8 @@ import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Exercise
-import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.library.MuscleGroup
+import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.progression.Progression

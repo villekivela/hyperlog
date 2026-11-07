@@ -13,16 +13,16 @@ import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.week.RotationAnchor
 import com.hyperlog.app.week.Rotations
 import com.hyperlog.app.week.WeekdayPlan
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertNull
-import org.junit.Test
 import java.time.DayOfWeek.MONDAY
 import java.time.DayOfWeek.SATURDAY
 import java.time.DayOfWeek.THURSDAY
 import java.time.LocalDate
 import java.time.ZoneId
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 /** What Today decides for the date picked (SPEC, Today; Training days and the rotation). */
 class TodayStateTest {

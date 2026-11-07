@@ -1367,7 +1367,8 @@ gallery (Technique videos).
 - **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
   its own. The navigation bar's symbols read without their labels at 24 dp: a calendar, a dumbbell, a
   conversation, a clock and a gear. One symbol, one meaning: the dumbbell is the program and nothing
-  else, a bolt is a workout from Claude, and a storefront is Gyms and equipment.
+  else, a bolt is a workout from Claude, a storefront is Gyms and equipment, and the clock with an arrow is the History tab: the old app's
+  weights have an inbox, a past program an archive box and time off a crossed-out calendar.
 - **Moments** (#272): a record, a finished session and a finished week each have a moment, and none
   holds anything up.
   - **The rep plays**: where a moment shows a lift, the rep mark's drawing moves through it once,
@@ -1380,14 +1381,22 @@ gallery (Technique videos).
     plan done, sets within 1 RIR of target, and lifts up on last time (a lift being up if its top set
     is heavier, or as heavy for more reps; held counts half). A measure that can't be read doesn't
     count against a session, so a first session is judged on what it has, and a deload or eased day
-    isn't compared with last time at all. The measures are averaged: 85 % is Strong, 55 % Solid. An
-    exercise left with nothing logged still counts against the plan. Under them come the
+    isn't compared with last time at all. A lift after a deload or eased day compares with the last
+    session that wasn't one, and with nothing if there is none, so a lighter week never reads as a
+    lift up; the Last column still shows the real last time. The measures are averaged: 85 % is
+    Strong, 55 % Solid. The plan comes first: under half of it is `In the bank`, and under 85 % of
+    it is never Strong, however the sets went. An exercise left with nothing logged still counts
+    against the plan. All of this is worked out when the session finishes; reading the session
+    back refreshes its sets alone, and a corrected set is read against the same last time. Under them come the
     records, the best lift (`Best lift: Hack Squat, 100 × 6 → 105 × 6`) and, with two or more
     exercises, the session's rep marks coming in one by one. Done and Resume work from the first frame.
   - **A finished week**: a session that closes a program week adds `Week 8 done`, a dot filling in for
     each day trained, `4 days · 42 sets`, the change on last week (`3 more than last week`) and, from
-    two weeks up, the run (`3 weeks in a row`), which a gap of more than a fortnight ends. A deload week
-    isn't compared with the week before.
+    two weeks up, the run (`3 weeks in a row`). A deload week isn't compared with the week before. Run
+    as a sequence, a week is the program's, done when what comes next is in a later one, and a gap
+    of more than a fortnight ends the run. On a rotation a program week is a calendar week (ADR
+    0006) and can run twice, so the card counts the calendar week: it comes on the last training
+    day, whatever comes next, its days and sets are that week's alone, and an empty week ends the run.
   - **Feel**: logging a set, a drop, a mini-set or a hold is a confirm, by the pad or the check, and
     opening a session or taking a set back is nothing. Session done is a confirm too, once. A record,
     and a finished week, are felt more strongly. Rest ending buzzes,
@@ -1400,7 +1409,7 @@ gallery (Technique videos).
   tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.
 - **A session's length is its time training** (#273): a gap of more than an hour between sets, or
   after the last one, doesn't count, so a session forgotten for days, or left open and picked up
-  again, reads the time it took, not `5192 min`.
+  again, reads the time it took, not `5192 min`. Every screen rounds it the same way.
 - **Today's one action has a lane of its own** (#269): Start and Resume sit under the list, not over
   it, so they never cover an exercise at any text size, and the list fades out above them.
 - **The set table reads aloud** (#268): every value on a row says which row it belongs to and its

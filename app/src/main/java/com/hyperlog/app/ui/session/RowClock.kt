@@ -8,9 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.rest.RestOverLimitMs
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.ui.theme.onTechniqueColor
 import com.hyperlog.app.ui.theme.techniqueColor

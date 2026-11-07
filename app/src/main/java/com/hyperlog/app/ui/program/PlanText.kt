@@ -23,11 +23,11 @@ import com.hyperlog.app.program.TechniqueKind
 import com.hyperlog.app.program.planChunks
 import com.hyperlog.app.ui.session.RirChipKey
 import com.hyperlog.app.ui.session.appendRir
+import com.hyperlog.app.ui.session.isDarkSurface
 import com.hyperlog.app.ui.session.rirChipContent
 import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.session.isDarkSurface
-import com.hyperlog.app.ui.theme.techniqueColor
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.techniqueColor
 
 /**
  * Each technique kind's symbol and name (docs/design/logging-screen.md, Technique label): the one

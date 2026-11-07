@@ -3,13 +3,13 @@ package com.hyperlog.app.ui.symbols
 import android.content.Context
 import android.graphics.drawable.VectorDrawable
 import androidx.test.core.app.ApplicationProvider
+import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class SymbolTest {
@@ -43,6 +43,14 @@ class SymbolTest {
         assertEquals(emptySet<String>(), others)
         val today = File("src/main/java/com/hyperlog/app/ui/today/TodayScreen.kt").readLines().filter { "Symbol.FitnessCenter" in it }
         assertEquals("Only Today's empty state, with no program yet", 1, today.size)
+    }
+
+    /** The clock with an arrow is the History tab (round 4). */
+    @Test
+    fun theHistorySymbolMeansTheTab() {
+        val others = File("src/main/java/com/hyperlog/app").walkTopDown()
+            .filter { it.extension == "kt" && "Symbol.History" in it.readText() }.map { it.name }.toSet() - setOf("MainActivity.kt")
+        assertEquals(emptySet<String>(), others)
     }
 
     @Test

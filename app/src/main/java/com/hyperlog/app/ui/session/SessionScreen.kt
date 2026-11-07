@@ -1,17 +1,5 @@
 package com.hyperlog.app.ui.session
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.hyperlog.app.ui.theme.accentButtonColors
-import com.hyperlog.app.ui.theme.interFigures
-import com.hyperlog.app.ui.theme.figureLarge
-import com.hyperlog.app.ui.theme.figureDisplay
-import com.hyperlog.app.session.machineChoices
-import com.hyperlog.app.domain.LadderSpec
-import androidx.compose.foundation.lazy.itemsIndexed
-import com.hyperlog.app.ui.theme.Sheet
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.cardBehind
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,10 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -54,10 +43,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.domain.Field
+import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.summary
 import com.hyperlog.app.domain.withPlates
 import com.hyperlog.app.gym.EquipmentItem
@@ -92,6 +84,7 @@ import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.session.SessionOrder
 import com.hyperlog.app.session.keptEdits
+import com.hyperlog.app.session.machineChoices
 import com.hyperlog.app.ui.gym.ItemEditor
 import com.hyperlog.app.ui.gym.LadderEditor
 import com.hyperlog.app.ui.gym.LadderKind
@@ -101,16 +94,23 @@ import com.hyperlog.app.ui.history.goalLabel
 import com.hyperlog.app.ui.history.goalStatus
 import com.hyperlog.app.ui.library.SearchField
 import com.hyperlog.app.ui.library.openTechniqueVideo
+import com.hyperlog.app.ui.mannequin.RepMark
+import com.hyperlog.app.ui.mannequin.RepStage
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueText
-import com.hyperlog.app.ui.mannequin.RepMark
-import com.hyperlog.app.ui.mannequin.RepStage
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import kotlinx.coroutines.delay
-import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.CardMargin
+import com.hyperlog.app.ui.theme.Sheet
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.accentButtonColors
+import com.hyperlog.app.ui.theme.cardBehind
+import com.hyperlog.app.ui.theme.figureDisplay
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.interFigures
+import kotlinx.coroutines.delay
 
 /**
  * The logging screen (docs/design/logging-screen.md): one exercise at a time as set rows, the
@@ -710,7 +710,7 @@ internal const val LadderOfferTag = "ladder-offer"
 private fun StartingHintRow(set: String) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().testTag(StartingHintTag), verticalAlignment = Alignment.Top) {
-        SymbolIcon(Symbol.History, null, Modifier.size(20.dp), tint = muted)
+        SymbolIcon(Symbol.MoveToInbox, null, Modifier.size(20.dp), tint = muted)
         Spacer(Modifier.width(16.dp))
         // The set on a line of its own, so it never breaks inside it.
         Column {

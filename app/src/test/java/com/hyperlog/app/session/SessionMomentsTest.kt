@@ -100,13 +100,69 @@ class SessionMomentsTest {
         val session = summary(lift("A", LiftChange.Up, set(105.0, 6), set(100.0, 6))).copy(skippedSets = 6)
         assertEquals(8, session.planned)
         assertEquals(2, session.plannedDone)
-        assertEquals(SessionRating.Solid, session.rating)
+        assertEquals(SessionRating.Banked, session.rating)
     }
 
     /** Review: sets added on top of a plan read `14 of 12`. */
     @Test
     fun setsBeyondThePlanDontPassIt() {
         assertEquals(2, summary(lift("A", null, set(100.0, 6), null, planned = 2, sets = 4)).plannedDone)
+    }
+
+    /** Round 4: the read-back has no week, no skipped sets and no deload to go on. */
+    @Test
+    fun theReadBackRefreshesTheSetsAndNothingElse() {
+        val finished = SessionSummary(
+            1, 0, 3_600_000,
+            listOf(ExerciseSummary("A", listOf(set(100.0, 6)), exerciseId = "a", change = LiftChange.Up, lastTop = set(95.0, 6), planned = 3, aimed = 1, onEffort = 1)),
+            WeekDone(7, 3, 20), skippedSets = 8,
+        )
+        val readBack = SessionSummary(1, 0, 9_000_000, listOf(ExerciseSummary("A", listOf(set(100.0, 6)), exerciseId = "a", change = LiftChange.Down, lastTop = set(120.0, 6), planned = 1)))
+        assertEquals(finished, finished.refreshedBy(readBack))
+    }
+
+    /** A correction made from Session done is the one thing the read-back brings. */
+    @Test
+    fun aCorrectedSetIsReadAgainstTheSameLastTime() {
+        val finished = SessionSummary(1, 0, 3_600_000, listOf(ExerciseSummary("A", listOf(set(100.0, 6)), exerciseId = "a", change = LiftChange.Up, lastTop = set(95.0, 6))))
+        val corrected = SessionSummary(1, 0, 3_600_000, listOf(ExerciseSummary("A", listOf(set(90.0, 6)), records = listOf(null), exerciseId = "a")))
+        val refreshed = finished.refreshedBy(corrected).exercises.single()
+        assertEquals(listOf(set(90.0, 6)), refreshed.sets)
+        assertEquals(LiftChange.Down, refreshed.change)
+    }
+
+    /** Session done opens an exercise by its place in the stored session. */
+    @Test
+    fun theReadBacksOrderStands() {
+        val a = ExerciseSummary("A", listOf(set(100.0, 6)), exerciseId = "a")
+        val b = ExerciseSummary("B", listOf(set(50.0, 6)), exerciseId = "b")
+        val refreshed = SessionSummary(1, 0, 1, listOf(a, b)).refreshedBy(SessionSummary(1, 0, 1, listOf(b, a)))
+        assertEquals(listOf("B", "A"), refreshed.exercises.map { it.name })
+    }
+
+    /** Round 4: `1 of 12 sets` read Solid, as the other measures averaged it up. */
+    @Test
+    fun underHalfThePlanIsNeverSolid() {
+        assertEquals(SessionRating.Banked, summary(lift("A", LiftChange.Up, set(105.0, 6), set(100.0, 6), planned = 12, sets = 1, aimed = 1, onEffort = 1)).rating)
+        assertEquals(SessionRating.Banked, summary(lift("A", LiftChange.Same, set(100.0, 6), set(100.0, 6), planned = 9, sets = 2)).rating)
+    }
+
+    @Test
+    fun halfThePlanCanBeSolid() {
+        assertEquals(SessionRating.Solid, summary(lift("A", LiftChange.Up, set(105.0, 6), set(100.0, 6), planned = 4, sets = 2)).rating)
+    }
+
+    /** Most of a plan, every lift up: good, and still not all of it. */
+    @Test
+    fun aPlanLeftUnfinishedIsNeverStrong() {
+        assertEquals(SessionRating.Solid, summary(lift("A", LiftChange.Up, set(105.0, 6), set(100.0, 6), planned = 3, sets = 2)).rating)
+    }
+
+    /** Round 4: Session done said 2 min and Today 1 minute for the same session. */
+    @Test
+    fun aSessionsMinutesRoundTheSameEverywhere() {
+        assertEquals(2, sessionMinutes(0, 90_000))
+        assertEquals(1, sessionMinutes(0, 80_000))
     }
 
     @Test

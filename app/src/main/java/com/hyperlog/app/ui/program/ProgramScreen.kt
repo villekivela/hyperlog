@@ -1,8 +1,5 @@
 package com.hyperlog.app.ui.program
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.hyperlog.app.ui.theme.interFigures
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,21 +31,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import com.hyperlog.app.gym.Gym
-import com.hyperlog.app.library.Exercise
-import com.hyperlog.app.ui.today.aboutMinutes
-import com.hyperlog.app.week.DayFit
-import com.hyperlog.app.week.FitAsk
-import com.hyperlog.app.week.Fit
-import com.hyperlog.app.week.WeekdayPlan
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -60,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.Change
 import com.hyperlog.app.coach.ProgramActions
+import com.hyperlog.app.gym.Gym
+import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.ActiveProgram
 import com.hyperlog.app.program.ChangeRecord
 import com.hyperlog.app.program.ListedProgram
@@ -68,17 +62,23 @@ import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.coach.scopeText
 import com.hyperlog.app.ui.coach.shortDate
 import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.theme.NextAction
-import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.EmptyState
 import com.hyperlog.app.ui.theme.GroupHead
+import com.hyperlog.app.ui.theme.NextAction
+import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.theme.Segment
 import com.hyperlog.app.ui.theme.SegmentedList
+import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.ui.today.aboutMinutes
+import com.hyperlog.app.week.DayFit
+import com.hyperlog.app.week.Fit
+import com.hyperlog.app.week.FitAsk
+import com.hyperlog.app.week.WeekdayPlan
 
 /**
  * The program: its blocks and weeks, with where you are. The program runs as a sequence, so

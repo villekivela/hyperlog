@@ -14,13 +14,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToNode
@@ -28,8 +28,8 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.AppNavigationBar
-import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.Screen
+import com.hyperlog.app.coach.NumberRange
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
 import com.hyperlog.app.domain.LoggedSet
@@ -42,16 +42,17 @@ import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.library.GripDemand
 import com.hyperlog.app.library.MovementPattern
+import com.hyperlog.app.navItem
 import com.hyperlog.app.program.Backoff
 import com.hyperlog.app.program.PlannedSlot
+import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.session.ActiveSession
-import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.ExerciseSummary
+import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.SessionExercise
-import com.hyperlog.app.navItem
 import com.hyperlog.app.ui.coach.TileCard
 import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.history.HistoryScreen
@@ -59,19 +60,20 @@ import com.hyperlog.app.ui.program.BlockChoice
 import com.hyperlog.app.ui.program.SetSummary
 import com.hyperlog.app.ui.session.PastSessionScreen
 import com.hyperlog.app.ui.session.Recording
-import com.hyperlog.app.ui.session.SessionScreen
-import com.hyperlog.app.ui.session.SetTableTag
 import com.hyperlog.app.ui.session.RirChipLoggedTag
 import com.hyperlog.app.ui.session.RirChipTargetTag
+import com.hyperlog.app.ui.session.SessionScreen
+import com.hyperlog.app.ui.session.SetTableTag
+import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.ConnectedChoice
-import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.theme.HyperlogTheme
 import com.hyperlog.app.ui.theme.NextAction
 import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.theme.SegmentedRow
 import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.today.SlotRows
+import com.hyperlog.app.ui.today.WeekRow
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -201,9 +203,9 @@ class LargeTextTest {
 
     /** The logging screen with one exercise and rest over, so the Next row reads `Last exercise` beside the clock. */
     @Composable
-    private fun Session(lastTime: List<LoggedSet> = listOf(LoggedSet(50.0, 10, 5, 1))) {
+    private fun Session(lastTime: List<LoggedSet> = listOf(LoggedSet(50.0, 10, 5, 1)), sets: List<LoggedSet> = emptyList()) {
         val exercise = SessionExercise(
-            id = 1, exercise = bench, sets = emptyList(), lastTime = lastTime, ladder = DefaultPlates.ladder(), ladderKnown = true,
+            id = 1, exercise = bench, sets = sets, lastTime = lastTime, ladder = DefaultPlates.ladder(), ladderKnown = true,
             prescription = List(lastTime.size) { SetPrescription(RepRange(4, 6), 1, 180) }, plates = DefaultPlates,
         )
         val entry = SetEntry("100", "6", "", 1, Field.Reps, partialMode = false, fresh = true)
@@ -347,7 +349,7 @@ class LargeTextTest {
 
     /** Round 3: `Gastrocnemi/us`, `Target 10–16` over `sets` and `Sets last` over `week` at 200 %. */
     @Test
-    @Config(qualifiers = "w448dp-h1000dp-xxhdpi")
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
     fun progressHoldsItsWordsOnAPhonesScreen() {
         val monday = LocalDate.of(2026, 11, 2)
         val weeks = listOf(WeekSets(monday, emptyMap()), WeekSets(monday.minusWeeks(1), mapOf("Gastrocnemius" to 1.5, "Triceps Lateral Head" to 3.0, "Calves" to 13.0), 4))
@@ -365,6 +367,33 @@ class LargeTextTest {
             val low = compose.onAllNodes(hasText("10"), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()?.boundsInRoot
             val high = compose.onNode(hasText("16"), useUnmergedTree = true).getBoundsInRoot()
             if (low != null) assertTrue("10 and 16 touch at $scale", with(compose.density) { low.right.toDp() } + 4.dp <= high.left)
+        }
+    }
+
+    /** Round 4: the day's letter clipped in its fixed 20 dp marker at 200 %. */
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun theCalendarsLettersStayWhole() {
+        val monday = LocalDate.of(2026, 11, 2)
+        val session = PastSessionItem(1, 0, 3_600_000, "Day A — Bench", null, emptyList(), programId = 1, position = Position(1, 0))
+        atEveryScale({ WeekRow(monday, monday.plusDays(4), monday.plusDays(4), mapOf(monday to listOf(session)), emptyMap(), {}) }) { scale ->
+            assertFalse("A is cut short at $scale", compose.onNodeWithText("A", useUnmergedTree = true).cutShort())
+        }
+    }
+
+    /** Round 4: at 200 % `97.5 × 5` almost touched the kg column. */
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun theLastColumnKeepsClearOfTheKgColumn() {
+        val heavy = "97.5\u00A0×\u00A05"
+        atEveryScale({ Session(listOf(LoggedSet(97.5, 5, 0, 1)), listOf(LoggedSet(100.0, 5, 0, 1))) }) { scale ->
+            val table = hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))
+            compose.onNode(table).performScrollToNode(hasText(heavy))
+            val last = compose.onNodeWithText(heavy, useUnmergedTree = true)
+            val lastInk = last.getBoundsInRoot().left + with(compose.density) { last.layout().getLineRight(0).toDp() }
+            val kg = compose.onNode(hasText("100") and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)
+            val kgInk = kg.getBoundsInRoot().left + with(compose.density) { kg.layout().getLineLeft(0).toDp() }
+            assertTrue("Last ends ${kgInk - lastInk} from the 100 at $scale", kgInk - lastInk >= 8.dp)
         }
     }
 

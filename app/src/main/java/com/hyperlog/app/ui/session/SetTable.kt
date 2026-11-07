@@ -1,26 +1,21 @@
 package com.hyperlog.app.ui.session
 
-import com.hyperlog.app.ui.theme.figureLarge
-import com.hyperlog.app.ui.theme.figureMedium
-import com.hyperlog.app.ui.theme.onTechniqueColor
-import com.hyperlog.app.ui.theme.techniqueColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -33,15 +28,16 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,8 +55,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,7 +65,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
-import com.hyperlog.app.progression.Record
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
@@ -80,6 +75,7 @@ import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.program.plannedWeight
+import com.hyperlog.app.progression.Record
 import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.DEFAULT_DROP_REPS
 import com.hyperlog.app.session.FollowUp
@@ -89,9 +85,13 @@ import com.hyperlog.app.session.WarmupEdit
 import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueName
 import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.theme.fadingEdges
-import com.hyperlog.app.ui.theme.sharedFontSize
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.fadingEdges
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.figureMedium
+import com.hyperlog.app.ui.theme.onTechniqueColor
+import com.hyperlog.app.ui.theme.sharedFontSize
+import com.hyperlog.app.ui.theme.techniqueColor
 
 // The set table (docs/design/logging-screen.md): flat rows on the screen's surface, columns
 // index · Last · kg · Reps · RIR · ✓. Warm-ups, sets and their drops or mini-sets are one list
@@ -197,7 +197,7 @@ internal fun SetTable(table: TableState, modifier: Modifier, stage: @Composable 
     }
     BoxWithConstraints(modifier.fillMaxWidth()) {
     // Every Last in the table at one size, the smallest any row needs.
-    val lastWidth = maxWidth - (TapInset + RowPad) * 2 - ColIndex - ColKg - ColReps - ColRir - ColCheck
+    val lastWidth = maxWidth - (TapInset + RowPad) * 2 - ColIndex - ColKg - ColReps - ColRir - ColCheck - LastGap
     val body = MaterialTheme.typography.bodyMedium
     val lastSize = sharedFontSize(current.lastTime.map { it.short() to lastWidth }, body, floor = LastFloor)
     val lastStyle = body.copy(fontSize = lastSize, lineHeight = lastSize * 1.2f)
@@ -227,6 +227,9 @@ internal fun SetTable(table: TableState, modifier: Modifier, stage: @Composable 
 
 /** The Last column's style, sized for the whole table. */
 private val LocalLastStyle = staticCompositionLocalOf { TextStyle.Default }
+
+/** What Last keeps clear of the kg column, whose figures fill it at large text. */
+private val LastGap = 8.dp
 
 /** Below this a figure stops being large text; past it Last wraps instead. */
 private val LastFloor = 12.sp
@@ -902,7 +905,7 @@ private fun RowScope.SubLast(row: String, last: String?) {
     Text(
         // A long one breaks before its `+`, never inside `50 × 10`.
         last.orEmpty().replace(" × ", "\u00A0×\u00A0").replace(" + ", " +\u00A0"),
-        Modifier.weight(1f).then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),
+        Modifier.weight(1f).padding(end = LastGap).then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),
         style = LocalLastStyle.current,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 2,
