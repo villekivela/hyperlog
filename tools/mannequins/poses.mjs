@@ -313,6 +313,20 @@ export const POSES = {
     camera: { target: [0, 0.95, 0.4], halfHeight: 1.05, azimuth: 72, elevation: 8 },
   },
 
+  // Hinged forward with the forearms on the rest, the low back under the lever's pad and the balls of
+  // the feet on the bar: the ankles roll, the heels dropping well below the bar and pausing there.
+  donkey_calf_raise: {
+    equipment: 'machine',
+    motion: 'donkey_calf',
+    kit: { donkey_calf: {} },
+    body: { padUp: 0.01, padDeep: 0.125 },
+    top: { lever: 17.6, trunk: 73, sole: 12.5, wrist: [0, -40] },
+    bottom: { trunk: 65, sole: -29.5, wrist: [0, -40] },
+    feet: { stance: 0.1 },
+    grip: { pole: [0.15, -1, 0] },
+    camera: { target: [0, 0.75, 0.2], halfHeight: 0.95, azimuth: 78, elevation: 6 },
+  },
+
   // In the sled, the back on the pad and the shoulders under their pads, the feet on the tilted
   // platform: the hips travel down the rails until the knees are well past a right angle. The hands
   // hold the handles beside the head, the elbows out, so the knuckles can lie along them.

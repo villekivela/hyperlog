@@ -297,6 +297,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
 | `standing_calf` | standing, the shoulders under a lever's pads, the balls of the feet on a bar, the legs straight, the hands on the lever's grips | `arm`, degrees up from the stretch: the heels rise as far as it takes the shoulders to reach the pads; `body.trunk`; `feet.stance`; `grip.pole` |
+| `donkey_calf` | hinged forward onto a rest, the low back under a lever's pad, the forearms on the rest, the balls of the feet on a bar | `lever`, degrees up from level, placing the hips; `trunk`; `sole`, degrees, heel up positive; `wrist`; `body.padUp` and `body.padDeep`, the hips from the pad's face along the trunk and through the body; `feet.stance`; `grip.pole` |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `rods_press` | a bar pressed on a smith machine's rods from an adjustable bench: the body as `dumbbell_press` lays it, the bar along their line | `press`, 0 at the top and 1 at the bottom; `bottom.chest`, where the bar comes down to; `grip.width`, `grip.lockout`, `grip.elbows`; the entry's `perAngle` places the machine and its stops (`kit.smith_machine.z`, `.stops`) |
@@ -353,7 +354,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `dip_machine` | Seated Machine Dip | `dip_machine` |
 | `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` (posed, #241) |
 | `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
-| `calf_raise_machine` | Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
+| `calf_raise_machine` | Seated Calf Raise | `calf_raise_machine` (seated) |
+| `donkey_calf` | Donkey Calf Raise | `donkey_calf` (posed, #127) |
 | `standing_calf` | Standing Calf Raise | `standing_calf` (posed, #127) |
 | `crunch_machine` | Machine Crunch | `crunch_machine` |
 | `shrug_machine` | Machine Shrug | `shrug_machine` (posed, #241) |
@@ -593,6 +595,13 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   cable, each a body on a revolute joint at its own pivot, 0 to 10.4° up from the stretch, the stack
   rising 0.9 m a radian. The pads meet the shoulders, the grips the hands and the bar the feet. Where
   the build leaves the ref is under the ref's Open gaps.
+- `donkey_calf` (#127, the machine kind of `donkey_calf_raise`, posed on the `donkey_calf` motion)
+  stands where its ref puts it: two side frames, each a closed triangle of tube, a foot bar 155 mm up and
+  a rest 905 mm up. The lever is a flat loop on a pivot 1.145 m up, a body on a revolute joint from 8.7°
+  to 17.6° up from level, the hip pad hung under its front. A post on the stack carries two rollers under
+  the lever's arms, so it lifts the stack directly, 0.39 m a radian, with no cable. The pad meets the
+  hips, the rest the forearms, the handles the hands and the bar the feet. Where the build leaves the
+  ref is under the ref's Open gaps.
 - `shrug_machine` (#223, #241, the machine kind of `machine_shrug`, posed standing on the
   `standing_levers` motion) stands where its ref puts it, whatever the pose, the lifter at the origin,
   100 mm behind the grips' place on the stop: a rectangular base of 75 mm tube, 38 mm up on a foot at each

@@ -39,6 +39,7 @@ The T-bar row machine, then the cable crossover, then the smith machine, then th
 | 17 | [`trap_bar`](trap_bar/ref.md) | 1 | Rogue TB-3 Open Trap Bar; built (#234), not yet posed |
 | 18 | [`captains_chair`](captains_chair/ref.md) | 1 | Life Fitness Dip/Leg Raise (LBR-LD); built and posed (#237) |
 | 19 | [`standing_calf`](standing_calf/ref.md) | 1 | Hammer Strength Select Standing Calf (HS-SC); built and posed (#127) |
+| 20 | [`donkey_calf`](donkey_calf/ref.md) | 1 | Precor Icarian Donkey Calf (615); built and posed (#127) |
 
 The cable crossover serves the 25 cable exercises that use a free handle at an adjustable height.
 The other 16 cable exercises (the pulldowns, the seated rows, the pressdown and the rest named in
@@ -118,6 +119,8 @@ gaps says why):
   chair is a lower make with no visible step.
 - `standing_calf` (built and posed, #127): no frame shows the pads loaded, so their travel and tilt are inferred, and
   the pad's reach and the grips' place are set by the mannequin's fit, not measured.
+- `donkey_calf` (built and posed, #127): no maker's document, the sizes are dealers', and the video's camera solve
+  reads the lifter's legs short, so the body's places come from the mannequin's fit, not the solve.
 
 Across them:
 

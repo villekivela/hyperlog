@@ -88,6 +88,8 @@ const WEARS = {
     .map((k) => [k, [{ equipment: 'machine', kit: { [k]: {} } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']]])),
   lying_leg_curl: [{ equipment: 'machine', kit: { leg_curl: { lying: true } } }, ['frame', 'vinyl', 'plate', 'metal', 'pulley']],
   smith_machine: [{ equipment: 'smith_machine', kit: { smith_machine: {} } }, ['frame', 'vinyl', 'metal', 'pulley']],
+  // The lever lifts the stack directly: no cable and no pulley.
+  donkey_calf: [{ equipment: 'machine', kit: { donkey_calf: {} } }, ['frame', 'vinyl', 'plate', 'metal']],
   platform: [{ equipment: 'barbell', kit: { platform: {} } }, ['frame', 'vinyl']],
 };
 

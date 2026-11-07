@@ -107,6 +107,15 @@ So about 50 degrees of ankle range, 42 of it in the sole. The top is low: this l
 - Fit, as the video shows it: balls of the feet on the bar, forearms on the rest, hands on the handles, pad on the low back above the hip joint, knees soft.
 
 ## Open gaps
+- Built differently from the numbers above, to fit the mannequin. The camera solve reads this lifter's hip to ankle at about 670, where a 1.75 m lifter's legs are about 850, so the body's places above don't fit the mannequin. The machine's sizes stand, and these move:
+  - The lever turns from 8.7 to 17.6 degrees, not 8.8 to 14.3, so the pad rises about 124, not 70. A leg of the mannequin's length needs that for the knees to hold still, and the ankles to do the work.
+  - The hip pad's reach is 800, not 735, at the edge of its +-60, which puts the elbows at the rest's rear and the hands past its front.
+  - The pad is fixed to the lever, without its hinge, and meets the top of the pelvis.
+  - The rest's top is 905, not 870, and the rest legs run 40 higher, for the forearms to lie on it.
+  - The trunk lies about 6 to 14 degrees above level, not 20, for the elbows to reach the rest, and pivots on the shoulders: the elbows move about 55 for the hips' 129.
+  - The knees hold about 168 at both ends, not 170 and 150. The sole's range is the video's.
+  - The wrists bend 40 degrees toward the little finger, set by the pose, so the forearms lie level while the hands follow the sloping handles.
+  - The stack is the library's, 12 plates, not 20.
 - Trusted least: the hip pad's fore-and-aft place and depth (centre D 1135, ±60, 230 deep). It is black on black, edge-on at 0:00.2 and half hidden by the lifter in every loaded frame; its front edge comes from a soft corner in one frame, and the depth from a product picture's proportions. The catalog picture seems to put the pad's front past the loop's front, while the solve puts it about 30 behind.
 - The rest pad's width (about 890) is wider than the published 787, so the published width must be the frame's, or the solve is wrong here. The front photo agrees with the solve.
 - The solve's handle tips land 70 to 120 short of the published length. Let the difference go in the rest legs if the kit must reach 2210 exactly.
