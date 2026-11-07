@@ -7,7 +7,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -23,6 +25,7 @@ import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToNode
@@ -32,14 +35,17 @@ import androidx.compose.ui.unit.dp
 import com.hyperlog.app.AppNavigationBar
 import com.hyperlog.app.Screen
 import com.hyperlog.app.coach.NumberRange
+import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.SetEntry
+import com.hyperlog.app.domain.WeightCheck
 import com.hyperlog.app.domain.WeightLadder
 import com.hyperlog.app.domain.WeightUnit
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.TrendLine
@@ -51,19 +57,27 @@ import com.hyperlog.app.library.MovementPattern
 import com.hyperlog.app.navItem
 import com.hyperlog.app.program.Backoff
 import com.hyperlog.app.program.PlannedSlot
+import com.hyperlog.app.program.HoldPosition
 import com.hyperlog.app.program.Position
 import com.hyperlog.app.program.RepRange
 import com.hyperlog.app.program.SetPrescription
+import com.hyperlog.app.program.Technique
+import com.hyperlog.app.progression.Suggestion
 import com.hyperlog.app.session.ActiveSession
+import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSession
+import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.session.PickedSet
 import com.hyperlog.app.session.SessionExercise
+import com.hyperlog.app.session.WarmupEdit
 import com.hyperlog.app.ui.coach.TileCard
 import com.hyperlog.app.ui.gym.GymScreen
 import com.hyperlog.app.ui.history.HistoryScreen
 import com.hyperlog.app.ui.program.BlockChoice
 import com.hyperlog.app.ui.program.SetSummary
+import com.hyperlog.app.ui.session.PadTag
 import com.hyperlog.app.ui.session.PastSessionScreen
 import com.hyperlog.app.ui.session.Recording
 import com.hyperlog.app.ui.session.RirChipLoggedTag
@@ -494,6 +508,150 @@ class LargeTextTest {
             assertFalse("Last is cut at $scale", last.cutShort())
             assertTrue("Last is ${layout.layoutInput.style.fontSize} at $scale", layout.layoutInput.style.fontSize.value >= lastFloorAt(scale))
         }
+    }
+
+    /** Its last line's ink ends under the box. A tall line's empty foot can pass the box; a digit's ink stops at the baseline. */
+    private fun TextLayoutResult.inkBelowItsBox(): Boolean {
+        val last = lineCount - 1
+        val text = layoutInput.text.text
+        val descends = text.substring(getLineStart(last)).any { it in "gjpqy,/()" }
+        val em = with(layoutInput.density) { layoutInput.style.fontSize.toPx() }
+        return getLineBaseline(last) + (if (descends) em * 0.2f else 0f) > size.height + 0.5f
+    }
+
+    /** Every text on screen that doesn't read whole, with what's wrong with it. */
+    private fun faults(): List<String> {
+        val texts = SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult)
+        val all = compose.onAllNodes(texts, useUnmergedTree = true)
+        val cut = all.fetchSemanticsNodes().indices.mapNotNull { i ->
+            val layout = all[i].layout()
+            val text = layout.layoutInput.text.text
+            val lines = 0 until layout.lineCount
+            fun inWord(c: Char) = c.isLetterOrDigit() || c == '.'
+            when {
+                text.isBlank() -> null
+                lines.any { layout.isLineEllipsized(it) } -> "`$text` ellipsized"
+                layout.getLineEnd(layout.lineCount - 1, visibleEnd = true) < text.trimEnd().length -> "`$text` loses its end"
+                layout.inkBelowItsBox() -> "`$text` is cut at the foot"
+                lines.any { layout.getLineRight(it) > layout.size.width + 0.5f } -> "`$text` runs past its box"
+                (1 until layout.lineCount).any { inWord(text[layout.getLineStart(it) - 1]) && inWord(text[layout.getLineStart(it)]) } -> "`$text` splits inside a word or figure"
+                else -> null
+            }
+        }
+        // What the pad's own rows hold back: a text laid out whole in a row too short for it.
+        val inPad = compose.onAllNodes(texts and hasAnyAncestor(hasTestTag(PadTag)), useUnmergedTree = true)
+        val heldBack = inPad.fetchSemanticsNodes().indices.mapNotNull { i ->
+            val layout = inPad[i].layout()
+            val shown = inPad[i].fetchSemanticsNode().boundsInRoot
+            "`${layout.layoutInput.text.text}` is clipped by its row".takeIf { shown.height < layout.size.height - 1f || shown.width < layout.size.width - 1f }
+        }
+        val pad = compose.onAllNodes(hasTestTag(PadTag), useUnmergedTree = true)
+        val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val offScreen = listOfNotNull("The pad runs off the screen".takeIf { pad.fetchSemanticsNodes().any { it.boundsInRoot.bottom > root.bottom + 1f || it.boundsInRoot.top < root.top } })
+        return (cut + heldBack + offScreen).distinct()
+    }
+
+    private val sweepExercise = SessionExercise(
+        id = 1, exercise = bench, sets = emptyList(),
+        lastTime = listOf(LoggedSet(97.5, 5, 0, 1), LoggedSet(87.5, 8, 5, 1)), ladder = DefaultPlates.ladder(), ladderKnown = true,
+        prescription = List(3) { SetPrescription(RepRange(4, 6), 1, 180) }, plates = DefaultPlates,
+        suggestion = Suggestion(97.5, 5, Suggestion.Kind.Deload, "Deload week, last time's weight", "97.5 · deload week, 2 in reserve"),
+    )
+
+    private fun onWeight(kg: String) = SetEntry(kg, "", "", 1, Field.Weight, partialMode = false, fresh = true)
+    private fun onReps(kg: String, partial: Boolean = false) = SetEntry(kg, "5", "", 1, Field.Reps, partialMode = partial, fresh = false)
+
+    private fun sweepSession(exercise: SessionExercise = sweepExercise, entry: SetEntry? = onReps("102.5"), more: List<SessionExercise> = emptyList()) = ActiveSession(
+        id = 1, startedAt = 0, exercises = listOf(exercise) + more, currentId = exercise.id, entry = entry, padVisible = true, restEndsAt = null, restTotalMs = 180_000, rampEntry = entry,
+    )
+
+    private fun SessionExercise.logged(vararg done: LoggedSet) = copy(sets = done.toList(), setIndices = done.indices.toList())
+
+    /** A set with its technique, one follow-up logged and another to come. */
+    private fun followed(technique: Technique, kind: Extension.Kind, kg: Double, reps: Int) = sweepExercise.logged(
+        LoggedSet(102.5, 5, 0, 1, technique = technique, extensions = listOf(Extension(kind, kg, reps))),
+    ).copy(
+        lastTime = listOf(LoggedSet(102.5, 5, 0, 1, technique = technique, extensions = listOf(Extension(kind, kg, reps), Extension(kind, kg, reps)))),
+        prescription = listOf(SetPrescription(RepRange(4, 6), 1, 180, technique = technique)) + List(2) { SetPrescription(RepRange(4, 6), 1, 180) },
+    )
+
+    /** Each state of the logging screen, its strips and its fixed-height rows. */
+    private fun sessionStates(): Map<String, ActiveSession> {
+        val drop = followed(Technique.Dropset(2, 25), Extension.Kind.Drop, 77.5, 8)
+        val mini = followed(Technique.MyoReps(3), Extension.Kind.MiniSet, 102.5, 3)
+        val hold = followed(Technique.IsoHold(20, HoldPosition.Stretch), Extension.Kind.Hold, 102.5, 20)
+        val fine = sweepExercise.copy(ladder = LadderSpec.Steps(0.0, 1.25, WeightUnit.Kg, 200).ladder(), plates = null)
+        val stack = sweepExercise.copy(
+            exercise = bench.copy(equipment = Equipment.Machine), plates = null, ladder = LadderSpec.DefaultPinStack.ladder(),
+            machine = EquipmentItem(gymId = 1, name = "Chest press", ladder = LadderSpec.DefaultPinStack.copy(builtIn = listOf(2.5, 2.5))), pinPlates = listOf(1.25, 2.5),
+        )
+        val slot = PlannedSlot("s", "5a", 0, "bench", emptyList(), null, emptyList())
+        val partner = SessionExercise(2, bench.copy(id = "rdl", name = "Barbell Romanian Deadlift"), emptyList(), emptyList(), DefaultPlates.ladder(), true, slot = slot.copy(id = "t", label = "5b", exercise = "rdl"))
+        val done = LoggedSet(102.5, 5, 0, 1)
+        return buildMap {
+            listOf("102.5", "197.5", "207.5", "212.5").forEach { put("weight strip at $it", sweepSession(entry = onWeight(it))) }
+            put("weight strip on a 1.25 step", sweepSession(fine, onWeight("101.25")))
+            listOf("2.2× last time", "2.2× last set", "1/3 of last time", "Not on this equipment").forEach {
+                put("check strip: $it", sweepSession(entry = onWeight("212.5")).copy(weightCheck = WeightCheck(it, listOf(197.5, 207.5, 212.5))))
+            }
+            put("RIR and F/P row", sweepSession())
+            put("partials", sweepSession(entry = onReps("102.5", partial = true)))
+            put("split reps", sweepSession(entry = SetEntry("102.5", "12", "", 1, Field.Right, partialMode = false, fresh = false, right = "10")))
+            put("plate line", sweepSession(entry = onWeight("212.5")))
+            put("plate line, off the plates", sweepSession(entry = onWeight("212.6")))
+            put("stack line", sweepSession(stack, onWeight("85")))
+            put("stack line, off the stack", sweepSession(stack, onWeight("87.5")))
+            put("warm-up on the reps", sweepSession().copy(warmupEdit = WarmupEdit(1, 1, onReps("60"))))
+            put("warm-up on the weight", sweepSession().copy(warmupEdit = WarmupEdit(1, 1, onWeight("102.5"))))
+            put("correcting a set", sweepSession(sweepExercise.logged(done)).copy(correction = Correction(1, 0, null, null, onReps("102.5"))))
+            put("correcting a drop", sweepSession(drop).copy(correction = Correction(1, 0, 0, Extension.Kind.Drop, onReps("77.5"))))
+            put("correcting a mini-set", sweepSession(mini).copy(correction = Correction(1, 0, 0, Extension.Kind.MiniSet, onReps("102.5"))))
+            put("correcting a hold", sweepSession(hold).copy(correction = Correction(1, 0, 0, Extension.Kind.Hold, onReps("102.5"))))
+            put("follow-up drop", sweepSession(drop, onReps("77.5")).copy(followUp = FollowUp.Drop(1, 2), openSetId = 1, openIndex = 0))
+            put("follow-up mini-set", sweepSession(mini, onReps("102.5")).copy(followUp = FollowUp.MiniSet(1, 3), openSetId = 1, openIndex = 0))
+            put("follow-up hold", sweepSession(hold, onReps("102.5")).copy(followUp = FollowUp.Hold(20, HoldPosition.Stretch), openSetId = 1, openIndex = 0))
+            put("follow-up hold running", sweepSession(hold, onReps("102.5")).copy(followUp = FollowUp.Hold(20, HoldPosition.Stretch), openSetId = 1, openIndex = 0, holdStartedAt = 0))
+            put("drop rows done", sweepSession(drop.logged(drop.sets.single(), done)))
+            put("drop rows to come", sweepSession(drop.logged()))
+            put("picked set", sweepSession().copy(pickedSet = PickedSet(1, 2, onReps("102.5"))))
+            put("logged partials and split reps", sweepSession(sweepExercise.logged(LoggedSet(102.5, 12, 6, 1), LoggedSet(102.5, 12, 0, 1, rightReps = 10))))
+            put("three-digit reps", sweepSession(entry = SetEntry("102.5", "100", "20", 1, Field.Reps, partialMode = true, fresh = false)))
+            put("bench row", sweepSession(sweepExercise.copy(exercise = bench.copy(adjustableBench = true), lastBenchAngle = 30)))
+            put("which machine", sweepSession(sweepExercise.copy(needsMachine = true), entry = null).copy(gym = Gym(1, "Hyperlog Fitness Centre", listOf(EquipmentItem(id = 1, gymId = 1, name = "Plate-loaded Chest Press Machine With Long Name", ladder = LadderSpec.DefaultPinStack)))))
+            put("pad hidden", sweepSession().copy(padVisible = false))
+            put("rest running", sweepSession(sweepExercise.logged(done)).copy(restEndsAt = System.currentTimeMillis() + 95_000))
+            put("superset chips", sweepSession(sweepExercise.copy(slot = slot), more = listOf(partner)))
+            put("swapped chip", sweepSession(sweepExercise.copy(slot = slot.copy(inPlaceOf = "rdl")), more = listOf(partner)))
+            put("day done", sweepSession(sweepExercise.logged(done, done, done), entry = null))
+        }
+    }
+
+    /** One clipping fault a round was the wrong pace: every state of the screen, at every size, in one pass. */
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun everySessionStateReadsWhole() = assertEveryStateWhole()
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    fun everySessionStateReadsWholeOnASmallPhone() = assertEveryStateWhole()
+
+    /** A list composes only the rows on screen: a screen this tall has them all, none scrolled away unread. */
+    @Test
+    @Config(qualifiers = "w427dp-h2000dp-xxhdpi")
+    fun everyRowOfEveryStateReadsWhole() = assertEveryStateWhole()
+
+    private fun assertEveryStateWhole() {
+        val states = sessionStates()
+        var state by mutableStateOf(states.keys.first())
+        val found = mutableListOf<String>()
+        atEveryScale({ key(state) { SessionScreen(states.getValue(state), listOf(bench), Recording(mutableListOf()), onLeave = {}) } }) { scale ->
+            states.keys.forEach {
+                compose.runOnIdle { state = it }
+                compose.waitForIdle()
+                faults().forEach { fault -> found += "$scale, $it: $fault" }
+            }
+        }
+        assertTrue("${found.size} faults:\n${found.joinToString("\n")}", found.isEmpty())
     }
 
     /** Round 4: at 200 % `97.5 × 5` almost touched the kg column. */

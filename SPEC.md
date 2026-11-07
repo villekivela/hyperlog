@@ -278,8 +278,8 @@ Research behind these rules: `docs/research/progression-and-partials.md`.
     one short muted line led by a direction symbol (`trending_up`, `trending_flat`,
     `trending_down`) in a fixed colour scale like RIR's, the same on every phone: calm green for
     up, neutral for the same weight, amber for down (a deload or back-off isn't a failure, so never
-    red). It is short (`↑ 62.5 · hit the top of 8–10 last time`); the full sentence is in the
-    exercise sheet. A set that just follows the one before has no line.
+    red). It is short (`↑ 62.5 · hit the top of 8–10 last time`) and wraps at large text; the full
+    sentence is in the exercise sheet. A set that just follows the one before has no line.
 - Coaching changes (e.g. `adjust_load -10%` after time off) apply on top of the suggestion for their
   scope; progression then continues from what you actually lift.
 
@@ -1433,7 +1433,13 @@ gallery (Technique videos).
   down to 12 sp, and past that it widens and Last gives way. A set that can't fit a line at Last's
   floor is written without its spaces (`50×10+5`) and breaks before its `×` or `+`; only what two
   lines can't hold takes Last under the floor, to 8 sp, and a weight that still can't fit leaves
-  Last empty on screen, while a screen reader still says it. A connected choice stacks its options
+  Last empty on screen, while a screen reader still says it. Reps past the same 12 sp widen their
+  column the same way. A drop's Last keeps to one line. The pad's strip holds its height until its
+  text needs more, then grows: its weights share one size down to 12 sp, then show three rungs in
+  place of five; the check's reason sits beside its weights while two lines hold it, then above
+  them; a follow-up's progress goes above its buttons when they leave it no room. The why-line
+  wraps, since it gives the reason for the weight, and so do the header chips and a machine's name
+  in Which machine. A connected choice stacks its options
   when their labels no longer fit side by side. The program's phases go to one row of chips instead, the picked one scrolled into view
   and a chip at the edge fading out, so the weeks under them stay on screen. Past its floor a set
   table head runs over its column into the room around it, whole. The pad's RIR chips stop growing past about 115 %, because five of them share a strip

@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -106,7 +107,7 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
     val side = totalKg?.let { plates.perSide(it) }
     val description = platesDescription(plates, side, totalKg, machine)
     val text = (if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall)
-    Row(modifier.clearAndSetSemantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.semantics(mergeDescendants = true) { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
         BarSide(side.orEmpty(), height = if (compact) 24.dp else 40.dp, muted = side == null && totalKg != null, scale = if (compact) 1f else 1.5f)
         Spacer(Modifier.width(if (compact) 8.dp else 16.dp))
         // A warm-up row's legend is one line, so the row keeps its 48 dp.
@@ -225,7 +226,7 @@ internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mod
     val cs = MaterialTheme.colorScheme
     val side = totalKg?.let { plates.perSide(it) }
     val description = wholeDescription(plates, side, totalKg, machine)
-    androidx.compose.foundation.layout.Column(modifier.clearAndSetSemantics { contentDescription = description }) {
+    androidx.compose.foundation.layout.Column(modifier.semantics(mergeDescendants = true) { contentDescription = description }) {
         Text(totalKg?.let { stringResource(R.string.weight_kg, formatKg(it)) }.orEmpty(), style = MaterialTheme.typography.figureHeadline)
         Text(
             stringResource(if (machine) R.string.plates_whole_machine_line else R.string.plates_whole_bar_line, formatKg(plates.baseKg)),

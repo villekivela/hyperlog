@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +42,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
@@ -56,6 +58,9 @@ import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.linesOf
+import com.hyperlog.app.ui.theme.sharedFontSize
+import com.hyperlog.app.ui.theme.widestText
 
 /**
  * The compact pad, drawn like the system number keyboard: a strip with the set's decisions
@@ -120,10 +125,13 @@ internal fun Pad(
                 StackLoad(entry.weightKg?.let(pinLoad), entry.weightKg, Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 4.dp))
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = cs.outlineVariant)
             }
-            Row(Modifier.fillMaxWidth().height(KeyHeight), verticalAlignment = Alignment.CenterVertically) {
+            // The strip holds its height until its text needs more; it grows rather than cut a word.
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val strip = maxWidth
+            Row(Modifier.fillMaxWidth().heightIn(min = KeyHeight), verticalAlignment = Alignment.CenterVertically) {
                 val typed = entry.weightKg
                 if (check != null) {
-                    WeightCheckStrip(check, actions)
+                    WeightCheckStrip(check, actions, strip)
                 } else if (warmup != null && !onWeight) {
                     WarmupStrip(warmup.first, warmup.second)
                 } else if (correction?.kind != null && !onWeight) {
@@ -134,13 +142,11 @@ internal fun Pad(
                     // Nothing to place on the ladder yet: the strip stays empty until a weight is typed.
                     Spacer(Modifier.weight(1f))
                 } else if (onWeight && typed != null) {
-                    // The equipment's real weights around the one typed.
-                    ladder.around(typed).forEach { kg ->
-                        val label = formatKg(kg)
-                        StripChip(label == entry.weight, Modifier.weight(1f), label, onClick = { actions.pickWeight(kg) }) {
-                            Text(label, style = MaterialTheme.typography.titleSmall)
-                        }
-                    }
+                    // The equipment's real weights around the one typed: three when five can't stay whole.
+                    val five = ladder.around(typed)
+                    val atFloor = MaterialTheme.typography.titleSmall.copy(fontSize = ChipFloor)
+                    val fits = widestText(five.map(::formatKg), atFloor) <= strip / five.size - ChipRoom
+                    WeightChips(if (fits) five else ladder.around(typed, 3), strip, entry.weight, actions)
                 } else {
                     val rirLabel = stringResource(R.string.pad_rir)
                     // Five chips share the strip with the toggle, so past 115 % text they stop growing.
@@ -153,6 +159,7 @@ internal fun Pad(
                     Spacer(Modifier.width(8.dp))
                     FullPartialToggle(entry.partialMode, onChange = actions::partialMode)
                 }
+            }
             }
             Spacer(Modifier.height(KeyGap))
             Column(verticalArrangement = Arrangement.spacedBy(KeyGap)) {
@@ -176,26 +183,53 @@ internal fun Pad(
 
 /**
  * The weight check in place of the strip: the reason in the error colour, then three real
- * weights. ✓ turns error-coloured too, because the next ✓ keeps the weight as typed.
+ * weights, under it when two lines beside them can't hold it. ✓ turns error-coloured too, because
+ * the next ✓ keeps the weight as typed.
  */
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: WeightCheck, actions: PadActions) {
+private fun androidx.compose.foundation.layout.RowScope.WeightCheckStrip(check: WeightCheck, actions: PadActions, strip: Dp) {
     val cs = MaterialTheme.colorScheme
-    Row(
-        Modifier.weight(1.5f).padding(start = 8.dp).testTag(WeightCheckTag),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    val reason = MaterialTheme.typography.labelLarge
+    @Composable
+    fun Reason(modifier: Modifier) = Row(modifier.padding(start = 8.dp).testTag(WeightCheckTag), verticalAlignment = Alignment.CenterVertically) {
         SymbolIcon(Symbol.Warning, contentDescription = null, tint = cs.error, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(8.dp))
-        Text(check.reason, style = MaterialTheme.typography.labelLarge, color = cs.error, maxLines = 2)
+        Text(check.reason, style = reason, color = cs.error)
     }
-    check.options.forEach { kg ->
-        val label = formatKg(kg)
-        StripChip(false, Modifier.weight(1f), label, onClick = { actions.pickWeight(kg) }, outlined = true) {
-            Text(label, style = MaterialTheme.typography.titleSmall)
+    // Beside the weights while two lines hold it; past that it takes the strip's width, above them.
+    val beside = strip * (ReasonShare / (ReasonShare + check.options.size)) - 36.dp
+    if (linesOf(check.reason, reason, beside) <= 2) {
+        Reason(Modifier.weight(ReasonShare))
+        WeightChips(check.options, strip * (check.options.size / (ReasonShare + check.options.size)), null, actions, outlined = true)
+    } else {
+        Column(Modifier.weight(1f)) {
+            Reason(Modifier.fillMaxWidth().heightIn(min = 40.dp))
+            Row(Modifier.fillMaxWidth()) { WeightChips(check.options, strip, null, actions, outlined = true) }
         }
     }
 }
+
+/** Weights to pick, sharing [width] and one size, the largest at which all fit on a line. */
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.WeightChips(kgs: List<Double>, width: Dp, picked: String?, actions: PadActions, outlined: Boolean = false) {
+    val labels = kgs.map(::formatKg)
+    val style = MaterialTheme.typography.titleSmall
+    val size = sharedFontSize(labels.map { it to width / kgs.size - ChipRoom }, style, floor = ChipFloor)
+    kgs.zip(labels).forEach { (kg, label) ->
+        StripChip(label == picked, Modifier.weight(1f), label, onClick = { actions.pickWeight(kg) }, outlined = outlined) {
+            Text(label, style = style, fontSize = size, maxLines = 1, softWrap = false)
+        }
+    }
+}
+
+/** What a chip keeps of its share: the 4 dp around the pill, and air inside it. */
+private val ChipRoom = 16.dp
+
+/** Under this a chip's weight stops being large text, so the strip shows fewer. */
+private val ChipFloor = 12.sp
+
+/** The check's reason's share of the strip, against one for each weight. */
+private const val ReasonShare = 1.5f
 
 /**
  * The strip while a drop, mini-set or hold is corrected: which one it is, after `edit`. It has no
@@ -212,7 +246,7 @@ private fun androidx.compose.foundation.layout.RowScope.CorrectionStrip(correcti
     Spacer(Modifier.width(8.dp))
     SymbolIcon(Symbol.Edit, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
     Spacer(Modifier.width(8.dp))
-    Text(text, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+    Text(text, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
 }
 
 /** The pad folded down to its bottom corners: show the pad, and ✓ to log the set as shown. */
@@ -240,7 +274,7 @@ private fun androidx.compose.foundation.layout.RowScope.WarmupStrip(index: Int, 
     Spacer(Modifier.width(8.dp))
     SymbolIcon(Symbol.Stairs, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.width(8.dp))
-    Text(stringResource(R.string.warmup_strip, index + 1, count), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+    Text(stringResource(R.string.warmup_strip, index + 1, count), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
 }
 
 internal const val PadTag = "pad"

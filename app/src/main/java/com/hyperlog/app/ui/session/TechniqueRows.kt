@@ -6,8 +6,11 @@ import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.CardMargin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -69,6 +72,7 @@ import com.hyperlog.app.ui.symbols.SymbolIcon
  * The pad's strip during a drop, mini-set or hold: where you are in the set, the hold's timer,
  * and **Finish set** to close the set early.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, actions: PadActions) {
     val cs = MaterialTheme.colorScheme
@@ -77,18 +81,28 @@ internal fun RowScope.FollowUpStrip(followUp: FollowUp, holdRunning: Boolean, ac
         is FollowUp.MiniSet -> TechniqueLook.MyoReps to stringResource(R.string.follow_mini_set, followUp.index + 1)
         is FollowUp.Hold -> TechniqueLook.IsoHold to stringResource(R.string.follow_hold, followUp.seconds)
     }
-    Spacer(Modifier.width(8.dp))
-    SymbolIcon(look.symbol, null, Modifier.size(20.dp), tint = techniqueColor(look.kind, isDarkSurface()))
-    Spacer(Modifier.width(8.dp))
-    Text(text, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    if (followUp is FollowUp.Hold) {
-        FilledTonalButton(onClick = { if (holdRunning) actions.stopHold() else actions.startHold() }) {
-            SymbolIcon(if (holdRunning) Symbol.Stop else Symbol.PlayArrow, null, Modifier.size(20.dp))
+    // Where you are beside the buttons; on a line of its own, above them, when they leave it no room.
+    FlowRow(
+        Modifier.weight(1f).padding(start = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SymbolIcon(look.symbol, null, Modifier.size(20.dp), tint = techniqueColor(look.kind, isDarkSurface()))
             Spacer(Modifier.width(8.dp))
-            Text(stringResource(if (holdRunning) R.string.hold_stop else R.string.hold_start))
+            Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, softWrap = false)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (followUp is FollowUp.Hold) {
+                FilledTonalButton(onClick = { if (holdRunning) actions.stopHold() else actions.startHold() }) {
+                    SymbolIcon(if (holdRunning) Symbol.Stop else Symbol.PlayArrow, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (holdRunning) R.string.hold_stop else R.string.hold_start))
+                }
+            }
+            TextButton(onClick = actions::finishSet) { Text(stringResource(R.string.follow_finish_set)) }
         }
     }
-    TextButton(onClick = actions::finishSet) { Text(stringResource(R.string.follow_finish_set)) }
 }
 
 /** The techniques a set can be given in the session, each with the program format's defaults. */

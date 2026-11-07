@@ -610,16 +610,16 @@ private fun Header(
 private fun HeaderChip(symbol: Symbol?, text: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val cs = MaterialTheme.colorScheme
     Row(
-        modifier.height(32.dp).border(1.dp, cs.outlineVariant, ChipShape)
+        modifier.heightIn(min = 32.dp).border(1.dp, cs.outlineVariant, ChipShape)
             .then(if (onClick != null) Modifier.clip(ChipShape).clickable(onClick = onClick) else Modifier)
-            .padding(start = if (symbol != null) 8.dp else 12.dp, end = 12.dp).testTag(HeaderChipTag),
+            .padding(start = if (symbol != null) 8.dp else 12.dp, end = 12.dp, top = 4.dp, bottom = 4.dp).testTag(HeaderChipTag),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         symbol?.let {
             SymbolIcon(it, null, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
             Spacer(Modifier.width(8.dp))
         }
-        Text(text, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
     }
 }
 
@@ -654,8 +654,8 @@ internal const val SuggestionTag = "suggestion"
 
 /**
  * Why the set to do's weight is what it is (SPEC, Every suggestion says why): one short muted
- * line under the name, led by the direction in the fixed trend scale. The full sentence is in the
- * exercise sheet.
+ * line under the name, led by the direction in the fixed trend scale; it wraps rather than lose
+ * its reason. The full sentence is in the exercise sheet.
  */
 @Composable
 private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
@@ -667,7 +667,7 @@ private fun SuggestionLine(suggestion: Suggestion, from: Double?) {
     ) {
         SymbolIcon(direction.symbol, null, Modifier.size(20.dp), tint = direction.color)
         Spacer(Modifier.width(8.dp))
-        RirText(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        RirText(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -721,6 +721,7 @@ private fun StartingHintRow(set: String) {
 }
 
 /** Every planned set is logged: the pad gives way to Finish session, under the session's [records]. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
     val ink = MaterialTheme.colorScheme.onPrimaryContainer
@@ -736,10 +737,17 @@ private fun DayDoneBar(records: List<SessionRecord>, onFinish: () -> Unit) {
             // A long list scrolls inside the strip, which never grows past the pad it replaces.
             RecordLines(records, Modifier.padding(bottom = 16.dp).heightIn(max = 288.dp).verticalScroll(rememberScrollState()), color = ink, muted = ink.copy(alpha = 0.8f), tint = ink)
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)
-            Spacer(Modifier.width(16.dp))
-            Text(stringResource(R.string.session_day_done), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = ink)
+        // Finish beside it, or under it when the two don't fit: never a word in two.
+        androidx.compose.foundation.layout.FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SymbolIcon(Symbol.CheckCircle, null, Modifier.size(24.dp), tint = ink)
+                Spacer(Modifier.width(16.dp))
+                Text(stringResource(R.string.session_day_done), style = MaterialTheme.typography.titleMedium, color = ink, maxLines = 1, softWrap = false)
+            }
             Button(onClick = onFinish, colors = accentButtonColors()) { Text(stringResource(R.string.session_finish)) }
         }
     }
@@ -954,13 +962,11 @@ private fun MachineRow(item: EquipmentItem, i: Int, count: Int, muted: Boolean, 
                     .padding(horizontal = Margin - com.hyperlog.app.ui.theme.CardMargin, vertical = 12.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(item.name, style = MaterialTheme.typography.bodyLarge, color = if (muted) cs.onSurfaceVariant else cs.onSurface)
                 Text(
                     item.ladder.withPlates(gymPlates).summary(pinPlates),
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
             }

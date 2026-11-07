@@ -25,6 +25,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -51,7 +52,7 @@ internal fun StackLoad(load: PinLoad?, typedKg: Double?, modifier: Modifier = Mo
         typedKg != null -> stringResource(R.string.stack_load_off, formatKg(typedKg))
         else -> stringResource(R.string.stack_load_none)
     }
-    Row(modifier.testTag(StackLoadTag).clearAndSetSemantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.testTag(StackLoadTag).semantics(mergeDescendants = true) { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
         StackDrawing(load, muted = load == null && typedKg != null, height = 40.dp)
         Spacer(Modifier.width(16.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

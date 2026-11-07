@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -31,6 +32,17 @@ fun sharedFontSize(texts: List<Pair<String, Dp>>, style: TextStyle, floor: TextU
                 measured <= with(density) { width.toPx() }
             }
         }
+    }
+}
+
+/** How many lines [text] takes in [style] at [width]. */
+@Composable
+fun linesOf(text: String, style: TextStyle, width: Dp): Int {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(text, style, density, width) {
+        val px = with(density) { width.roundToPx() }.coerceAtLeast(0)
+        measurer.measure(text, style, constraints = Constraints(maxWidth = px)).lineCount
     }
 }
 
