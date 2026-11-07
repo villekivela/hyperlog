@@ -36,6 +36,23 @@ function heldPast(e, elbow, deg, rotate, L) {
   return elbow.clone().addScaledVector(hanging(deg), L.fore + depthOf(e, L)).addScaledVector(bends, -Math.cos(rad(rotate)) * L.seatOff(sits, thumb));
 }
 
+/** The sole tilted `deg` with the ankle, heel up positive, about the ball: its way toward the toes, and its up. */
+const soleAt = (deg) => {
+  const a = rad(deg);
+  return [V(0, -Math.sin(a), Math.cos(a)), V(0, Math.cos(a), Math.sin(a))];
+};
+/** Each ankle above the ball `ball(side)` gives, for a sole `[heading, up]`. */
+const anklesOn = (ball, L) => ([head, up]) => [-1, 1].map((side) => ball(side).addScaledVector(head, -L.ballAhead).addScaledVector(up, L.ankleY - L.ballY));
+/** The sole tilted just as far as `short` stops holding of it: the heel rises while the body falls short. */
+function soleWhere(short) {
+  let [lo, hi] = [-45, 60];
+  for (let i = 0; i < 40; i++) {
+    const m = (lo + hi) / 2;
+    if (short(soleAt(m))) lo = m; else hi = m;
+  }
+  return soleAt((lo + hi) / 2);
+}
+
 /** The values `top` and `bottom` give, `d` of the way down the rep (0 at the top, 1 at the bottom). */
 export function stateAt(e, d) {
   const t = smooth(d);
@@ -991,23 +1008,13 @@ export const MOTIONS = {
     const u = trunkUp(lean);
     const f = forwardOf(u);
     const { value, pivot, ball, rest, hand, across } = s.linkage;
-    // The sole tilted `deg` with the ankle, about the ball: its way toward the toes, and its up.
-    const sole = (deg) => {
-      const a = rad(deg);
-      return [V(0, -Math.sin(a), Math.cos(a)), V(0, Math.cos(a), Math.sin(a))];
-    };
     const onBall = (side) => V(side * e.feet.stance, ...ball);
-    const anklesAt = ([head, up]) => [-1, 1].map((side) => onBall(side).addScaledVector(head, -L.ballAhead).addScaledVector(up, L.ankleY - L.ballY));
+    const anklesAt = anklesOn(onBall, L);
     const pole = V(0, 1, 0.3).normalize();
     const kneeOf = (feet) => kneeAt(V(0, hipC.y, hipC.z), feet[1].clone().setX(0), L, pole);
     // How far the lever has turned to lie over the knee, up from its stretch.
     const turned = (p) => Math.atan2(p.y - pivot.y, pivot.z - p.z) - rest;
-    let [lo, hi] = [-45, 60];
-    for (let i = 0; i < 40; i++) {
-      const m = (lo + hi) / 2;
-      if (turned(kneeOf(anklesAt(sole(m)))) < value) lo = m; else hi = m;
-    }
-    const [heading, top] = sole((lo + hi) / 2);
+    const [heading, top] = soleWhere((tilted) => turned(kneeOf(anklesAt(tilted))) < value);
     const ankles = anklesAt([heading, top]);
     const knee = kneeOf(ankles);
     return {
@@ -1024,6 +1031,40 @@ export const MOTIONS = {
       knee, pivot,
       // The top of the platform, under the balls.
       platform: V(0, ball[0] - L.ballY, ball[1]),
+    };
+  },
+
+  /**
+   * Standing with the shoulders under a lever's pads and the balls of the feet on a bar, the legs
+   * straight and the trunk upright, the hands on the lever's grips: the heels rise as far as it takes
+   * the shoulders to reach the pads.
+   */
+  standing_calf(e, s, L) {
+    const { ball, padFace, hipsZ, legs, shoulderTop, hand, across } = s.linkage;
+    const u = trunkUp(spineLean(e.body.trunk, L));
+    const f = forwardOf(u);
+    const onBall = (side) => V(side * e.feet.stance, ball[0] + L.ballY, ball[1]);
+    const anklesAt = anklesOn(onBall, L);
+    // The hips over the bar, the legs as long as `legs` of their length up from the ankles.
+    const hipsOver = (ankles) => {
+      const back = hipsZ - ankles[1].z;
+      return V(0, ankles[1].y + Math.sqrt(((L.thigh + L.shin) * legs) ** 2 - back ** 2), hipsZ);
+    };
+    const [heading, top] = soleWhere((tilted) => {
+      const sh = shouldersOf(hipsOver(anklesAt(tilted)), u, L);
+      return sh.y + shoulderTop < padFace(sh.z);
+    });
+    const ankles = anklesAt([heading, top]);
+    return {
+      hipC: hipsOver(ankles), u,
+      headDir: u.clone().addScaledVector(f, 0.25).normalize(),
+      ankles,
+      toeOut: 0,
+      foot: () => ({ heading: heading.clone(), top: top.clone() }),
+      kneePole: (side) => V(side * 0.1, 0, 1).normalize(),
+      support: (side) => ({ point: onBall(side).addScaledVector(top, -L.ballY), normal: top.clone() }),
+      hand, across,
+      armPole: elbowsTo(e, [0.8, -1, -0.2]),
     };
   },
 

@@ -90,9 +90,9 @@ class MannequinsTest {
                 "single_leg_leg_press", "smith_machine_bench_press", "smith_machine_incline_press",
                 "smith_machine_jm_press", "smith_machine_lunge", "smith_machine_rdl",
                 "smith_machine_seated_press", "smith_machine_squat", "split_squat_smith",
-                "standing_db_arnold_press", "super_rom_db_lateral_raise", "t_bar_row",
-                "triceps_pressdown", "weighted_chinup", "weighted_dip", "weighted_pullup",
-                "wide_grip_seated_cable_row",
+                "standing_calf_raise", "standing_db_arnold_press", "super_rom_db_lateral_raise",
+                "t_bar_row", "triceps_pressdown", "weighted_chinup", "weighted_dip",
+                "weighted_pullup", "wide_grip_seated_cable_row",
             ),
             mannequins.clips.map { it.exerciseId },
         )

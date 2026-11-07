@@ -3686,6 +3686,30 @@
         "kit_smith_machine.bin"
       ]
     },
+    "standing_calf_raise": {
+      "clip": "standing_calf_raise.glb",
+      "equipment": "machine",
+      "camera": {
+        "target": [
+          0,
+          0.95,
+          0.4
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 72,
+        "elevation": 8
+      },
+      "tempo": {
+        "lowering": 2,
+        "bottom": 0.5,
+        "lifting": 1,
+        "top": 0.6
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_standing_calf.bin"
+      ]
+    },
     "standing_db_arnold_press": {
       "clip": "standing_db_arnold_press.glb",
       "equipment": "dumbbell",

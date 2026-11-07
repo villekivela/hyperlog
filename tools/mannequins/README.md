@@ -297,6 +297,7 @@ The motions, in `motions.mjs`, and what each reads besides the above:
 | `free_arms` | the arms moving freely, standing or seated: a raise, a flye, a press between pulleys, an upright row (a bar lies between the hands) | `hand: [x, y, z]`, the left hand's point at the top and the bottom (the right mirrors it); `grip.one`, `grip.rest`, `grip.pole`, `feet.stagger` as for `arms`; `grip.arc` (a flye, a raise) sweeps the hand on an arc about its shoulder from the top's point to the bottom's, its reach between theirs, so the elbow holds its bend; `grip.across` [x, y, z] lays the knuckles along one line through the rep (a dumbbell raise's, front to back); `body.arch`, `body.look` lying on a bench, as a press has them |
 | `knee_lever` | the knees bending against a roller: seated (a leg extension, a seated curl) or `body.prone`, face down (a lying curl) | `lever`, degrees from the stretch; `body.thigh` (below level); `grip.pole`. The shin lies against the roller, along the lever with the knee on its axis |
 | `calf_raise` | seated, the knees under a lever's pads, the balls of the feet on a platform's edge | `lever`, degrees up from the stretch: the heels rise as far as it takes the knee to reach it |
+| `standing_calf` | standing, the shoulders under a lever's pads, the balls of the feet on a bar, the legs straight, the hands on the lever's grips | `arm`, degrees up from the stretch: the heels rise as far as it takes the shoulders to reach the pads; `body.trunk`; `feet.stance`; `grip.pole` |
 | `hack_squat` | in a hack squat's sled, the back on its pad | `carriage`, metres above its stops; `body.trunk`; `feet.stance`, `feet.toeOut`, `feet.kneesOut`; `grip.pole` |
 | `lever_handles` | seated, handles swinging on levers about a pivot: a chest-supported row, a machine pulldown | `levers`, degrees up from level ahead; `grip.width` |
 | `rods_press` | a bar pressed on a smith machine's rods from an adjustable bench: the body as `dumbbell_press` lays it, the bar along their line | `press`, 0 at the top and 1 at the bottom; `bottom.chest`, where the bar comes down to; `grip.width`, `grip.lockout`, `grip.elbows`; the entry's `perAngle` places the machine and its stops (`kit.smith_machine.z`, `.stops`) |
@@ -353,7 +354,8 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
 | `dip_machine` | Seated Machine Dip | `dip_machine` |
 | `hip_machine` | Machine Hip Abduction and Adduction | `hip_machine` (posed, #241) |
 | `hip_thrust_machine` | Machine Hip Thrust | `hip_thrust_machine` (posed, #229) |
-| `calf_raise_machine` | Standing, Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
+| `calf_raise_machine` | Seated and Donkey Calf Raise | `calf_raise_machine` (seated) |
+| `standing_calf` | Standing Calf Raise | `standing_calf` (posed, #127) |
 | `crunch_machine` | Machine Crunch | `crunch_machine` |
 | `shrug_machine` | Machine Shrug | `shrug_machine` (posed, #241) |
 
@@ -585,6 +587,13 @@ The library's machines by kind (`MACHINES` in `kit.mjs`):
   rises with the yoke. Options: `seat`, the seat's top, and `pad`, how far behind the spine the pad's face
   stands, each solved for the mannequin. In the studio, `npm run studio`, open `Machine Shoulder Press`
   to see the pose, or `shoulder press` under Kits for the machine alone, and scrub the yoke.
+- `standing_calf` (#127, the machine kind of `standing_calf_raise`, posed on the `standing_calf` motion)
+  stands where its ref puts it, the posts 870 mm ahead of a foot bar 170 mm up: two rails from the posts
+  to the bar, a floor plate under the heels, and the stack in a bay on the lifter's right. An upper arm
+  with the pads and grips turns on a pivot 1.745 m up, and a link ties it to a lower arm that pulls the
+  cable, each a body on a revolute joint at its own pivot, 0 to 10.4° up from the stretch, the stack
+  rising 0.9 m a radian. The pads meet the shoulders, the grips the hands and the bar the feet. Where
+  the build leaves the ref is under the ref's Open gaps.
 - `shrug_machine` (#223, #241, the machine kind of `machine_shrug`, posed standing on the
   `standing_levers` motion) stands where its ref puts it, whatever the pose, the lifter at the origin,
   100 mm behind the grips' place on the stop: a rectangular base of 75 mm tube, 38 mm up on a foot at each
