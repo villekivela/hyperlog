@@ -8,6 +8,7 @@ import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { CHECKS, checkStage } from './checks.mjs';
 import { V, heldAt, wpos } from './rig.mjs';
+import { floating } from './floats.fixture.mjs';
 
 const ID = 'donkey_calf_raise';
 const stage = await buildStage(prepare(ID));
@@ -158,51 +159,8 @@ test('the rollers ride under the lever, and every support reaches the floor or i
   for (const side of sides) assert.ok(side.min.y < 0.005, `a side frame stops ${side.min.y.toFixed(3)} off the floor`);
 });
 
-/**
- * A part as points along its centre line and a radius. A box round a tilted tube stands well clear of
- * the tube, so two parts a few centimetres apart would pass as touching.
- */
-const lineOf = (mesh) => {
-  mesh.geometry.computeBoundingBox();
-  const { min, max } = mesh.geometry.boundingBox;
-  const scale = new THREE.Vector3().setFromMatrixScale(mesh.matrixWorld);
-  const size = max.clone().sub(min).multiply(scale);
-  const axes = ['x', 'y', 'z'].sort((a, b) => size[b] - size[a]);
-  const middle = min.clone().add(max).multiplyScalar(0.5);
-  const n = Math.max(1, Math.ceil(size[axes[0]] / 0.02));
-  const points = Array.from({ length: n + 1 }, (_, i) => {
-    const p = middle.clone();
-    p[axes[0]] = min[axes[0]] + ((max[axes[0]] - min[axes[0]]) * i) / n;
-    return p.applyMatrix4(mesh.matrixWorld);
-  });
-  return { points, radius: size[axes[1]] / 2 };
-};
-
-// Any part of the frame that touches nothing shows here, whichever part it is: each must join, through
-// parts that touch, one that stands on the floor. Parts on the lever must join the lever's own.
-test('nothing floats: every fixed part joins the floor, every lever part joins the lever', () => {
-  at(0.5);
-  const lever = stage.kit.group.getObjectByName('donkey_calf_lever');
-  const under = (o, top) => { for (let p = o; p; p = p.parent) if (p === top) return true; return false; };
-  // The mitred lengths go by the straight stand-ins along them: their own box is the whole frame's.
-  const moving = new Set(['rollerPost', 'rollerAxle', 'roller', 'sideFrame', 'leverLoop']);
-  const parts = { frame: [], lever: [] };
-  stage.kit.group.traverse((o) => {
-    if (!o.isMesh || moving.has(o.userData.role) || o.userData.stack) return;
-    const part = { name: o.name, ...lineOf(o) };
-    (under(o, lever) ? parts.lever : parts.frame).push(part);
-  });
-  const touching = (a, b) => a.points.some((p) => b.points.some((q) => p.distanceTo(q) < a.radius + b.radius + 0.006));
-  const unjoined = (list, seed) => {
-    const reached = new Set(list.filter(seed));
-    for (let grew = true; grew;) {
-      grew = false;
-      for (const p of list) if (!reached.has(p) && [...reached].some((r) => touching(r, p))) { reached.add(p); grew = true; }
-    }
-    return list.filter((p) => !reached.has(p)).map((p) => p.name);
-  };
-  assert.deepEqual(unjoined(parts.frame, (p) => p.points.some((q) => q.y - p.radius < 0.01)), []);
-  assert.deepEqual(unjoined(parts.lever, (p) => p === parts.lever[0]), []);
+test('nothing on the machine floats: every part joins the floor, all through the rep', () => {
+  for (const d of [0, 0.5, 1]) assert.deepEqual(floating(stage, d), [], `at ${d}`);
 });
 
 // The owner's bar (#241): no open tube end.
