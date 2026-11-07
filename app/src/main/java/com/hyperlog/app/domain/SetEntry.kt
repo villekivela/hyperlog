@@ -103,7 +103,10 @@ data class SetEntry(
         }
 
     fun press(key: PadKey, ladder: WeightLadder): SetEntry = when (key) {
-        is PadKey.Digit -> type(((if (fresh) "" else current) + key.value).take(maxChars))
+        is PadKey.Digit -> (if (fresh) "" else current).let { typed ->
+            // Two decimals is all a weight keeps, so a third would be read as something else.
+            if (this.field == Field.Weight && typed.substringAfter('.', "").length >= 2) this else type((typed + key.value).take(maxChars))
+        }
         PadKey.Dot -> if (field != Field.Weight) this else {
             val base = if (fresh) "" else current
             type(if ('.' in base) base else (base.ifEmpty { "0" } + ".").take(maxChars))
