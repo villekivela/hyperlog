@@ -115,9 +115,9 @@ test('after a save only the saved pose is checked again', async () => {
   const { get, post } = await serve(async (id) => { began.push(id); return PASSES; });
   await get('/api/items?wait=1');
   began.length = 0;
-  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 12 } });
+  await post('/api/save', { id: 'hack_squat', tuned: { 'camera.azimuth': 12 } });
   await get('/api/items?wait=1');
-  assert.deepEqual(began, ['leg_press']);
+  assert.deepEqual(began, ['hack_squat']);
 });
 
 test('after a save the poses that take it by like: are checked again too, however far along', async () => {
@@ -135,9 +135,10 @@ test('after a save the poses that take it by like: are checked again too, howeve
 test('a save bakes the pose it saved and the poses that take it by like:', async () => {
   const baked = [];
   const { post } = await serve(async () => PASSES, { bake: async (ids) => { baked.push(ids); } });
+  await post('/api/save', { id: 'hack_squat', tuned: { 'camera.azimuth': 12 } });
   await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 12 } });
   await post('/api/save', { id: 'deadlift', tuned: { 'camera.azimuth': 12 } });
-  assert.deepEqual(baked, [['leg_press'], ['deadlift', 'deficit_deadlift']]);
+  assert.deepEqual(baked, [['hack_squat'], ['leg_press', 'single_leg_leg_press', 'leg_press_calf_press'], ['deadlift', 'deficit_deadlift']]);
 });
 
 test('a change to the tool\'s code checks every pose again', async () => {
@@ -160,9 +161,9 @@ test('a save with the clips behind bakes every clip, and then only what it chang
       behind = false;
     },
   });
-  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 12 } });
-  await post('/api/save', { id: 'leg_press', tuned: { 'camera.azimuth': 13 } });
-  assert.deepEqual(baked, [undefined, ['leg_press']]);
+  await post('/api/save', { id: 'hack_squat', tuned: { 'camera.azimuth': 12 } });
+  await post('/api/save', { id: 'hack_squat', tuned: { 'camera.azimuth': 13 } });
+  assert.deepEqual(baked, [undefined, ['hack_squat']]);
 });
 
 test('a save refused because the tool doesn\'t load leaves poses.mjs as it was', async () => {

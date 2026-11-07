@@ -12,7 +12,10 @@ import { POSES } from './poses.mjs';
 /** Every posed exercise on a machine, and the joint its rep drives. */
 const MACHINES = {
   leg_press: 'sled',
+  single_leg_leg_press: 'sled',
+  leg_press_calf_press: 'sled',
   machine_chest_press: 'levers',
+  incline_machine_press: 'levers',
   machine_shoulder_press: 'yoke',
   leg_extension: 'lever',
   seated_leg_curl: 'lever',
@@ -20,6 +23,7 @@ const MACHINES = {
   seated_calf_raise: 'lever',
   hack_squat: 'carriage',
   chest_supported_machine_row: 'levers',
+  machine_row: 'levers',
   machine_pulldown: 'levers',
   machine_preacher_curl: 'lever',
   chest_supported_t_bar_row: 'lever',
