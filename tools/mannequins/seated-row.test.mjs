@@ -7,6 +7,7 @@ import { prepare } from './entries.mjs';
 import { buildStage } from './stage.mjs';
 import { CHECKS, checkStage } from './checks.mjs';
 import { heldAt, wpos } from './rig.mjs';
+import { floating } from './floats.fixture.mjs';
 
 const posed = async (id) => {
   const stage = await buildStage(prepare(id));
@@ -62,6 +63,13 @@ test('the hips stay on the pad all through every lift', async () => {
       assert.ok(hips.y > 0.47 && hips.y < 0.55, `${id}: the hips ${hips.y.toFixed(3)} up at ${d.toFixed(1)}, the pad's top at 0.43`);
       assert.ok(hips.z > -0.416 && hips.z < 0.584, `${id}: the hips at z ${hips.z.toFixed(3)} at ${d.toFixed(1)}, off the pad`);
     }
+  }
+});
+
+test('nothing on the station floats: every part joins the floor, all through the rep', async () => {
+  for (const id of ['seated_cable_row', 'wide_grip_seated_cable_row', 'seated_cable_kelso_shrug', 'seated_cable_deadlift']) {
+    const { stage } = await posed(id);
+    for (const d of [0, 0.5, 1]) assert.deepEqual(floating(stage, d), [], `${id} at ${d}`);
   }
 });
 
