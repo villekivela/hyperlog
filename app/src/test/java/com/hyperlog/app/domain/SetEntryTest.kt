@@ -119,11 +119,21 @@ class SetEntryTest {
     }
 
     @Test
-    fun weightTakesOneDotAndAtMostFiveCharacters() {
+    fun weightTakesOneDotAndAtMostSixCharacters() {
         val entry = SetEntry.prefill(null).type(
-            PadKey.Digit(1), PadKey.Dot, PadKey.Digit(2), PadKey.Dot, PadKey.Digit(5), PadKey.Digit(5), PadKey.Digit(5),
+            PadKey.Digit(1), PadKey.Dot, PadKey.Digit(2), PadKey.Dot, PadKey.Digit(5), PadKey.Digit(5), PadKey.Digit(5), PadKey.Digit(5),
         )
-        assertEquals("1.255", entry.weight)
+        assertEquals("1.2555", entry.weight)
+    }
+
+    /** On the build `101.25` left `101.2`: the pad dropped the digit and logged the wrong weight. */
+    @Test
+    fun aFineStepWeightKeepsEveryDigit() {
+        val entry = SetEntry.prefill(null).type(
+            PadKey.Digit(1), PadKey.Digit(0), PadKey.Digit(1), PadKey.Dot, PadKey.Digit(2), PadKey.Digit(5),
+        )
+        assertEquals("101.25", entry.weight)
+        assertEquals(101.25, entry.weightKg!!, 0.0)
     }
 
     @Test
