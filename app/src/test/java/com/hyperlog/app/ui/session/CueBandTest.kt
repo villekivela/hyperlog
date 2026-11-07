@@ -84,9 +84,10 @@ class CueBandTest {
         compose.onAllNodesWithTag(CueBandTag, useUnmergedTree = true).assertCountEquals(0)
     }
 
+    /** The cue is part of the exercise: a table that fills the screen cuts it, never hides it. */
     @Test
-    fun aTableThatLeavesNoRoomHasNoBand() {
+    fun aLongTableKeepsTheCue() {
         show(sets = 12)
-        compose.onAllNodesWithTag(CueBandTag, useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithTag(CueBandTag, useUnmergedTree = true).assertCountEquals(1)
     }
 }

@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -118,6 +117,18 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
         legendRow {
             if (side == null && totalKg != null) {
                 Text(stringResource(R.string.plates_not_on), style = text, color = cs.onSurfaceVariant)
+                return@legendRow
+            }
+            // Nothing typed: the line says what is there, so the drawing never stands alone.
+            if (totalKg == null && !compact) {
+                Text(
+                    when {
+                        plates.baseKg <= 0 -> stringResource(R.string.plates_type_weight)
+                        machine -> stringResource(R.string.plates_whole_machine_line, formatKg(plates.baseKg))
+                        else -> stringResource(R.string.plates_whole_bar_line, formatKg(plates.baseKg))
+                    },
+                    style = text, color = cs.onSurfaceVariant,
+                )
                 return@legendRow
             }
             legend(side.orEmpty()).forEach { (kg, n) ->

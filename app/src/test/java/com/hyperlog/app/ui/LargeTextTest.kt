@@ -75,6 +75,7 @@ import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.ExerciseSummary
 import com.hyperlog.app.session.PastSession
 import com.hyperlog.app.session.FollowUp
+import com.hyperlog.app.session.LastSession
 import com.hyperlog.app.session.LiftChange
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.session.PickedSet
@@ -88,6 +89,7 @@ import com.hyperlog.app.ui.history.HistoryScreen
 import com.hyperlog.app.ui.library.LibraryScreen
 import com.hyperlog.app.ui.program.BlockChoice
 import com.hyperlog.app.ui.program.SetSummary
+import com.hyperlog.app.ui.session.CueBandTag
 import com.hyperlog.app.ui.session.PadTag
 import com.hyperlog.app.ui.session.PastSessionScreen
 import com.hyperlog.app.ui.session.Recording
@@ -538,6 +540,11 @@ class LargeTextTest {
         return getLineBaseline(last) + (if (descends) em * 0.2f else 0f) > size.height + 0.5f
     }
 
+    private fun SemanticsNodeInteraction.isCutCue(): Boolean {
+        val config = fetchSemanticsNode().config
+        return config.getOrNull(SemanticsProperties.TestTag) == CueBandTag && config.contains(SemanticsActions.OnClick)
+    }
+
     /** Its layout; null for a text still to be laid out, off in a list or a sheet on its way in. */
     private fun SemanticsNodeInteraction.laidOut(): TextLayoutResult? {
         val layouts = mutableListOf<TextLayoutResult>()
@@ -556,6 +563,8 @@ class LargeTextTest {
             fun inWord(c: Char) = c.isLetterOrDigit() || c == '.' || c == '–'
             when {
                 text.isBlank() -> null
+                // The cue alone may be cut, to leave the table room, as it opens the sheet where it's whole.
+                all[i].isCutCue() -> null
                 lines.any { layout.isLineEllipsized(it) } -> "`$text` ellipsized"
                 layout.getLineEnd(layout.lineCount - 1, visibleEnd = true) < text.trimEnd().length -> "`$text` loses its end"
                 layout.inkBelowItsBox() -> "`$text` is cut at the foot"
@@ -584,8 +593,11 @@ class LargeTextTest {
             if (text.isBlank() || box.height <= 0f) null else Triple(text, box, lines.minOf { layout.getLineLeft(it) } + box.left to lines.maxOf { layout.getLineRight(it) } + box.left)
         }.sortedBy { it.third.first }
         val gap = with(compose.density) { 4.dp.toPx() }
+        // An inline chip sits inside its line's box: that's the line, not a neighbour.
+        fun inside(inner: androidx.compose.ui.geometry.Rect, outer: androidx.compose.ui.geometry.Rect) =
+            inner.left >= outer.left - 1f && inner.right <= outer.right + 1f && inner.top >= outer.top - 1f && inner.bottom <= outer.bottom + 1f
         val touching = ink.flatMapIndexed { i, (text, box, edges) ->
-            ink.drop(i + 1).filter { (_, other, _) -> box.top < other.bottom && other.top < box.bottom }.take(1)
+            ink.drop(i + 1).filter { (_, other, _) -> box.top < other.bottom && other.top < box.bottom && !inside(other, box) && !inside(box, other) }.take(1)
                 .filter { (_, _, next) -> next.first - edges.second < gap }.map { (next, _, _) -> "`$text` runs into `$next`" }
         }
         val pad = compose.onAllNodes(hasTestTag(PadTag), useUnmergedTree = true)
@@ -599,6 +611,11 @@ class LargeTextTest {
         lastTime = listOf(LoggedSet(97.5, 5, 0, 1), LoggedSet(87.5, 8, 5, 1)), ladder = DefaultPlates.ladder(), ladderKnown = true,
         prescription = List(3) { SetPrescription(RepRange(4, 6), 1, 180) }, plates = DefaultPlates,
         suggestion = Suggestion(97.5, 5, Suggestion.Kind.Deload, "Deload week, last time's weight", "97.5 · deload week, 2 in reserve"),
+        lastSessions = listOf(
+            LastSession(LocalDate.of(2026, 11, 2), LoggedSet(97.5, 5, 0, 2)),
+            LastSession(LocalDate.of(2026, 10, 29), LoggedSet(101.25, 12, 6, 1)),
+            LastSession(LocalDate.of(2026, 10, 26), LoggedSet(122.5, 5, 0, 1, rightReps = 4)),
+        ),
     )
 
     private fun onWeight(kg: String) = SetEntry(kg, "", "", 1, Field.Weight, partialMode = false, fresh = true)
@@ -671,6 +688,12 @@ class LargeTextTest {
             put("a wider weight to come, under the check", sweepSession(backoff, onReps("210")).copy(weightCheck = WeightCheck("2.2× last time", listOf(100.0, 102.5, 105.0))))
             put("a wider drop to come", sweepSession(dropping, onReps("210")))
             put("a cue with a short table", sweepSession(sweepExercise.copy(exercise = cued, prescription = sweepExercise.prescription?.take(1)), onWeight("102.5")))
+            val oneSet = sweepExercise.copy(exercise = bench.copy(note = null), prescription = sweepExercise.prescription?.take(1))
+            put("one set, no cue", sweepSession(oneSet, onReps("20")))
+            put("one set, no cue, pad hidden", sweepSession(oneSet, onReps("20")).copy(padVisible = false))
+            put("rest running, short table", sweepSession(oneSet.logged(done).copy(prescription = sweepExercise.prescription?.take(2)), onReps("20")).copy(restEndsAt = System.currentTimeMillis() + 95_000))
+            put("day done, short table", sweepSession(oneSet.logged(done), entry = null))
+            put("a long table cuts the cue", sweepSession(sweepExercise.copy(exercise = cued, prescription = List(8) { SetPrescription(RepRange(4, 6), 1, 180) }), onReps("102.5")))
             put("pad hidden", sweepSession().copy(padVisible = false))
             put("rest running", sweepSession(sweepExercise.logged(done)).copy(restEndsAt = System.currentTimeMillis() + 95_000))
             put("superset chips", sweepSession(sweepExercise.copy(slot = slot), more = listOf(partner)))
@@ -773,7 +796,10 @@ class LargeTextTest {
             "finish dialog" to over("Finish the session?", open = menu("Finish session")),
             "leave dialog" to over("Leave") { tap("Leave session") },
             "exercise sheet" to over("Back-off") { tapText("Barbell RDL") },
-            "set sheet" to over("Intensity technique") { tap("Set 1 options") },
+            "set sheet" to over("Intensity technique") {
+                compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))).performScrollToNode(hasContentDescription("Set 1 options"))
+                tap("Set 1 options")
+            },
             "rest sheet" to over("End rest", resting) { compose.onNode(hasClickAction() and hasText(":", substring = true)).performClick() },
             "whole bar sheet" to over("On a 20 kg bar") { compose.onNode(hasContentDescription("Plates", substring = true)).performClick() },
             "bench angle sheet" to over("Bench angle", benched) {

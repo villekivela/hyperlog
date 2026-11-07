@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -67,6 +66,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
@@ -111,7 +112,6 @@ import com.hyperlog.app.ui.theme.cardBehind
 import com.hyperlog.app.ui.theme.figureDisplay
 import com.hyperlog.app.ui.theme.figureLarge
 import com.hyperlog.app.ui.theme.interFigures
-import com.hyperlog.app.ui.theme.linesOf
 import kotlinx.coroutines.delay
 
 /**
@@ -311,8 +311,8 @@ fun SessionScreen(
                             openIndex = session.openIndex,
                             onBenchAngle = { benchFor = current.id },
                         )
-                        SetTable(table, Modifier.weight(1f)) {
-                            CueBand(current.slot?.note ?: current.exercise.note, onClick = { showDetails = true })
+                        SetTable(table, Modifier.weight(1f)) { room ->
+                            CueBand(current.slot?.note ?: current.exercise.note, room, onClick = { showDetails = true })
                         }
                     }
                 }
@@ -629,25 +629,25 @@ internal const val HeaderChipTag = "header-chip"
 internal const val CueBandTag = "cue-band"
 
 /**
- * The room a short exercise leaves above its table: its [cue], in words, and a tap opens the
- * exercise. No cue, or one the room can't hold whole, and nothing shows: the cue stays in the sheet.
+ * The exercise's [cue], under its name, before the table: part of the exercise, so always shown and
+ * wrapping. Only when the whole of it would leave the table no [room] is it cut to its first lines,
+ * and a tap opens the exercise's sheet, where it is whole.
  */
 @Composable
-private fun CueBand(cue: String?, onClick: () -> Unit) {
+private fun CueBand(cue: String?, room: Dp, onClick: () -> Unit) {
     cue ?: return
     val style = MaterialTheme.typography.bodyMedium
     val line = with(LocalDensity.current) { style.lineHeight.toDp() }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val needs = maxOf(line * linesOf(cue, style, maxWidth - Margin * 2) + 16.dp, 48.dp)
-        if (needs > maxHeight) return@BoxWithConstraints
-        Text(
-            cue,
-            Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClickLabel = stringResource(R.string.session_exercise_details), onClick = onClick)
-                .padding(horizontal = Margin, vertical = 8.dp).testTag(CueBandTag),
-            style = style,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    val lines = ((room - 16.dp) / line).toInt().coerceAtLeast(1)
+    Text(
+        cue,
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClickLabel = stringResource(R.string.session_exercise_details), onClick = onClick)
+            .padding(horizontal = Margin, vertical = 8.dp).testTag(CueBandTag),
+        style = style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = lines,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 /** The text size from which a session list row's action sits under its name. */

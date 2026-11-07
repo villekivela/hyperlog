@@ -86,15 +86,7 @@ class SetTableTest {
         assertEquals("addDrop 2", calls.last())
     }
 
-    /** A short exercise's rows sit on the pad, in reach of the thumb, with no band between them (#269). */
-    @Test
-    fun aShortExercisesRowsSitOnThePad() {
-        show(emptyList(), listOf(top), warmups = false)
-        // The table's last row is Add set, under the set.
-        val row = compose.onNodeWithText("Add set", useUnmergedTree = true).getBoundsInRoot()
-        val next = compose.onNodeWithTag(NextRowTag, useUnmergedTree = true).getBoundsInRoot()
-        assertTrue("${next.top - row.bottom} between the last row and the pad", next.top - row.bottom <= 32.dp)
-    }
+    // Where a short table sits, under the cue in every pad state, is SessionLayoutTest's (#269).
 
     /** The arrow does what system Back does: it asks first, and a tap on Stay keeps the session on screen (#269). */
     @Test

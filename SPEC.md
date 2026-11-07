@@ -1355,8 +1355,7 @@ gallery (Technique videos).
     domain keeps writing `@ N` as the one source; only the UI draws it as a chip.
 - **The session has a visible way out** (#269): an arrow left of the exercise's name, the same step as
   system Back. It steps out of a correction or a finished exercise first, and only then asks to
-  leave. A short table sits on the pad, its rows in reach of the thumb; a long one fills the screen
-  and scrolls.
+  leave.
 - **Exercises are listed by name** (#271): a list's rows are plain, with no drawing of the lift. The
   3D mannequin in the exercise's sheet is the only figure in the app.
 - **Every colour has one meaning** (#271), listed in `docs/design/colours.md`, and no screen writes one of
@@ -1395,9 +1394,20 @@ gallery (Technique videos).
     as it did.
   - **The system's animation setting** is followed everywhere: Compose's animations stop with it, a
     moment just appears and goes, dots are there at once, and the mannequin holds a still.
-- **The cue band** (#271): the space a short exercise leaves above its table holds its cue in words
-  (the slot's note, else the exercise's own), and a tap opens the exercise. With no cue, or one the
-  band can't hold whole, nothing shows there, and the cue stays in the exercise's sheet.
+- **The cue band** (#271): the exercise's cue in words (the slot's note, else the exercise's own),
+  under its name and before the table, always shown and wrapping: it is part of the exercise, so it
+  shows from the first warm-up. Only when the whole of it would leave the table less than its heads
+  and two rows is it cut to its first lines, and a tap opens the exercise, where it is whole.
+- **The table sits under the cue** (#269), or under the name with no cue, whatever the pad is doing:
+  up, hidden, resting, under Day done, in a drop or a hold. A long table scrolls in what the cue
+  leaves it.
+- **Last sessions** (#269): what the table leaves above the Next bar holds the exercise's last
+  three sessions, newest first, each its date and top set (`Mon 2 Nov · 97.5 × 5 [2]`), under the
+  label `Last sessions`. They are read by the Last column's rules, per machine for machines and
+  cables (ADR 0002). Only whole rows show, fewer when room is short and none with no room, and they
+  never move the table or the pad.
+- **The plate line names the bar** while no weight is typed: `On a 20 kg bar`, `On a 15 kg machine,
+  empty`, or with no base `Type a weight to see its plates`, never the drawing alone.
 - **A session's length is its time training** (#273): a gap of more than an hour between sets, or
   after the last one, doesn't count, so a session forgotten for days, or left open and picked up
   again, reads the time it took, not `5192 min`. Every screen rounds it the same way.

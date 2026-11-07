@@ -4,9 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,6 +48,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -62,6 +64,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -172,7 +175,7 @@ internal enum class Check { Todo, Ready, Done }
 private enum class Tone { Plain, Active, Technique }
 
 @Composable
-internal fun SetTable(table: TableState, modifier: Modifier, stage: @Composable () -> Unit = {}) {
+internal fun SetTable(table: TableState, modifier: Modifier, cue: @Composable (room: Dp) -> Unit = {}) {
     val current = table.current
     val items = mutableListOf<TableItem>()
     var active: String? = null
@@ -215,29 +218,90 @@ internal fun SetTable(table: TableState, modifier: Modifier, stage: @Composable 
     val lastWidth = maxWidth - (TapInset + RowPad) * 2 - ColIndex - kgWidth - repsWidth - ColRir - ColCheck - LastGap
     // Every Last in the table at one size, the smallest any row needs.
     val last = lastColumn(current.lastTime.map { it.short() }, current.lastTime.flatMap { set -> set.extensions.map { it.short() } }, lastWidth)
-    // A short table sits on the pad, in reach of the thumb; a long one fills the space and scrolls.
     CompositionLocalProvider(LocalLast provides last, LocalKg provides kg, LocalReps provides repsWidth) {
-    Column(Modifier.fillMaxSize().testTag(SetTableTag), verticalArrangement = Arrangement.Bottom) {
-        // What the rows leave free holds the [stage]; a long table leaves it nothing.
-        Box(Modifier.fillMaxWidth().weight(1f)) { stage() }
-        // The heads sit above the rows, so they stay while the rows scroll.
-        Box(Modifier.padding(horizontal = TapInset)) {
-            ColumnHeads(
-                showLast = current.lastTime.isNotEmpty(),
-                split = table.entry?.right != null && table.followUp == null && table.warmupEdit == null,
-            )
-        }
-        LazyColumn(
-            Modifier.fillMaxWidth().fadingEdges(listState),
-            state = listState,
-            contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
-        ) {
-            items(items, key = { it.key }) { it.content() }
+    // The cue first, then the table straight under it, whatever the pad is doing; a long table
+    // scrolls in what the cue leaves. What the table leaves holds the last sessions, whole rows only.
+    val measurer = rememberTextMeasurer()
+    val lastLabel = stringResource(R.string.last_sessions)
+    val labelStyle = MaterialTheme.typography.labelLarge
+    val rowStyle = MaterialTheme.typography.bodyMedium
+    val lastTexts = current.lastSessions.map { "${com.hyperlog.app.ui.history.long(it.date)} · ${it.top.setText()}" }
+    SubcomposeLayout(Modifier.fillMaxSize().testTag(SetTableTag)) { constraints ->
+        val loose = constraints.copy(minWidth = constraints.maxWidth, minHeight = 0)
+        val full = constraints.maxHeight
+        // The cue is cut to its first lines, never dropped, when it would leave the table less than its heads and two rows.
+        val keep = (LabelHeight + RowHeight * 2).roundToPx()
+        val cueRoom = (full - keep).coerceAtLeast(0).toDp()
+        val cuePlaced = subcompose("cue") { cue(cueRoom) }.map { it.measure(loose) }
+        val cueHeight = cuePlaced.maxOfOrNull { it.height } ?: 0
+        val tablePlaced = subcompose("table") {
+            Column(Modifier.fillMaxWidth()) {
+                // The heads sit above the rows, so they stay while the rows scroll.
+                Box(Modifier.padding(horizontal = TapInset)) {
+                    ColumnHeads(
+                        showLast = current.lastTime.isNotEmpty(),
+                        split = table.entry?.right != null && table.followUp == null && table.warmupEdit == null,
+                    )
+                }
+                LazyColumn(
+                    Modifier.fillMaxWidth().fadingEdges(listState),
+                    state = listState,
+                    contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
+                ) {
+                    items(items, key = { it.key }) { it.content() }
+                }
+            }
+        }.map { it.measure(loose.copy(maxHeight = (full - cueHeight).coerceAtLeast(0))) }
+        val tableHeight = tablePlaced.maxOfOrNull { it.height } ?: 0
+        // Never more than fits: the label and whole rows, or nothing. They're sized before they're
+        // composed, since a row composed and left out would still be read out.
+        val free = full - cueHeight - tableHeight
+        val textWidth = (constraints.maxWidth - (Margin * 2).roundToPx()).coerceAtLeast(0)
+        fun tall(text: String, style: TextStyle, padding: Dp, least: Dp = 0.dp) =
+            maxOf(measurer.measure(text, style, constraints = Constraints(maxWidth = textWidth)).size.height + padding.roundToPx(), least.roundToPx())
+        var room = free - tall(lastLabel, labelStyle, LastLabelPadding)
+        val shown = lastTexts.takeWhile { text -> tall(text, rowStyle, LastRowPadding, LastRowHeight).let { (it <= room).also { fits -> if (fits) room -= it } } }
+        val last = if (shown.isEmpty()) emptyList() else subcompose("last-${shown.size}") {
+            Column(Modifier.fillMaxWidth()) {
+                LastSessionsLabel(lastLabel, labelStyle)
+                shown.forEach { LastSessionRow(it, rowStyle) }
+            }
+        }.map { it.measure(loose.copy(maxHeight = free.coerceAtLeast(0))) }
+        layout(constraints.maxWidth, full) {
+            cuePlaced.forEach { it.place(0, 0) }
+            tablePlaced.forEach { it.place(0, cueHeight) }
+            last.forEach { it.place(0, cueHeight + tableHeight) }
         }
     }
     }
     }
 }
+
+/** Over the last sessions: what they are. */
+@Composable
+private fun LastSessionsLabel(text: String, style: TextStyle) {
+    Text(
+        text,
+        Modifier.fillMaxWidth().padding(start = Margin, end = Margin, top = 16.dp, bottom = 4.dp),
+        style = style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/** One of the last sessions: `Mon 2 Nov · 97.5 × 5`, its RIR as a chip. */
+@Composable
+private fun LastSessionRow(text: String, style: TextStyle) {
+    RirText(
+        text,
+        Modifier.fillMaxWidth().heightIn(min = LastRowHeight).padding(horizontal = Margin, vertical = 4.dp).testTag(LastSessionTag),
+        style = style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+private val LastLabelPadding = 20.dp
+private val LastRowPadding = 8.dp
+private val LastRowHeight = 32.dp
 
 /** The kg column: its [width], and the [size] of the weights in it, one for the whole table. */
 private class KgColumn(val width: Dp, val size: TextUnit)
@@ -330,7 +394,7 @@ private val LastWeightFloor = 8.sp
 
 /**
  * Scrolls as little as it takes to show the item at [index] whole, so the warm-ups above it stay
- * in view as long as they can; one out of view comes to the top.
+ * in view as long as they can: one out of view below comes in at the foot, one above at the top.
  */
 private suspend fun LazyListState.keepInView(index: Int) {
     val info = layoutInfo
@@ -338,6 +402,14 @@ private suspend fun LazyListState.keepInView(index: Int) {
     val end = info.viewportEndOffset - info.afterContentPadding
     val item = info.visibleItemsInfo.firstOrNull { it.index == index }
     when {
+        // Out of view below: brought in to the foot of the list, not its head, so the rows above
+        // it (the warm-ups) stay in view as long as they can.
+        item == null && index > (info.visibleItemsInfo.lastOrNull()?.index ?: -1) -> {
+            scrollToItem(index)
+            withFrameNanos { }
+            val shown = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } ?: return
+            scrollBy((shown.offset + shown.size - end).toFloat().coerceAtMost(0f))
+        }
         item == null -> animateScrollToItem(index)
         item.offset < start -> animateScrollBy((item.offset - start).toFloat())
         item.offset + item.size > end -> animateScrollBy(minOf(item.offset + item.size - end, item.offset - start).toFloat())
@@ -825,6 +897,7 @@ private fun ActiveSubRow(
 internal fun indexTag(label: String) = "index-$label"
 
 internal const val SetTableTag = "set-table"
+internal const val LastSessionTag = "last-session"
 internal const val RecordBadgeTag = "record-badge"
 
 internal const val ActiveSubRowTag = "active-sub-row"

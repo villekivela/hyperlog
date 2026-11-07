@@ -80,6 +80,8 @@ data class SessionExercise(
     val benchAngle: Int? = null,
     /** The latest earlier session's bench angle for this exercise, at any gym: the target; null with none. */
     val lastBenchAngle: Int? = null,
+    /** Its last sessions, newest first, on the exercise on screen (GLOSSARY, Last sessions); empty elsewhere. */
+    val lastSessions: List<LastSession> = emptyList(),
 ) {
     /** Its sets with their records, as summaries show them. */
     val summary: ExerciseSummary
@@ -260,6 +262,9 @@ data class PickedSet(val sessionExerciseId: Long, val index: Int, val entry: Set
 
 /** Warm-up [index] of session exercise [sessionExerciseId] on the pad, as typed so far. */
 data class WarmupEdit(val sessionExerciseId: Long, val index: Int, val entry: SetEntry)
+
+/** One of an exercise's last sessions: the day it was done and its top set. */
+data class LastSession(val date: java.time.LocalDate, val top: LoggedSet)
 
 /** An exercise's sets in a session, with the record each makes ([SessionExercise.records]). */
 data class ExerciseSummary(

@@ -32,6 +32,7 @@
     <string name="session_last_exercise">Last exercise</string>
     <string name="session_leave">Leave session</string>
     <string name="session_list">Session list</string>
+    <string name="last_sessions">Last sessions</string>
     <string name="session_start_exercise">Start</string>
     <!-- The superset line above the exercise name: its slot label and its partner, "2a with DB French Press". -->
     <string name="session_superset_with">%1$s with %2$s</string>
@@ -132,6 +133,7 @@
     <string name="plates_bar_alone">The bar alone, %1$s kg</string>
     <string name="plates_cannot">%1$s kg isn’t on these plates</string>
     <string name="plates_not_on">Not on these plates</string>
+    <string name="plates_type_weight">Type a weight to see its plates</string>
     <string name="plates_whole">%1$s kg: %2$s with %3$s on each side</string>
     <string name="plates_whole_alone">%1$s kg: %2$s alone</string>
     <string name="plates_whole_bar">a %1$s kg bar</string>

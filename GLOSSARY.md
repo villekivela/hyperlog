@@ -346,7 +346,11 @@ What Progress opens on: a week's weekly sets per muscle against their ranges, th
 A lift whose estimate moved 1 % or more over about the last 4 weeks, up or down, and which was done in that time. Progress shows the three that moved most.
 
 **Cue band**:
-The space a short exercise leaves above its set table, holding its cue in words.
+The exercise's cue in words, under its name on the logging screen and before its set table.
+
+**Last sessions**:
+An exercise's three latest sessions on the logging screen, each its date and top set, in the room its set table leaves above the Next bar. Read by the Last column's rules, per machine for machines and cables.
+_Avoid_: History (the tab), Last time (one session)
 
 **Moment**:
 A short, designed beat for a record, a finished session or a finished week. It takes no touches and holds nothing up.

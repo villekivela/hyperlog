@@ -1139,6 +1139,11 @@ class SessionLogger(
             val indices = rows.map { it.position }
             val before = before(sets, indices, firstUnlogged(indices))
             val onScreen = se.id == row.currentSessionExerciseId && !needsMachine && !needsLadder
+            // Read by the same rules as Last, per machine for machines and cables (ADR 0002).
+            val lastSessions = if (!onScreen) emptyList() else {
+                (if (plan != null) past else exerciseHistory.of(exercise, machine?.id, before = row, last = LAST_SESSIONS))
+                    .takeLast(LAST_SESSIONS).reversed().map { LastSession(programs.dateOf(it.startedAt), it.logged.maxWith(Heaviest)) }
+            }
             // The old app's weight stands in until the exercise (on this machine) has its own history.
             val starting = if (onScreen && sets.isEmpty() && lastTime.isEmpty()) startingWeights.get(se.exerciseId) else null
             val start = starting?.takeIf { !perMachine }
@@ -1164,6 +1169,7 @@ class SessionLogger(
                 exercise = exercise,
                 sets = sets,
                 lastTime = lastTime,
+                lastSessions = lastSessions,
                 comparedWith = comparedWith,
                 ladder = ladder.ladder,
                 ladderKnown = ladder.known,
@@ -1312,6 +1318,9 @@ class SessionLogger(
 
         /** How many past sessions of an exercise progression reads. */
         const val HISTORY_SESSIONS = 12
+
+        /** How many of an exercise's last sessions the logging screen can show. */
+        const val LAST_SESSIONS = 3
     }
 }
 
