@@ -59,6 +59,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
@@ -258,8 +259,8 @@ private class LastColumn(val style: TextStyle, val tight: Boolean = false, val s
 private val LocalLast = staticCompositionLocalOf { LastColumn(TextStyle.Default) }
 
 /**
- * A set keeps to a line at one size, down to the floor. Past that it's written [tight], and only a
- * weight too wide for its own line takes Last under the floor. A weight that still won't fit
+ * A set keeps to a line at one size, down to the floor. Past that it's written [tight] on two lines,
+ * and only what two lines can't hold takes Last under the floor. A weight that still won't fit
  * leaves Last empty, for the eye: better no weight than a wrong one.
  */
 @Composable
@@ -270,7 +271,10 @@ private fun lastColumn(sets: List<String>, width: Dp): LastColumn {
     if (widestText(sets.flatMap { it.split(" + ") }, atFloor) <= width) {
         return LastColumn(style(sharedFontSize(sets.map { it to width }, body, floor = LastFloor)))
     }
-    val lines = sets.flatMap { it.tight().split(TightBreak) }
+    val measurer = rememberTextMeasurer()
+    val lines = sets.flatMap { set ->
+        twoLines(set.tight().split(TightBreak)) { measurer.measure(it, atFloor, maxLines = 1, softWrap = false).size.width }
+    }
     val size = sharedFontSize(lines.map { it to width }, atFloor, floor = LastWeightFloor)
     return LastColumn(style(size), tight = true, shown = widestText(lines, body.copy(fontSize = size)) <= width)
 }
@@ -280,13 +284,20 @@ private fun String.tight() = replace(" × ", "$TightBreak×").replace(" + ", "$T
 
 private const val TightBreak = '\u200B'
 
+/** A row holds two lines, so the three parts of `50`, `×10`, `+5` share them the narrowest way. */
+private fun twoLines(parts: List<String>, width: (String) -> Int): List<String> {
+    if (parts.size < 3) return parts
+    val (weight, reps, partials) = parts
+    return listOf(listOf(weight + reps, partials), listOf(weight, reps + partials)).minBy { it.maxOf(width) }
+}
+
 /** What Last keeps clear of the kg column, whose figures fill it at large text. */
 private val LastGap = 8.dp
 
 /** Below this a figure stops being large text; past it Last wraps instead. */
 private val LastFloor = 12.sp
 
-/** Last's size when a weight alone is wider than the column: at 200 % still over the 14 sp it has at 100 %. */
+/** Last's size when two lines can't hold a set at its floor: at 200 % still over the 14 sp it has at 100 %. */
 private val LastWeightFloor = 8.sp
 
 /**

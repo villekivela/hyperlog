@@ -1431,8 +1431,8 @@ gallery (Technique videos).
   (down to 11 sp) and its Last column (down to 12 sp, one size for the whole table, then wrapping
   before its `+`). A weight never loses a digit: the kg column takes one size for the whole table,
   down to 12 sp, and past that it widens and Last gives way. A set that can't fit a line at Last's
-  floor is written without its spaces (`50×10+5`) and breaks before its `×` or `+`; only a weight
-  too wide for its own line takes Last under the floor, to 8 sp, and one that still can't fit leaves
+  floor is written without its spaces (`50×10+5`) and breaks before its `×` or `+`; only what two
+  lines can't hold takes Last under the floor, to 8 sp, and a weight that still can't fit leaves
   Last empty on screen, while a screen reader still says it. A connected choice stacks its options
   when their labels no longer fit side by side. The program's phases go to one row of chips instead, the picked one scrolled into view
   and a chip at the edge fading out, so the weeks under them stay on screen. Past its floor a set

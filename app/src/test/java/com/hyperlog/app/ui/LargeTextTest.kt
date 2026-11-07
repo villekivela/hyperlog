@@ -438,6 +438,9 @@ class LargeTextTest {
         }
     }
 
+    /** 12 sp, but for the half step at 200 % that keeps `50×10+5` to the row's two lines. */
+    private fun lastFloorAt(scale: Float) = if (scale < 2f) 12f else 11.5f
+
     /** Last showing [set], however its spaces are written. */
     private fun hasLast(set: String) = SemanticsMatcher("Last reads $set") { node ->
         fun bare(text: String) = text.filterNot { it.isWhitespace() || it == '\u200B' }
@@ -476,6 +479,22 @@ class LargeTextTest {
     @Test
     @Config(qualifiers = "w360dp-h800dp-xxhdpi")
     fun theLongestPlateWeightStaysWholeOnTheNarrowestPhone() = assertWeightWhole(122.5, DefaultPlates.ladder(), lastCanGo = true)
+
+    /** On the build at 200 %, a 102.5 beside it left `50×10+5` three lines, and the `+5` went. */
+    @Test
+    @Config(qualifiers = "w427dp-h950dp-xxhdpi")
+    fun aSetKeepsItsPartialsBesideAWideWeight() {
+        val sets = listOf(LoggedSet(50.0, 10, 5, 1), LoggedSet(50.0, 10, 5, 1))
+        atEveryScale({ Session(sets, listOf(LoggedSet(102.5, 5, 0, 1))) }) { scale ->
+            val table = hasScrollToNodeAction() and hasAnyAncestor(hasTestTag(SetTableTag))
+            compose.onNode(table).performScrollToNode(hasLast(LongLast))
+            val last = compose.onAllNodes(hasLast(LongLast), useUnmergedTree = true)[0]
+            val layout = last.layout()
+            assertEquals("Last reads short at $scale", layout.layoutInput.text.text.length, layout.getLineEnd(layout.lineCount - 1, visibleEnd = true))
+            assertFalse("Last is cut at $scale", last.cutShort())
+            assertTrue("Last is ${layout.layoutInput.style.fontSize} at $scale", layout.layoutInput.style.fontSize.value >= lastFloorAt(scale))
+        }
+    }
 
     /** Round 4: at 200 % `97.5 × 5` almost touched the kg column. */
     @Test
@@ -579,7 +598,7 @@ class LargeTextTest {
             }
             assertEquals("Last sizes differ at $scale: $widths", widths[0], widths[1], 0.01f)
             val long = compose.onNode(hasLast(LongLast), useUnmergedTree = true)
-            assertTrue("Last is ${long.layout().layoutInput.style.fontSize} at $scale", long.layout().layoutInput.style.fontSize.value >= 12f)
+            assertTrue("Last is ${long.layout().layoutInput.style.fontSize} at $scale", long.layout().layoutInput.style.fontSize.value >= lastFloorAt(scale))
             assertFalse("Last is cut at $scale", long.cutShort())
         }
     }
