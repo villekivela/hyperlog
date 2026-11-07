@@ -545,10 +545,24 @@ class LargeTextTest {
             val shown = inPad[i].fetchSemanticsNode().boundsInRoot
             "`${layout.layoutInput.text.text}` is clipped by its row".takeIf { shown.height < layout.size.height - 1f || shown.width < layout.size.width - 1f }
         }
+        // Two values whole but touching read as one: `102.5` beside `12 + 6` was `102.512 + 6` on the build.
+        val inTable = compose.onAllNodes(texts and hasAnyAncestor(hasTestTag(SetTableTag)), useUnmergedTree = true)
+        val ink = inTable.fetchSemanticsNodes().indices.mapNotNull { i ->
+            val layout = inTable[i].layout()
+            val box = inTable[i].fetchSemanticsNode().boundsInRoot
+            val lines = 0 until layout.lineCount
+            val text = layout.layoutInput.text.text
+            if (text.isBlank() || box.height <= 0f) null else Triple(text, box, lines.minOf { layout.getLineLeft(it) } + box.left to lines.maxOf { layout.getLineRight(it) } + box.left)
+        }.sortedBy { it.third.first }
+        val gap = with(compose.density) { 4.dp.toPx() }
+        val touching = ink.flatMapIndexed { i, (text, box, edges) ->
+            ink.drop(i + 1).filter { (_, other, _) -> box.top < other.bottom && other.top < box.bottom }.take(1)
+                .filter { (_, _, next) -> next.first - edges.second < gap }.map { (next, _, _) -> "`$text` runs into `$next`" }
+        }
         val pad = compose.onAllNodes(hasTestTag(PadTag), useUnmergedTree = true)
         val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
         val offScreen = listOfNotNull("The pad runs off the screen".takeIf { pad.fetchSemanticsNodes().any { it.boundsInRoot.bottom > root.bottom + 1f || it.boundsInRoot.top < root.top } })
-        return (cut + heldBack + offScreen).distinct()
+        return (cut + heldBack + touching + offScreen).distinct()
     }
 
     private val sweepExercise = SessionExercise(
@@ -618,6 +632,8 @@ class LargeTextTest {
             put("three-digit reps", sweepSession(entry = SetEntry("102.5", "100", "20", 1, Field.Reps, partialMode = true, fresh = false)))
             put("bench row", sweepSession(sweepExercise.copy(exercise = bench.copy(adjustableBench = true), lastBenchAngle = 30)))
             put("which machine", sweepSession(sweepExercise.copy(needsMachine = true), entry = null).copy(gym = Gym(1, "Hyperlog Fitness Centre", listOf(EquipmentItem(id = 1, gymId = 1, name = "Plate-loaded Chest Press Machine With Long Name", ladder = LadderSpec.DefaultPinStack)))))
+            val cued = bench.copy(id = "2_grip_lat_pulldown", note = "Two grips: wide overhand (1.5× shoulder width) and underhand (shoulder width).")
+            put("rep stage with its cue", sweepSession(sweepExercise.copy(exercise = cued).logged(done, done), onWeight("102.5")))
             put("pad hidden", sweepSession().copy(padVisible = false))
             put("rest running", sweepSession(sweepExercise.logged(done)).copy(restEndsAt = System.currentTimeMillis() + 95_000))
             put("superset chips", sweepSession(sweepExercise.copy(slot = slot), more = listOf(partner)))

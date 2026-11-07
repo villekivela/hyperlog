@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -41,6 +42,7 @@ import com.hyperlog.app.mannequin.ExercisePoses
 import com.hyperlog.app.mannequin.PoseShown
 import com.hyperlog.app.mannequin.RepPose
 import com.hyperlog.app.ui.theme.animationsRemoved
+import com.hyperlog.app.ui.theme.linesOf
 
 /** The exercise library by id, so a mark can be drawn wherever only an exercise's id is known. */
 internal val LocalExercises = staticCompositionLocalOf<Map<String, Exercise>> { emptyMap() }
@@ -168,8 +170,8 @@ internal fun RepPlay(exercise: Exercise?, modifier: Modifier = Modifier, size: D
 private const val RepStrokeMs = 600
 
 /**
- * The band a short exercise leaves above its table: the rep, large, with its [cue]. A tap opens the
- * exercise. Under [StageMinimum] there isn't room for it to read, so nothing shows and the table
+ * The band a short exercise leaves above its table: the rep, large, with its [cue] if it fits whole.
+ * A tap opens the exercise. Under [StageMinimum] there isn't room for it to read, so nothing shows and the table
  * has the space.
  */
 @Composable
@@ -179,6 +181,8 @@ internal fun RepStage(exercise: Exercise, cue: String?, onClick: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxHeight < StageMinimum) return@BoxWithConstraints
         val drawingSize = min(maxHeight - 16.dp, 200.dp)
+        val cueWidth = maxWidth - drawingSize - 64.dp
+        val cueHeight = maxHeight - 16.dp
         val details = stringResource(R.string.session_exercise_details)
         Row(
             Modifier.fillMaxSize().clickable(onClickLabel = details, onClick = onClick).padding(horizontal = 24.dp, vertical = 8.dp).testTag(RepStageTag),
@@ -186,9 +190,12 @@ internal fun RepStage(exercise: Exercise, cue: String?, onClick: () -> Unit) {
         ) {
             val ink = if (shown.exact) cs.onSurface else cs.onSurfaceVariant.copy(alpha = 0.6f)
             Canvas(Modifier.size(drawingSize)) { drawRep(shown.drawing, ink, ghost = shown.exact, ground = cs.surface) }
-            if (cue != null) {
+            // A cue the band can't hold whole stays in the exercise's sheet, a tap away.
+            val style = MaterialTheme.typography.bodyMedium
+            val lines = cue?.let { linesOf(it, style, cueWidth) } ?: 0
+            if (cue != null && with(LocalDensity.current) { style.lineHeight.toDp() } * lines <= cueHeight) {
                 Spacer(Modifier.width(16.dp))
-                Text(cue, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                Text(cue, Modifier.weight(1f), style = style, color = cs.onSurfaceVariant)
             }
         }
     }

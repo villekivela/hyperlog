@@ -1407,6 +1407,7 @@ gallery (Technique videos).
 - **The rep stage** (#271): the space a short exercise leaves above its table holds its rep, large,
   with its cue (the slot's note, else the exercise's own), so the band shows how the set goes. A
   tap opens the exercise. Under 96 dp there is no room for it to read, and the table has the space.
+  A cue the band can't hold whole leaves it, and stays in the exercise's sheet.
 - **A session's length is its time training** (#273): a gap of more than an hour between sets, or
   after the last one, doesn't count, so a session forgotten for days, or left open and picked up
   again, reads the time it took, not `5192 min`. Every screen rounds it the same way.
@@ -1434,7 +1435,7 @@ gallery (Technique videos).
   floor is written without its spaces (`50×10+5`) and breaks before its `×` or `+`; only what two
   lines can't hold takes Last under the floor, to 8 sp, and a weight that still can't fit leaves
   Last empty on screen, while a screen reader still says it. Reps past the same 12 sp widen their
-  column the same way. A drop's Last keeps to one line. The pad's strip holds its height until its
+  column the same way, and a value keeps 8 dp from the one beside it, so two never read as one. A drop's Last keeps to one line. The pad's strip holds its height until its
   text needs more, then grows: its weights share one size down to 12 sp, then show three rungs in
   place of five; the check's reason sits beside its weights while two lines hold it, then above
   them; a follow-up's progress goes above its buttons when they leave it no room. The why-line

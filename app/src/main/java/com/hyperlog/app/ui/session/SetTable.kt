@@ -203,12 +203,15 @@ internal fun SetTable(table: TableState, modifier: Modifier, stage: @Composable 
     // The weights at one size, the largest at which all fit; the entry box's inset can step its own
     // down from there. Past the floor the column gives way rather than lose a digit: a weight that
     // reads wrong is worse than a narrower Last.
-    val weights = table.weights()
     val figure = MaterialTheme.typography.figureLarge
-    val kgWidth = maxOf(ColKg, widestText(weights, figure.copy(fontSize = KgFloor, fontWeight = FontWeight.SemiBold)) + (CellInset + CellPad) * 2 + 4.dp)
-    val kg = KgColumn(kgWidth, sharedFontSize(weights.map { it to kgWidth }, figure, floor = KgFloor))
+    val atFloor = figure.copy(fontSize = KgFloor, fontWeight = FontWeight.SemiBold)
+    val entries = table.entries()
+    val weights = table.loggedWeights()
+    val typedWeights = entries.map { it.weight }
+    val kgWidth = columnWidth(ColKg, weights, typedWeights, atFloor)
+    val kg = KgColumn(kgWidth, sharedFontSize((weights + typedWeights).filter { it.isNotEmpty() }.distinct().map { it to kgWidth - ValueGap }, figure, floor = KgFloor))
     // Reps past the same floor widen their column too: `12 / 10` whole, and Last gives way again.
-    val repsWidth = maxOf(ColReps, widestText(table.repsTexts(), figure.copy(fontSize = KgFloor, fontWeight = FontWeight.SemiBold)) + (CellInset + CellPad) * 2 + 4.dp)
+    val repsWidth = columnWidth(ColReps, current.sets.map { it.repsText() }, entries.map { it.repsText }, atFloor)
     val lastWidth = maxWidth - (TapInset + RowPad) * 2 - ColIndex - kgWidth - repsWidth - ColRir - ColCheck - LastGap
     // Every Last in the table at one size, the smallest any row needs.
     val last = lastColumn(current.lastTime.map { it.short() }, current.lastTime.flatMap { set -> set.extensions.map { it.short() } }, lastWidth)
@@ -246,22 +249,26 @@ private val KgFloor = 12.sp
 
 private val LocalReps = staticCompositionLocalOf { ColReps }
 
-/** Every reps value the table can show at once, for the reps column to fit them all. */
-private fun TableState.repsTexts(): List<String> = buildList {
-    current.sets.forEach { add(it.repsText()) }
-    listOfNotNull(entry, picked?.entry, warmupEdit?.entry, correction?.entry).forEach { add(it.repsText) }
-}.filter { it.isNotEmpty() }.distinct()
+/** What keeps a value clear of the one beside it, split between its two sides. */
+private val ValueGap = 8.dp
 
-/** Every weight the table can show at once, for the kg column to fit them all. */
-private fun TableState.weights(): List<String> = buildList {
+/** A column's width: [least], or what its [shown] values and the [typed] ones in their cells need at [atFloor]. */
+@Composable
+private fun columnWidth(least: Dp, shown: List<String>, typed: List<String>, atFloor: TextStyle) =
+    maxOf(least, widestText(shown, atFloor) + ValueGap + 2.dp, widestText(typed, atFloor) + (CellInset + CellPad) * 2 + 4.dp)
+
+/** Every entry the pad can have open, each in its own cell. */
+private fun TableState.entries() = listOfNotNull(entry, picked?.entry, warmupEdit?.entry, correction?.entry)
+
+/** Every weight the table can show outside a cell, for the kg column to fit them all. */
+private fun TableState.loggedWeights(): List<String> = buildList {
     current.sets.forEach { set ->
         add(formatKg(set.weightKg))
         set.extensions.forEach { add(formatKg(it.weightKg)) }
     }
     current.lastTime.forEach { add(formatKg(it.weightKg)) }
     warmups.forEach { add(formatKg(it.weightKg)) }
-    listOfNotNull(entry, picked?.entry, warmupEdit?.entry, correction?.entry).forEach { add(it.weight) }
-}.filter { it.isNotEmpty() }.distinct()
+}
 
 /** How the Last column writes its sets, the same for the whole table. */
 private class LastColumn(val style: TextStyle, val tight: Boolean = false, val shown: Boolean = true)
@@ -1005,7 +1012,7 @@ private fun ValueText(text: String, width: Dp, color: Color, small: Boolean = fa
     val largest = if (size.isSpecified) size else style.fontSize
     Text(
         text,
-        Modifier.width(width).then(if (spoken != null && text.isNotEmpty()) Modifier.semantics { contentDescription = spoken } else Modifier),
+        Modifier.width(width).padding(horizontal = ValueGap / 2).then(if (spoken != null && text.isNotEmpty()) Modifier.semantics { contentDescription = spoken } else Modifier),
         color = color,
         textAlign = TextAlign.Center,
         style = style,
