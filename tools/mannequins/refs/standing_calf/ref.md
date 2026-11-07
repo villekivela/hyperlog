@@ -120,7 +120,7 @@ Angles need no scale. The heel clears the floor plate by about 75 at the stretch
   - The gusset is 300 wide, not 190, to reach both posts as a plate with the low pulley on it.
   - The lower arm is a fork, so the cable rises between its tubes, and the stack and the arch run in a plane 95 ahead of the posts, not in theirs, the cable 20 ahead of that again to pass the guide rods, with a corner wheel at each turn: no frame shows the route inside the posts.
   - The arch's outer edge stands at 785, not 913: 913 with the foot blocks' flanges out at 358 makes 1271 across, against the published 1143. It starts from the far post, tying the two.
-  - The arm tubes are 45 square, not 38 x 51: the kit's tube is square.
+  - The arm tubes are 45 square, not 38 x 51: the kit's tube is square. They line up with the posts, so they start 200 out, on a spine from a cross tube pivoting between the posts.
   - The stack is the library's, 260 wide, not 540. The two strands to the lower arm's tip are drawn as one, and the lower arm turns as far as the upper.
 - The number I trust least: the upper arm's reach to the pad centre. The video reads 800 from a view turned 18 degrees with the pads high, the render about 900 from a three-quarter view, and no side-on picture exists. Built at 870, which keeps the shoulders under the pad's back third.
 - No frame shows the pads loaded or moving. The video's lifter never gets under them, and no demo of this machine was found. Pad travel comes from their rise and their ankles; the pad heights for the mannequin are chosen from the fit rule; the pad's tilt on the shoulder is untested.

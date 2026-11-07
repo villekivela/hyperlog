@@ -114,6 +114,19 @@ test('every moving joint meets: the link pins to the fork, and the grips join th
   }
 });
 
+test('the upper arm swings clear of the posts, and the pull pin stands out of its sleeve', () => {
+  const boxes = (role) => byRole(role).map((o) => new THREE.Box3().setFromObject(o));
+  for (const d of [0, 1]) {
+    at(d);
+    const posts = boxes('post');
+    for (const arm of boxes('armTube')) assert.ok(!posts.some((p) => p.intersectsBox(arm)), `an arm tube into a post at ${d}`);
+  }
+  const [pull] = boxes('linkPull');
+  const [sleeve] = boxes('linkSleeve');
+  assert.ok(pull && sleeve, 'a pull pin in a sleeve');
+  assert.ok(pull.min.z < sleeve.min.z - 0.01, `the pull pin ${(sleeve.min.z - pull.min.z).toFixed(3)} out of the sleeve's face`);
+});
+
 test('every support reaches the floor or its frame', () => {
   at(0);
   const boxOf = (role) => byRole(role).map((o) => new THREE.Box3().setFromObject(o));

@@ -39,6 +39,8 @@ const PAD_DROP = PAD.thick + 0.0225;
 const HIPS_Z = 0.12;
 const LEGS = 0.999;
 const SHOULDER_TOP = 0.075;
+// The arm's side tubes start here, clear of the posts they line up with.
+const ARM_FROM = 0.2;
 // Each link pin's reach along its arm and rise off it; the lower arm's tip.
 const UPPER_PIN = [0.294, 0.06];
 const LOWER_PIN = 0.335;
@@ -107,8 +109,9 @@ export default recipe({
     const rail = (s) => [V(s * POST_X, railY, POST_Z), V(s * POST_X, railY, RAIL.kink), V(s * RAIL.out, railY, RAIL.end)];
     const arch = [V(POST_X, ARCH.top, RUN_Z), V(ARCH.x + 0.1, ARCH.top, RUN_Z), V(ARCH.x, ARCH.top - 0.1, RUN_Z), V(ARCH.x, 0, RUN_Z)];
 
-    // The upper arm, built level about its pivot: a tube each side out past the pads, ties across
-    // them ahead of the head, the pads hanging under them and the grips outside them.
+    // The upper arm, built level about its pivot: a cross tube between the posts and a spine from it
+    // to the first tie, then a tube each side out past the pads, ties across them ahead of the head,
+    // the pads hanging under them and the grips outside them.
     const upper = new THREE.Group();
     upper.name = 'standing_calf_upper_arm';
     const out = (s, reach, rise = 0) => V(s * PAD.out, rise, -reach);
@@ -118,7 +121,7 @@ export default recipe({
       span(m, V(s * GRIP.out, GRIP.foot[1], -GRIP.foot[0]), V(s * GRIP.out, GRIP.head[1], -GRIP.head[0]));
       return m;
     });
-    const armTubes = sides.map((s) => role(tube(0.045, out(s, 0), out(s, PAD.reach + PAD.long / 2), M.frame), 'armTube'));
+    const armTubes = sides.map((s) => role(tube(0.045, out(s, ARM_FROM), out(s, PAD.reach + PAD.long / 2), M.frame), 'armTube'));
     // A strut up out of the arm's tube ahead of the fingers, and back over the hand to the grip.
     const strutOf = (s) => [out(s, 0.28), out(s, 0.28, 0.105), out(s, 0.395, 0.105), V(s * GRIP.out, 0.105, -0.395)];
     const struts = sides.flatMap((s) => {
@@ -126,7 +129,9 @@ export default recipe({
     });
     upper.add(
       ...armTubes,
-      ...[0.2, UPPER_PIN[0]].map((reach) => tube(0.05, out(-1, reach), out(1, reach), M.frame)),
+      tube(0.05, V(-POST_X + 0.04, 0, 0), V(POST_X - 0.04, 0, 0), M.frame),
+      tube(0.05, V(0, 0, 0), V(0, 0, -ARM_FROM), M.frame),
+      ...[ARM_FROM, UPPER_PIN[0]].map((reach) => tube(0.05, out(-1, reach), out(1, reach), M.frame)),
       ...struts,
       ...pads, ...grips,
     );
@@ -144,8 +149,8 @@ export default recipe({
     );
     // The link: a post in a sleeve, a pull pin through the sleeve's head setting the pads' height.
     const link = stretchedTube(0.051, M.frame);
-    const sleeve = stretchedTube(0.065, M.frame);
-    const linkPull = popPin(V(0, 0, 0), 1, M);
+    const sleeve = role(stretchedTube(0.065, M.frame), 'linkSleeve');
+    const linkPull = role(popPin(V(0, 0, 0), 1, M), 'linkPull');
     const strand = role(wire(M), 'cable');
     const drop = role(wire(M), 'cable');
     const weights = weightStack(V(STACK_X, 0, RUN_Z), M, { rodTop: ARCH.top - ARCH.tube / 2, toward: -1 });
@@ -167,7 +172,7 @@ export default recipe({
       const sleeveTop = foot.clone().lerp(head, 0.55);
       span(link, head, foot);
       span(sleeve, sleeveTop, foot);
-      linkPull.position.copy(sleeveTop).addScaledVector(head.clone().sub(foot).normalize(), -0.03);
+      linkPull.position.copy(sleeveTop).addScaledVector(head.clone().sub(foot).normalize(), -0.03).add(V(0, 0, -0.05));
       span(strand, lowWheel.clone().setZ(lowWheel.z - WHEEL), onArm(LOWER_PIVOT, lower.rotation.x, LOWER_TIP, -TIP_EYE));
     };
     const place = (value) => {
@@ -183,7 +188,7 @@ export default recipe({
       parts: [
         // The posts, tied at the top and across under the lower arm, on a floor bracket behind.
         ...posts,
-        tube(0.08, V(-POST_X, HEIGHT - 0.04, POST_Z), V(POST_X, HEIGHT - 0.04, POST_Z), M.frame),
+        tube(0.06, V(-POST_X, HEIGHT - 0.03, POST_Z), V(POST_X, HEIGHT - 0.03, POST_Z), M.frame),
         tube(0.08, V(-POST_X, 1.09, POST_Z), V(POST_X, 1.09, POST_Z), M.frame),
         ...sides.map((s) => pad(0.07, 0.05, 0.07, M.vinyl, V(s * FORK, 1.155, POST_Z - 0.005), { soft: 0.012 })),
         tube(0.07, V(-POST_X, 0.035, POST_Z), V(POST_X, 0.035, POST_Z), M.frame),
