@@ -2947,6 +2947,30 @@
         "kit_captains_chair.bin"
       ]
     },
+    "seated_cable_deadlift": {
+      "clip": "seated_cable_deadlift.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.4
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 70,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_seated_row.bin"
+      ]
+    },
     "seated_cable_flye": {
       "clip": "seated_cable_flye.glb",
       "equipment": "cable",
@@ -2970,6 +2994,54 @@
         "mannequin.bin",
         "kit_bench.bin",
         "kit_cable_crossover.bin"
+      ]
+    },
+    "seated_cable_kelso_shrug": {
+      "clip": "seated_cable_kelso_shrug.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.5
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 70,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 1,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_seated_row.bin"
+      ]
+    },
+    "seated_cable_row": {
+      "clip": "seated_cable_row.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.5
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 70,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_seated_row.bin"
       ]
     },
     "seated_calf_raise": {
@@ -3783,6 +3855,30 @@
         "mannequin.bin",
         "kit_dip_belt.bin",
         "kit_power_rack.bin"
+      ]
+    },
+    "wide_grip_seated_cable_row": {
+      "clip": "wide_grip_seated_cable_row.glb",
+      "equipment": "cable",
+      "camera": {
+        "target": [
+          0,
+          0.75,
+          0.5
+        ],
+        "halfHeight": 1.05,
+        "azimuth": 70,
+        "elevation": 10
+      },
+      "tempo": {
+        "lowering": 1,
+        "bottom": 0.3,
+        "lifting": 2,
+        "top": 0.5
+      },
+      "resources": [
+        "mannequin.bin",
+        "kit_seated_row.bin"
       ]
     }
   }
