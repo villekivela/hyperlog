@@ -304,7 +304,7 @@ How the app shows an RIR, in set text and on its own (the logging screen, its pa
 _Avoid_: RIR badge, RIR pill
 
 **Estimate**:
-The current strength estimate for an exercise (for machines, for one machine), worked out from logged reps and RIR. It drives suggestions.
+The current strength estimate for an exercise (for machines, for one machine), worked out from logged reps and RIR, an e1RM by Epley. It drives suggestions. The lift trend labels it `e1RM` (owner).
 _Avoid_: 1RM, max
 
 **Exercise history**:
@@ -338,6 +338,28 @@ _Avoid_: Body mass, weigh-in
 **Weekly sets**:
 The work sets a muscle got in a week (Monday to Sunday), each counted as 1 for every primary muscle of its exercise and 0.5 for every secondary muscle, whatever partials, drops or mini-sets extend it.
 _Avoid_: Volume load, tonnage
+
+**Training glance**:
+What Progress opens on: a week's weekly sets per muscle against their ranges, the work sets of the last 8 weeks and the moving lifts, on one screen.
+
+**Moving lift**:
+A lift whose estimate moved 1 % or more over about the last 4 weeks, up or down, and which was done in that time. Progress shows the three that moved most.
+
+**Cue band**:
+The exercise's cue in words, under its name on the logging screen and before its set table.
+
+**Lift trend**:
+How the exercise has moved, in its sheet: its e1RM up or down over about 4 weeks or steady, as Progress's Moving lifts read it, or not moved in N sessions, as the coach line reads it, with the e1RM drawn session by session.
+_Avoid_: Last sessions, trend line
+
+**Moment**:
+A short, designed beat for a record, a finished session or a finished week. It takes no touches and holds nothing up.
+
+**Session rating**:
+What a finished session came to, in a word: Strong session, Solid session or In the bank, from the sets of the plan done, the sets within 1 RIR of target and the lifts up on last time, each as far as it can be read.
+
+**Next action**:
+The one thing to do next, in an accent card at the top of Program and Progress: on to Today, or back to the session running.
 
 **Deload**:
 A planned week of reduced volume or effort, marked as one in the program file. It never lowers the estimate.

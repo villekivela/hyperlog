@@ -33,7 +33,7 @@ class CheckInNotices(private val context: Context) {
 
     /** The ongoing notification: what Claude is doing. */
     fun working(text: String?): Notification = NotificationCompat.Builder(context, WORKING_CHANNEL)
-        .setSmallIcon(R.drawable.symbol_sports)
+        .setSmallIcon(R.drawable.symbol_forum)
         .setContentTitle(text ?: context.getString(R.string.checkin_working))
         .setOngoing(true)
         .setOnlyAlertOnce(true)
@@ -51,7 +51,7 @@ class CheckInNotices(private val context: Context) {
         post(
             READY_ID,
             NotificationCompat.Builder(context, READY_CHANNEL)
-                .setSmallIcon(R.drawable.symbol_sports)
+                .setSmallIcon(R.drawable.symbol_forum)
                 .setContentTitle(title)
                 .setContentText(context.getString(R.string.checkin_ready_open))
                 .setAutoCancel(true)

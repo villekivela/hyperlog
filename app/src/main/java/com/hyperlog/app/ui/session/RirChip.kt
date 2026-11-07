@@ -1,8 +1,6 @@
 package com.hyperlog.app.ui.session
 
 import androidx.compose.foundation.background
-import com.hyperlog.app.domain.summary
-import com.hyperlog.app.domain.LoggedSet
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
+import com.hyperlog.app.domain.LoggedSet
+import com.hyperlog.app.domain.summary
 import com.hyperlog.app.progression.Record
 
 // The RIR chip (SPEC, RIR chip): set text keeps `@ N` as its one source, and the UI draws each
@@ -148,7 +150,7 @@ private fun chipTag(target: Boolean) = if (target) RirChipTargetTag else RirChip
 
 /** The chip's drawing, filling [modifier]'s size, with [label] at [fontSize]. */
 @Composable
-private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String, modifier: Modifier) {
+private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String, modifier: Modifier, spoken: String? = null) {
     val dark = isDarkSurface()
     Box(
         modifier.then(
@@ -161,6 +163,7 @@ private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String
     ) {
         Text(
             label,
+            if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier,
             fontSize = fontSize,
             lineHeight = fontSize,
             fontWeight = FontWeight.SemiBold,
@@ -172,13 +175,14 @@ private fun ChipBox(rir: Int, target: Boolean, fontSize: TextUnit, label: String
 
 /**
  * An RIR chip on its own, outside set text: the logging screen's RIR column, its pad and the
- * exercise sheet. Its number is [fontSize]; 4 and up read `4+`, as on the pad.
+ * exercise sheet. Its number is [fontSize]; 4 and up read `4+`, as on the pad. [spoken] replaces
+ * the bare number for a screen reader.
  */
 @Composable
-internal fun RirChip(rir: Int, target: Boolean, modifier: Modifier = Modifier, fontSize: TextUnit = 12.sp) {
+internal fun RirChip(rir: Int, target: Boolean, modifier: Modifier = Modifier, fontSize: TextUnit = 12.sp, spoken: String? = null) {
     val label = if (rir >= 4) "4+" else "$rir"
     val em = with(LocalDensity.current) { fontSize.toDp() } / NumberSize
-    ChipBox(rir, target, fontSize, label, modifier.size(em * chipWidth(label), em * ChipHeight).testTag(chipTag(target)))
+    ChipBox(rir, target, fontSize, label, modifier.size(em * chipWidth(label), em * ChipHeight).testTag(chipTag(target)), spoken)
 }
 
 /** A logged set as the screen writes it: its RIR after the whole set, and no break inside it. */

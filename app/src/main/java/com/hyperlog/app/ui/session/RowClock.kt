@@ -8,8 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.program.TechniqueKind
+import com.hyperlog.app.rest.RestOverLimitMs
+import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.FollowUp
 import com.hyperlog.app.ui.theme.onTechniqueColor
 import com.hyperlog.app.ui.theme.techniqueColor
@@ -22,7 +23,8 @@ internal enum class ClockKind { Rest, Over, Breath, Hold, HoldReached }
 /**
  * The session's one clock, drawn on the Next row: [time] in large digits and [fraction] of the
  * row's width filled. Rest and the breathing pause drain, the hold fills toward its target and
- * stops there, solid, and after rest it counts up on a muted row with nothing filled.
+ * stops there, solid, and after rest it counts up on a muted row with nothing filled, for
+ * [RestOverLimitMs].
  */
 internal data class RowClock(val kind: ClockKind, val time: String, val fraction: Float)
 
@@ -44,6 +46,7 @@ internal fun rowClock(session: ActiveSession, now: Long): RowClock? {
         }
         restEnds != null && session.breathing ->
             if (restEnds > now) RowClock(ClockKind.Breath, clock(restEnds - now), drained(restEnds - now, session.restTotalMs)) else null
+        restEnds != null && now - restEnds >= RestOverLimitMs -> null
         restEnds != null -> {
             val left = restEnds - now
             RowClock(if (left > 0) ClockKind.Rest else ClockKind.Over, clock(left), if (left > 0) drained(left, session.restTotalMs) else 0f)

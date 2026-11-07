@@ -3,6 +3,10 @@ package com.hyperlog.app.ui.session
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -10,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LadderSpec
 import com.hyperlog.app.domain.LadderSpec.Companion.DefaultPlates
@@ -27,11 +32,6 @@ import com.hyperlog.app.program.Technique
 import com.hyperlog.app.session.ActiveSession
 import com.hyperlog.app.session.SessionExercise
 import com.hyperlog.app.ui.theme.HyperlogTheme
-import androidx.compose.ui.test.getBoundsInRoot
-import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -84,6 +84,26 @@ class SetTableTest {
         // `+` at the drop set's foot adds a drop.
         compose.onNodeWithContentDescription("Add a drop").performClick()
         assertEquals("addDrop 2", calls.last())
+    }
+
+    // Where a short table sits, under the cue in every pad state, is SessionLayoutTest's (#269).
+
+    /** The arrow does what system Back does: it asks first, and a tap on Stay keeps the session on screen (#269). */
+    @Test
+    fun theSessionHasAVisibleWayOut() {
+        var left = 0
+        val exercise = SessionExercise(1, bench, emptyList(), emptyList(), DefaultPlates.ladder(), true, prescription = listOf(top), plates = DefaultPlates)
+        val entry = SetEntry("100", "6", "", 1, Field.Reps, partialMode = false, fresh = true)
+        val session = ActiveSession(id = 1, startedAt = 0, exercises = listOf(exercise), currentId = 1, entry = entry, padVisible = true, restEndsAt = null, restTotalMs = 0)
+        compose.setContent { HyperlogTheme { SessionScreen(session, listOf(bench), Recording(calls), onLeave = { left++ }) } }
+
+        compose.onNodeWithContentDescription("Leave session").performClick()
+        compose.onNodeWithText("Leave the session?").assertIsDisplayed()
+        compose.onNodeWithText("Stay").performClick()
+        assertEquals(0, left)
+        compose.onNodeWithContentDescription("Leave session").performClick()
+        compose.onNodeWithText("Leave").performClick()
+        assertEquals(1, left)
     }
 
     /** Set 1 logged with [technique] and [done] of its drops or mini-sets, the set still open for [followUp]. */

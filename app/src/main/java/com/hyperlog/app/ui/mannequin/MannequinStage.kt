@@ -1,7 +1,6 @@
 package com.hyperlog.app.ui.mannequin
 
 import android.content.Context
-import android.provider.Settings
 import android.view.View
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -22,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -37,10 +35,11 @@ import com.hyperlog.app.ui.session.isDarkSurface
 import com.hyperlog.app.ui.theme.CardShape
 import com.hyperlog.app.ui.theme.ClayColours
 import com.hyperlog.app.ui.theme.Tones
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.hyperlog.app.ui.theme.animationsRemoved
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal const val MannequinStageTag = "mannequin"
 
@@ -181,6 +180,3 @@ internal fun rememberMannequins(): Mannequins? {
     return produceState<Mannequins?>(null) { value = withContext(Dispatchers.IO) { Mannequins.fromAssets(context) } }.value
 }
 
-/** Whether the system's animations are off (Settings → Accessibility → Remove animations). */
-private fun animationsRemoved(context: Context): Boolean =
-    Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f

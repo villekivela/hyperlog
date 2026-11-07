@@ -5,8 +5,8 @@ import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.counting
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Exercise
-import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.library.MuscleGroup
+import com.hyperlog.app.library.Muscles
 import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.Programs
 import com.hyperlog.app.progression.Progression
@@ -25,7 +25,12 @@ import kotlinx.coroutines.flow.first
  * The work sets each muscle got in the week starting Monday [start], in body order: 1 a set for a
  * primary muscle, 0.5 for a secondary one.
  */
-data class WeekSets(val start: LocalDate, val sets: Map<String, Double>)
+data class WeekSets(
+    val start: LocalDate,
+    val sets: Map<String, Double>,
+    /** The work sets logged that week, each once however many muscles it counts for. */
+    val workSets: Int = 0,
+)
 
 /** One session on a trend: its top set and the estimate after it. */
 data class TrendPoint(
@@ -77,7 +82,7 @@ class History(
      * for each secondary one, whatever partials, drops or mini-sets extend it (SPEC, Volume).
      * Warm-ups are never logged.
      */
-    suspend fun weeklySets(weeks: Int = 8): List<WeekSets> = counted(weeks) { exercise, sets, week -> exercise.addSets(sets, week) }.map { WeekSets(it.start, it.sets.inBodyOrder()) }
+    suspend fun weeklySets(weeks: Int = 8): List<WeekSets> = counted(weeks) { exercise, sets, week -> exercise.addSets(sets, week) }.map { it.copy(sets = it.sets.inBodyOrder()) }
 
     /**
      * Sets per muscle group (Chest, Back, Shoulders, Arms, Legs, Glutes, Core) for the last [weeks]
@@ -91,7 +96,7 @@ class History(
         val secondary = exercise.secondary.mapNotNull { MuscleGroup.of(it) }.toSet() - primary
         for (g in primary) week[g.label] = (week[g.label] ?: 0.0) + sets
         for (g in secondary) week[g.label] = (week[g.label] ?: 0.0) + sets * 0.5
-    }.map { w -> WeekSets(w.start, MuscleGroup.entries.mapNotNull { g -> w.sets[g.label]?.let { g.label to it } }.toMap()) }
+    }.map { w -> w.copy(sets = MuscleGroup.entries.mapNotNull { g -> w.sets[g.label]?.let { g.label to it } }.toMap()) }
 
     /** Every finished session's work sets in the last [weeks] weeks, newest week first, added up by [count]. */
     private suspend fun counted(weeks: Int, count: (Exercise, Int, MutableMap<String, Double>) -> Unit): List<WeekSets> {
@@ -99,17 +104,20 @@ class History(
         val starts = (0 until weeks).map { thisWeek.minusWeeks(it.toLong()) }
         val exercises = db.exercises().all().associate { it.id to it.toExercise() }
         val counts = starts.associateWith { mutableMapOf<String, Double>() }
+        val workSets = starts.associateWith { 0 }.toMutableMap()
         for (session in dao.finishedSessions()) {
-            val week = counts[monday(dateOf(session.startedAt))] ?: continue
+            val start = monday(dateOf(session.startedAt))
+            val week = counts[start] ?: continue
             for (se in dao.sessionExercises(session.id)) {
                 if (se.removed) continue
                 val sets = dao.sets(se.id).size
                 if (sets == 0) continue
                 val exercise = exercises[se.exerciseId] ?: continue
                 count(exercise, sets, week)
+                workSets[start] = workSets.getValue(start) + sets
             }
         }
-        return starts.map { start -> WeekSets(start, counts.getValue(start)) }
+        return starts.map { start -> WeekSets(start, counts.getValue(start), workSets.getValue(start)) }
     }
 
     /** Every exercise with sets in a finished session, the one done last first, with its trend. */

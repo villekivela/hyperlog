@@ -30,7 +30,17 @@
     <string name="session_menu">More</string>
     <string name="session_next">Next</string>
     <string name="session_last_exercise">Last exercise</string>
+    <string name="session_leave">Leave session</string>
     <string name="session_list">Session list</string>
+    <string name="trend_up">e1RM up %1$d%% in 4 weeks, to %2$s kg</string>
+    <string name="trend_down">e1RM down %1$d%% in 4 weeks, to %2$s kg</string>
+    <string name="trend_steady">e1RM steady over 4 weeks, at %1$s kg</string>
+    <string name="trend_e1rm">e1RM %1$s kg</string>
+    <string name="trend_chart">%1$s\'s e1RM, session by session</string>
+    <plurals name="trend_stalled">
+        <item quantity="one">Hasn\'t moved in %1$d session</item>
+        <item quantity="other">Hasn\'t moved in %1$d sessions</item>
+    </plurals>
     <string name="session_start_exercise">Start</string>
     <!-- The superset line above the exercise name: its slot label and its partner, "2a with DB French Press". -->
     <string name="session_superset_with">%1$s with %2$s</string>
@@ -41,6 +51,21 @@
     <string name="col_reps">Reps</string>
     <string name="col_reps_split">L / R</string>
     <string name="col_rir">RIR</string>
+    <!-- A set table row's name, which a screen reader puts before each of its values. -->
+    <string name="row_set">Set %1$d</string>
+    <string name="row_warmup">Warm-up %1$d</string>
+    <string name="row_drop">Drop %1$d of set %2$d</string>
+    <string name="row_mini_set">Mini-set %1$d of set %2$d</string>
+    <string name="row_hold">Hold of set %1$d</string>
+    <!-- A set table value as a screen reader says it; the first argument is the row's name. -->
+    <string name="spoken_weight">%1$s weight, %2$s kg</string>
+    <string name="spoken_weight_empty">%1$s weight, empty</string>
+    <string name="spoken_reps">%1$s reps, %2$s</string>
+    <string name="spoken_reps_empty">%1$s reps, empty</string>
+    <string name="spoken_reps_target">%1$s reps, empty, target %2$s</string>
+    <string name="spoken_rir">%1$s, %2$s RIR</string>
+    <string name="spoken_rir_target">%1$s, target %2$s RIR</string>
+    <string name="spoken_last">%1$s last time, %2$s</string>
 
     <string name="pad_rir">RIR</string>
     <string name="pad_full">F</string>
@@ -74,7 +99,7 @@
     <string name="past_open_description">Open %1$s</string>
     <string name="follow_drop">Drop %1$d of %2$d</string>
     <string name="follow_mini_set">Mini-set %1$d</string>
-    <string name="follow_hold">Hold %1$d s</string>
+    <string name="follow_hold">Hold %1$d\u00A0s</string>
     <string name="follow_finish_set">Finish set</string>
     <string name="hold_start">Start</string>
     <string name="hold_stop">Stop</string>
@@ -116,6 +141,7 @@
     <string name="plates_bar_alone">The bar alone, %1$s kg</string>
     <string name="plates_cannot">%1$s kg isn’t on these plates</string>
     <string name="plates_not_on">Not on these plates</string>
+    <string name="plates_type_weight">Type a weight to see its plates</string>
     <string name="plates_whole">%1$s kg: %2$s with %3$s on each side</string>
     <string name="plates_whole_alone">%1$s kg: %2$s alone</string>
     <string name="plates_whole_bar">a %1$s kg bar</string>
@@ -177,8 +203,41 @@
     <string name="record_estimate">Estimate record</string>
     <string name="record_reps">Rep record</string>
     <string name="records_title">Records</string>
+    <string name="record_new">New record</string>
+    <string name="record_detail">%1$s · %2$s</string>
     <string name="done_when">Started %1$s, %2$d min</string>
     <string name="done_close">Done</string>
+    <plurals name="done_sets">
+        <item quantity="one">%1$d set</item>
+        <item quantity="other">%1$d sets</item>
+    </plurals>
+    <plurals name="done_lifts_up">
+        <item quantity="one">%1$d of %2$d lift up</item>
+        <item quantity="other">%1$d of %2$d lifts up</item>
+    </plurals>
+    <plurals name="done_records">
+        <item quantity="one">%1$d record</item>
+        <item quantity="other">%1$d records</item>
+    </plurals>
+    <plurals name="done_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="done_sets_of">
+        <item quantity="one">%1$d of %2$d set</item>
+        <item quantity="other">%1$d of %2$d sets</item>
+    </plurals>
+    <string name="done_on_effort">%1$d of %2$d on effort</string>
+    <string name="done_rating_strong">Strong session</string>
+    <string name="done_rating_solid">Solid session</string>
+    <string name="done_rating_banked">In the bank</string>
+    <string name="done_best">Best lift: %1$s, %2$s → %3$s</string>
+    <string name="done_week_more">%1$d more than last week</string>
+    <string name="done_week_fewer">%1$d fewer than last week</string>
+    <string name="done_week_same">As many as last week</string>
+    <string name="done_week_streak">%1$d weeks in a row</string>
+    <string name="done_week">Week %1$d done</string>
+    <string name="done_week_line">%1$s · %2$s</string>
     <string name="finish_title">Finish the session?</string>
     <string name="finish_body">Exercises with nothing logged are left out. You can resume it from Session done.</string>
     <string name="finish_body_empty">Nothing is logged yet, so the session is dropped, and nothing goes to History.</string>
@@ -404,6 +463,9 @@
     <string name="starter_resume_named">Resume %1$s</string>
     <string name="program_none_body">A program is a JSON file. Claude can write one from a program you own.</string>
     <string name="program_next">Next</string>
+    <string name="next_start">Start</string>
+    <string name="next_on">Next · %1$s</string>
+    <string name="next_resume">Resume</string>
     <!-- "Week 3 · Day A — Heavy bench" -->
     <string name="program_week_day">Week %1$d · %2$s</string>
     <string name="program_week_date_day">Week %1$d · %2$s · %3$s</string>
@@ -813,6 +875,7 @@
     <string name="gym_missing_restore">%1$s is here after all</string>
     <string name="history_title">History</string>
     <string name="history_sessions">Sessions</string>
+    <string name="past_preview_more">+%1$d more</string>
     <string name="history_progress">Progress</string>
     <string name="history_bodyweight">Bodyweight</string>
     <string name="history_bodyweight_none">No bodyweight logged</string>
@@ -820,7 +883,31 @@
     <string name="history_bodyweight_today">Bodyweight today</string>
     <string name="history_delete_bodyweight">Delete %1$s</string>
     <string name="history_sets_week">Sets this week</string>
-    <string name="history_sets_none">No sets this week</string>
+    <string name="history_sets_last_week">Sets last week</string>
+    <string name="history_no_sets_yet">No sets yet:\u0020</string>
+    <string name="history_sets_nothing">No sets in the last 8 weeks. Aim for %1$d–%2$d sets a muscle each week.</string>
+    <string name="history_on_target">%1$d of %2$d on target</string>
+    <string name="history_muscles_all">All %1$d muscles</string>
+    <string name="history_muscles_fewer">Fewer muscles</string>
+    <string name="history_status_under">under target</string>
+    <string name="history_status_within">on target</string>
+    <string name="history_status_over">over target</string>
+    <string name="history_muscle_description">%1$s, %2$s, target %3$d to %4$d, %5$s</string>
+    <plurals name="history_sets">
+        <item quantity="one">%1$s set</item>
+        <item quantity="other">%1$s sets</item>
+    </plurals>
+    <string name="history_target">Target %1$d–%2$d sets</string>
+    <string name="history_sets_axis">sets</string>
+    <plurals name="history_week_read">
+        <item quantity="one">%1$d set, week of %2$s</item>
+        <item quantity="other">%1$d sets, week of %2$s</item>
+    </plurals>
+    <string name="history_weekly_chart">Work sets a week over the last %1$d weeks, from %2$d to %3$d, %4$d in the latest</string>
+    <string name="history_moving">Moving</string>
+    <string name="history_moving_period">Estimate, last 4 weeks</string>
+    <string name="history_moving_none">Lifts that are moving show here after a few sessions.</string>
+    <string name="history_moving_description">%1$s, estimate %2$s to %3$s kg, %4$s</string>
     <string name="history_week_earlier">Earlier week</string>
     <string name="history_week_later">Later week</string>
     <string name="history_exercises">Exercises</string>
@@ -830,7 +917,10 @@
     <string name="history_estimate_with_body">Estimate with bodyweight</string>
     <string name="history_most_reps">Top set reps</string>
     <string name="history_top_set">Top set</string>
-    <string name="history_reps">%1$d reps</string>
+    <plurals name="history_reps">
+        <item quantity="one">%1$d rep</item>
+        <item quantity="other">%1$d reps</item>
+    </plurals>
     <string name="history_machine_unknown">Machine not known</string>
     <string name="history_needs_bodyweight">Log bodyweight for a true estimate</string>
     <string name="history_trend_chart">%1$s over time</string>

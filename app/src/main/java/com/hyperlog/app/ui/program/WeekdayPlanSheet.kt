@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.gym.Gym
@@ -163,10 +162,10 @@ private fun RowScope.DayGym(day: DayOfWeek, gym: Gym?, gyms: List<Gym>, onPick: 
     val dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
     val gymName = gym?.name ?: stringResource(R.string.weekday_plan_any_gym)
     val described = stringResource(R.string.weekday_plan_gym_on, dayName, gymName)
-    // The gym takes what the day name leaves and ends in an ellipsis, so the arrow always shows.
+    // The gym takes what the day name leaves and wraps, so the arrow always shows.
     Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
         TextButton(onClick = { open = true }, Modifier.semantics { contentDescription = described }) {
-            Text(gymName, Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(gymName, Modifier.weight(1f, fill = false))
             Spacer(Modifier.size(4.dp))
             SymbolIcon(Symbol.ArrowDropDown, null)
         }

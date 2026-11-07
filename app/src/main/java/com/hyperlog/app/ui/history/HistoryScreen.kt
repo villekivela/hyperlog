@@ -1,8 +1,9 @@
 package com.hyperlog.app.ui.history
 
-import com.hyperlog.app.ui.theme.figureHeadline
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,62 +15,60 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
+import com.hyperlog.app.coach.NumberRange
+import com.hyperlog.app.coach.TrainingTargets
 import com.hyperlog.app.domain.formatKg
 import com.hyperlog.app.history.Bodyweight
 import com.hyperlog.app.history.ExerciseTrend
 import com.hyperlog.app.history.WeekSets
+import com.hyperlog.app.history.trainingGlance
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.session.PastSessionItem
 import com.hyperlog.app.ui.session.SessionList
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.BottomActions
+import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.NextAction
+import com.hyperlog.app.ui.theme.NextCard
 import com.hyperlog.app.ui.theme.Segment
-import com.hyperlog.app.ui.theme.ShapedSymbol
+import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.cardBehind
-import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ToggleButton
 import com.hyperlog.app.ui.theme.connectedChoiceColors
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
+import com.hyperlog.app.ui.theme.figureHeadline
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
-import com.hyperlog.app.ui.theme.TextEdge
-import com.hyperlog.app.ui.theme.CardMargin
 
 // History (SPEC, Screens → History; docs/design/history.md): Sessions and Progress.
 
@@ -107,6 +106,15 @@ fun HistoryScreen(
     onLogBodyweight: (Double) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The training targets' weekly sets, what to aim for before there is anything to measure. */
+    standing: NumberRange = TrainingTargets().volume,
+    /** The weekly sets a muscle is measured against. */
+    range: (String) -> NumberRange = { standing },
+    /** The program's own muscles, the ones to measure; null for every muscle trained. */
+    muscles: Set<String>? = null,
+    today: LocalDate = LocalDate.now(),
+    /** What to do next, at the top of Progress; null when there is nothing to offer. */
+    next: NextAction? = null,
 ) {
     BackHandler(onBack = onBack)
     Scaffold(
@@ -143,7 +151,7 @@ fun HistoryScreen(
         if (tab == 0) {
             SessionList(sessions, onOpenSession, Modifier.padding(padding))
         } else {
-            Progress(weeks, exercises, bodyweights, onOpenExercise, onBodyweight, onLogBodyweight, Modifier.padding(padding))
+            Progress(weeks, exercises, bodyweights, onOpenExercise, onBodyweight, onLogBodyweight, standing, range, muscles, today, next, Modifier.padding(padding))
         }
     }
 }
@@ -156,12 +164,26 @@ private fun Progress(
     onOpenExercise: (String) -> Unit,
     onBodyweight: () -> Unit,
     onLogBodyweight: (Double) -> Unit,
+    standing: NumberRange,
+    range: (String) -> NumberRange,
+    muscles: Set<String>?,
+    today: LocalDate,
+    next: NextAction?,
     modifier: Modifier = Modifier,
 ) {
     val cs = MaterialTheme.colorScheme
     var logging by rememberSaveable { mutableStateOf(false) }
-    var week by rememberSaveable { mutableIntStateOf(0) }
+    var picked by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    val glance = weeks?.let { trainingGlance(it, exercises.orEmpty(), today, picked, muscles, range) }
     LazyColumn(modifier.fillMaxSize()) {
+        next?.let { item { NextCard(it); Spacer(Modifier.height(8.dp)) } }
+        glance?.let {
+            item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) { MusclesCard(it, standing, today) }; Spacer(Modifier.height(8.dp)) }
+            if (it.weeks.any { w -> w.workSets > 0 }) {
+                item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) { TrendCard(it) { w -> picked = w } }; Spacer(Modifier.height(8.dp)) }
+            }
+            item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) { MovingCard(it.moving, onOpenExercise) }; Spacer(Modifier.height(8.dp)) }
+        }
         item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) {
             SectionHead(stringResource(R.string.history_bodyweight)) {
                 IconButton(onClick = { logging = true }) { SymbolIcon(Symbol.Add, stringResource(R.string.history_log_bodyweight)) }
@@ -171,27 +193,6 @@ private fun Progress(
             }
             BodyweightSummary(bodyweights, onBodyweight, chartHeight = 64.dp)
         }; Spacer(Modifier.height(8.dp)) }
-        item { Column(Modifier.cardBehind(Tones.card).padding(vertical = 4.dp)) {
-            val shown = weeks?.getOrNull(week)
-            SectionHead(if (week == 0 || shown == null) stringResource(R.string.history_sets_week) else weekRange(shown.start)) {
-                if (weeks != null) {
-                    IconButton(onClick = { week++ }, enabled = week < weeks.size - 1) {
-                        SymbolIcon(Symbol.ChevronLeft, stringResource(R.string.history_week_earlier))
-                    }
-                    IconButton(onClick = { week-- }, enabled = week > 0) {
-                        SymbolIcon(Symbol.ChevronRight, stringResource(R.string.history_week_later))
-                    }
-                }
-            }
-            if (shown != null) {
-                if (shown.sets.isEmpty()) {
-                    Muted(stringResource(R.string.history_sets_none))
-                } else {
-                    WeekSets(shown.sets)
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-        } }
         item {
             SectionHead(stringResource(R.string.history_exercises))
             if (exercises != null && exercises.isEmpty()) Muted(stringResource(R.string.history_exercises_none))
@@ -247,7 +248,8 @@ private fun ExerciseRow(trend: ExerciseTrend) {
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(trend.exercise.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // A primary name wraps rather than truncates, at any text size.
+        Text(trend.exercise.name, Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.width(16.dp))
         val line = trend.lines.singleOrNull()
         if (line == null) {

@@ -1,6 +1,7 @@
 package com.hyperlog.app
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
@@ -8,10 +9,9 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.hyperlog.app.waitFor
 import org.junit.Rule
-import androidx.compose.ui.test.hasScrollToIndexAction
-import androidx.compose.ui.test.performScrollToNode
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
@@ -44,7 +44,7 @@ class MainActivityTest {
         // The day's letter is in its cookie, its name after the letter beside it.
         compose.onNodeWithText("Heavy bench, squat, pulldown").assertIsDisplayed()
         compose.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
-        compose.onNodeWithText("1 × 4–6\u00A02 RIR", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("1\u00A0×\u00A04–6\u00A02 RIR", substring = true).assertIsDisplayed()
         // The superset is further down, under the day's card.
         compose.onNode(hasScrollToIndexAction().and(hasTestTag(com.hyperlog.app.ui.today.CalendarTag).not())).performScrollToNode(hasText("5a"))
         compose.onNodeWithText("5a").assertIsDisplayed()

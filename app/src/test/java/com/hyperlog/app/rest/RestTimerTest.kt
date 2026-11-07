@@ -144,6 +144,15 @@ class RestTimerTest {
     }
 
     @Test
+    fun theRestOverNotificationGoesAfterAnHour() = runTest {
+        val logger = logger()
+        logger.log("20")
+        ring(logger)
+
+        assertEquals(3_600_000L, notification!!.timeoutAfter)
+    }
+
+    @Test
     fun whenRestRunsOutThePhoneBuzzesAsAnAlarmAndTheNotificationCountsUp() = runTest {
         val logger = logger()
         logger.log("20")

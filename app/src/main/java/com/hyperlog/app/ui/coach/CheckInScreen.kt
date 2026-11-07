@@ -3,58 +3,37 @@ package com.hyperlog.app.ui.coach
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import com.hyperlog.app.ui.theme.CardMargin
-import com.hyperlog.app.ui.theme.SectionCard
-import com.hyperlog.app.ui.theme.SegmentGap
-import com.hyperlog.app.ui.theme.ShapedSymbol
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -63,24 +42,40 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.coach.CheckInFailure
@@ -95,15 +90,19 @@ import com.hyperlog.app.ui.program.Problem
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
 import com.hyperlog.app.ui.theme.BottomActions
+import com.hyperlog.app.ui.theme.CardMargin
 import com.hyperlog.app.ui.theme.CardPadding
 import com.hyperlog.app.ui.theme.GroupGap
+import com.hyperlog.app.ui.theme.SectionCard
 import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.SegmentGap
 import com.hyperlog.app.ui.theme.SegmentedRow
+import com.hyperlog.app.ui.theme.ShapedSymbol
+import com.hyperlog.app.ui.theme.TextEdge
 import com.hyperlog.app.ui.theme.Tones
 import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import com.hyperlog.app.ui.theme.interFigures
 import kotlinx.coroutines.launch
-import com.hyperlog.app.ui.theme.TextEdge
 
 /** The bottom strip's padding: a text button first keeps its label on the [TextEdge]. */
 private val StripPadding = PaddingValues(start = TextEdge - 12.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
@@ -118,8 +117,8 @@ internal val TileLooks = mapOf(
     Tile.Gym to TileLook(R.string.checkin_tile_gym, Symbol.LocationOn),
     Tile.Tired to TileLook(R.string.checkin_tile_tired, Symbol.AirlineSeatFlat),
     Tile.ChangeProgram to TileLook(R.string.checkin_tile_change, Symbol.Tune),
-    Tile.Workout to TileLook(R.string.checkin_tile_workout, Symbol.FitnessCenter),
-    Tile.NewProgram to TileLook(R.string.checkin_tile_new_program, Symbol.ViewTimeline),
+    Tile.Workout to TileLook(R.string.checkin_tile_workout, Symbol.Bolt),
+    Tile.NewProgram to TileLook(R.string.checkin_tile_new_program, Symbol.PostAdd),
     Tile.SomethingElse to TileLook(R.string.checkin_tile_else, Symbol.Edit),
 )
 
@@ -282,7 +281,7 @@ private val TileInner = 8.dp
 private val TileHeight = 136.dp
 
 @Composable
-private fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modifier, onClick: () -> Unit) {
+internal fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modifier, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(
         // One height for every tile, two lines of label included, so the grid stays even.
@@ -297,7 +296,7 @@ private fun TileCard(label: String, symbol: Symbol, shape: Shape, modifier: Modi
         Box(Modifier.size(40.dp).clip(CircleShape).background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
             SymbolIcon(symbol, null, Modifier.size(24.dp), tint = cs.onSecondaryContainer)
         }
-        Text(label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleMedium)
     }
 }
 

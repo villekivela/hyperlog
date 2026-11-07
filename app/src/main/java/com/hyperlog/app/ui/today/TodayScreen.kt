@@ -1,20 +1,11 @@
 package com.hyperlog.app.ui.today
 
-import com.hyperlog.app.ui.theme.interFigures
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import com.hyperlog.app.ui.theme.Group
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,92 +17,100 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MediumExtendedFloatingActionButton
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.itemsIndexed
-import com.hyperlog.app.ui.theme.Banner
-import com.hyperlog.app.ui.theme.CardPadding
-import com.hyperlog.app.ui.theme.EmptyState
-import com.hyperlog.app.ui.theme.Segment
-import com.hyperlog.app.ui.theme.Sheet
-import com.hyperlog.app.ui.theme.Tones
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.LineBreak
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
+import com.hyperlog.app.coach.CoachLine
+import com.hyperlog.app.coach.Workouts
+import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.MissingSwaps
 import com.hyperlog.app.gym.SessionSwap
-import com.hyperlog.app.coach.CoachLine
-import com.hyperlog.app.program.DueReview
-import com.hyperlog.app.gym.Gym
 import com.hyperlog.app.gym.UsualGym
-import com.hyperlog.app.coach.Workouts
-import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.testTag
 import com.hyperlog.app.library.Exercise
 import com.hyperlog.app.program.ActiveProgram
+import com.hyperlog.app.program.DueReview
 import com.hyperlog.app.program.PlannedDay
 import com.hyperlog.app.program.Program
-import com.hyperlog.app.ui.program.SetSummary
-import com.hyperlog.app.ui.program.StarterOffer
-import com.hyperlog.app.ui.symbols.Symbol
-import com.hyperlog.app.ui.symbols.SymbolIcon
-import com.hyperlog.app.ui.theme.HyperlogTheme
-import com.hyperlog.app.update.UpdateBanner
 import com.hyperlog.app.session.PastSessionItem
+import com.hyperlog.app.session.date
 import com.hyperlog.app.today.DayKind
 import com.hyperlog.app.today.TodayState
-import com.hyperlog.app.session.date
+import com.hyperlog.app.ui.program.SetSummary
+import com.hyperlog.app.ui.program.StarterOffer
 import com.hyperlog.app.ui.program.WeekdayPlanSheetContent
+import com.hyperlog.app.ui.symbols.Symbol
+import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.Banner
+import com.hyperlog.app.ui.theme.CardPadding
+import com.hyperlog.app.ui.theme.EmptyState
+import com.hyperlog.app.ui.theme.Group
+import com.hyperlog.app.ui.theme.HyperlogTheme
+import com.hyperlog.app.ui.theme.Segment
+import com.hyperlog.app.ui.theme.Sheet
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.fadingEdges
+import com.hyperlog.app.ui.theme.interFigures
+import com.hyperlog.app.update.UpdateBanner
 import com.hyperlog.app.week.DayFit
-import com.hyperlog.app.week.FitAsk
 import com.hyperlog.app.week.Fit
+import com.hyperlog.app.week.FitAsk
 import com.hyperlog.app.week.WeekdayPlan
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
-import com.hyperlog.app.ui.theme.TextEdge
+import kotlinx.coroutines.launch
 
 /**
  * Today: a calendar of weeks, done and planned sessions marked, and the day picked on it below:
@@ -125,6 +124,9 @@ import com.hyperlog.app.ui.theme.TextEdge
 fun TodayScreen(
     sessionRunning: Boolean,
     onResume: () -> Unit,
+    /** Program or Progress asked for Start: the gym sheet opens as Today does, then [onStartOpened]. */
+    startOnOpen: Boolean = false,
+    onStartOpened: () -> Unit = {},
     /**
      * Starts a session at the gym (null with no gyms): the program's next day, or ad hoc when
      * [adHoc]. The swaps (slot id -> exercise) are for equipment the gym doesn't have, this session only.
@@ -233,6 +235,12 @@ fun TodayScreen(
             else -> picking = kind
         }
     }
+    LaunchedEffect(startOnOpen) {
+        if (startOnOpen) {
+            start(Kind.Day)
+            onStartOpened()
+        }
+    }
     val kind = picking
     val today = program?.today ?: LocalDate.now()
     var ownDay by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -329,10 +337,9 @@ fun TodayScreen(
             WeekdayPlanSheetContent(weekdayPlan, gyms, onWeekdayPlan, onDone = { editingWeekdayPlan = false })
         }
     }
-    // A workout or a running session keeps its Start floating; the next day's Start is in its card.
-    // Not before the sessions are read: nothing floats over the held day.
+    // A workout or a running session keeps its Start in the lane; the next day's Start is in its card.
+    // Not before the sessions are read: no lane under the held day.
     val fab = loaded && isToday && (workoutFirst || (sessionRunning && state.nextDay != null))
-    val bottom = if (fab) 112.dp else 24.dp
     val banners: @Composable ColumnScope.() -> Unit = {
         update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
         state.easeBack?.let { days -> TimeOffBanner(days, onEaseBack = { onEaseBack(days) }) }
@@ -345,13 +352,16 @@ fun TodayScreen(
         modifier = modifier,
         containerColor = Tones.screen,
         snackbarHost = { SnackbarHost(snackbars) },
-        floatingActionButton = {
+        // A lane of its own under the list rather than floating over it, so it never covers a row.
+        bottomBar = {
             if (fab) {
-                // The expressive medium size: the day's one action, unmistakable. With a workout today, it starts that.
-                MediumExtendedFloatingActionButton(onClick = { start(if (workoutFirst) Kind.Workout else Kind.Day) }) {
-                    SymbolIcon(Symbol.PlayArrow, null, Modifier.size(28.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Text(fabLabel, style = MaterialTheme.typography.titleMedium)
+                Box(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), contentAlignment = Alignment.CenterEnd) {
+                    // The expressive medium size: the day's one action, unmistakable. With a workout today, it starts that.
+                    MediumExtendedFloatingActionButton(onClick = { start(if (workoutFirst) Kind.Workout else Kind.Day) }) {
+                        SymbolIcon(Symbol.PlayArrow, null, Modifier.size(28.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text(fabLabel, style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
         },
@@ -389,7 +399,7 @@ fun TodayScreen(
                         onProgramDayShown()
                     }
                 }
-                LazyColumn(Modifier.weight(1f).fillMaxSize(), state = list, contentPadding = PaddingValues(bottom = bottom)) {
+                LazyColumn(Modifier.weight(1f).fillMaxSize(), state = list, contentPadding = PaddingValues(bottom = 24.dp)) {
                     item {
                         Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             update?.let { UpdateBanner(it, onUpdate, onDismissUpdate) }
@@ -403,13 +413,13 @@ fun TodayScreen(
                     item { AdHocRow(onAdHoc = { start(Kind.AdHoc) }) }
                 }
             }
-            // A running session keeps its day on today, with Resume floating.
+            // A running session keeps its day on today, with Resume under it.
             dayKind == DayKind.Running && day != null -> NextDay(
                 day, exerciseNames, Modifier.weight(1f),
                 banners = banners,
                 isWorkout = runningWorkout,
             )
-            dayKind == DayKind.Done -> LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
+            dayKind == DayKind.Done -> LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = 24.dp)) {
                 if (isToday) {
                     item { BannerColumn(banners) }
                     // What's next comes first after training, over what was done.
@@ -430,7 +440,7 @@ fun TodayScreen(
             dayKind == DayKind.Planned && day != null -> {
                 val date = state.date ?: selected
                 val groups = groupsOf(day)
-                LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
+                LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = 24.dp)) {
                     item {
                         if (isToday) BannerColumn(banners)
                         if (state.isNext) {
@@ -457,7 +467,7 @@ fun TodayScreen(
             // A missed day keeps its plan, dimmed, with no Start.
             dayKind == DayKind.Missed && day != null -> {
                 val groups = groupsOf(day)
-                LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
+                LazyColumn(Modifier.weight(1f).fillMaxSize().testTag(TodayDayListTag), state = dayList, contentPadding = PaddingValues(bottom = 24.dp)) {
                     item {
                         PlannedCard(day, selected, library = library, finished = programSessions, missed = true)
                         Spacer(Modifier.height(16.dp))
@@ -515,7 +525,7 @@ fun TodayScreen(
                 if (offerSaved) com.hyperlog.app.ui.program.WithSavedPrograms(savedPrograms, onOpenSaved, Modifier.weight(1f)) { main(Modifier) }
                 else main(Modifier.weight(1f))
             }
-            else -> LazyColumn(Modifier.weight(1f).fillMaxSize(), state = dayList, contentPadding = PaddingValues(bottom = bottom)) {
+            else -> LazyColumn(Modifier.weight(1f).fillMaxSize(), state = dayList, contentPadding = PaddingValues(bottom = 24.dp)) {
                 item { RestCard(selected, state.restDay, select, onWeekdayPlan = { editingWeekdayPlan = true }) }
             }
         }
@@ -608,8 +618,9 @@ private fun NextDay(
     isWorkout: Boolean = false,
 ) {
     val cs = MaterialTheme.colorScheme
-    // The bottom padding keeps the last row clear of the floating Start session.
-    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 112.dp)) {
+    val list = rememberLazyListState()
+    // The list fades into the lane under it, rather than stopping dead at the button.
+    LazyColumn(modifier.fillMaxSize().fadingEdges(list).testTag(TodayDayListTag), state = list, contentPadding = PaddingValues(bottom = 24.dp)) {
         item {
             Column(Modifier.padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { banners() }
             Column(Modifier.padding(horizontal = TextEdge).padding(top = 8.dp, bottom = 16.dp)) {
@@ -639,7 +650,7 @@ private fun AdHocRow(onAdHoc: () -> Unit) {
             Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = CardPadding, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SymbolIcon(Symbol.FitnessCenter, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
+            SymbolIcon(Symbol.AddCircle, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
             Spacer(Modifier.width(16.dp))
             Text(stringResource(R.string.today_ad_hoc), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
             SymbolIcon(Symbol.ChevronRight, null, tint = cs.onSurfaceVariant)
@@ -658,7 +669,7 @@ private const val ElsewhereChoice = -1L
 /**
  * The workout from Claude added for today (SPEC, Coaching → Workout), first on Today: "Workout"
  * over its name, summary and gym ([gym]: `At Itis`, `Elsewhere`) on the accent head, with ⋮ →
- * Remove; then its exercises with their rest. Start session, floating, starts it.
+ * Remove; then its exercises with their rest. Start session, in its lane, starts it.
  */
 @Composable
 private fun WorkoutCard(
@@ -750,7 +761,7 @@ private fun ProgramDayCard(day: PlannedDay, names: Map<String, String>, onStart:
 private fun TimeOffBanner(days: Int, onEaseBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Banner(
-        Symbol.History,
+        Symbol.EventBusy,
         stringResource(R.string.coach_days_off, days),
         container = cs.tertiaryContainer,
         content = cs.onTertiaryContainer,
@@ -1023,9 +1034,8 @@ internal fun SlotRows(
                 }
                 Text(
                     names[slot.exercise] ?: slot.exercise,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    // A name too long for the line breaks where a word may, not at its last letter.
+                    style = MaterialTheme.typography.bodyLarge.copy(hyphens = androidx.compose.ui.text.style.Hyphens.Auto),
                 )
                 if (rest && slot.sets.isNotEmpty()) {
                     Row {

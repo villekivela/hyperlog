@@ -109,6 +109,8 @@ export const BATCHES = {
     'lat_pulldown_wide_grip', 'neutral_grip_lat_pulldown', 'cable_rope_hammer_curl', '1_arm_cable_pulldown', 'cable_lat_pullover',
     '1_arm_lat_pull_in', '1_arm_cable_lat_pull_around',
   ],
+  // The seated row station's four exercises, machine-first (#127).
+  'seated-row': ['seated_cable_row', 'wide_grip_seated_cable_row', 'seated_cable_kelso_shrug', 'seated_cable_deadlift'],
 };
 
 const idsOf = (name) => {

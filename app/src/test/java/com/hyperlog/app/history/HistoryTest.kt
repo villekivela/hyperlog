@@ -13,23 +13,23 @@ import com.hyperlog.app.gym.EquipmentItem
 import com.hyperlog.app.gym.Gyms
 import com.hyperlog.app.library.Equipment
 import com.hyperlog.app.library.ExerciseLibrary
-import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.library.LibrarySeed
+import com.hyperlog.app.library.toExercise
 import com.hyperlog.app.program.Programs
+import com.hyperlog.app.progression.Record
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import com.hyperlog.app.progression.Record
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import kotlin.math.roundToInt
 
 /** History (SPEC, Screens → History): weekly sets per muscle and each exercise's trend. */
 @RunWith(RobolectricTestRunner::class)
@@ -122,6 +122,15 @@ class HistoryTest {
         )
         // Leg extensions have no secondary muscles.
         assertEquals(mapOf("Quads" to 2.0), weeks[1].sets)
+    }
+
+    /** Adding a week's muscles up would count a bench set for chest, triceps and shoulders. */
+    @Test
+    fun aWeeksWorkSetsCountEachSetOnce() = runTest {
+        session(LocalDate.of(2026, 10, 12), "barbell_bench_press" to listOf(Logged(80.0, 6, 1), Logged(80.0, 6, 1)))
+        session(LocalDate.of(2026, 10, 13), "db_lateral_raise" to listOf(Logged(10.0, 15, 1)))
+
+        assertEquals(3, history().weeklySets().first().workSets)
     }
 
     @Test

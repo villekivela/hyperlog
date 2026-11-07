@@ -1,36 +1,34 @@
 package com.hyperlog.app.ui.session
 
-import com.hyperlog.app.ui.theme.figureLarge
-import com.hyperlog.app.ui.theme.figureMedium
-import com.hyperlog.app.ui.theme.onTechniqueColor
-import com.hyperlog.app.ui.theme.techniqueColor
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -39,49 +37,51 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import com.hyperlog.app.R
-import com.hyperlog.app.progression.Record
 import com.hyperlog.app.domain.Extension
 import com.hyperlog.app.domain.Field
 import com.hyperlog.app.domain.LoggedSet
 import com.hyperlog.app.domain.SetEntry
 import com.hyperlog.app.domain.WarmupSet
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.history.LiftTrend
 import com.hyperlog.app.program.SetPrescription
 import com.hyperlog.app.program.Technique
 import com.hyperlog.app.program.backoffWeight
 import com.hyperlog.app.program.plannedWeight
+import com.hyperlog.app.progression.Record
 import com.hyperlog.app.session.Correction
 import com.hyperlog.app.session.DEFAULT_DROP_REPS
 import com.hyperlog.app.session.FollowUp
@@ -92,6 +92,15 @@ import com.hyperlog.app.ui.program.symbol
 import com.hyperlog.app.ui.program.techniqueName
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.fadingEdges
+import com.hyperlog.app.ui.theme.figureLarge
+import com.hyperlog.app.ui.theme.figureMedium
+import com.hyperlog.app.ui.theme.onTechniqueColor
+import com.hyperlog.app.ui.theme.sharedFontSize
+import com.hyperlog.app.ui.theme.techniqueColor
+import com.hyperlog.app.ui.theme.widestText
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 // The set table (docs/design/logging-screen.md): flat rows on the screen's surface, columns
 // index · Last · kg · Reps · RIR · ✓. Warm-ups, sets and their drops or mini-sets are one list
@@ -168,7 +177,7 @@ internal enum class Check { Todo, Ready, Done }
 private enum class Tone { Plain, Active, Technique }
 
 @Composable
-internal fun SetTable(table: TableState, modifier: Modifier) {
+internal fun SetTable(table: TableState, modifier: Modifier, cue: @Composable (room: Dp) -> Unit = {}) {
     val current = table.current
     val items = mutableListOf<TableItem>()
     var active: String? = null
@@ -195,27 +204,167 @@ internal fun SetTable(table: TableState, modifier: Modifier) {
         withFrameNanos { }
         listState.keepInView(activeIndex)
     }
-    Column(modifier.fillMaxWidth()) {
-        // The heads sit above the rows, so they stay while the rows scroll.
-        Box(Modifier.padding(horizontal = TapInset)) {
-            ColumnHeads(
-                showLast = current.lastTime.isNotEmpty(),
-                split = table.entry?.right != null && table.followUp == null && table.warmupEdit == null,
-            )
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+    // The weights at one size, the largest at which all fit; the entry box's inset can step its own
+    // down from there. Past the floor the column gives way rather than lose a digit: a weight that
+    // reads wrong is worse than a narrower Last.
+    val figure = MaterialTheme.typography.figureLarge
+    val atFloor = figure.copy(fontSize = KgFloor, fontWeight = FontWeight.SemiBold)
+    val entries = table.entries()
+    val weights = table.loggedWeights()
+    val typedWeights = entries.map { it.weight }
+    val kgWidth = columnWidth(ColKg, weights, typedWeights, atFloor)
+    val kg = KgColumn(kgWidth, sharedFontSize((weights + typedWeights).filter { it.isNotEmpty() }.distinct().map { it to kgWidth - ValueGap }, figure, floor = KgFloor))
+    // Reps past the same floor widen their column too: `12 / 10` whole, and Last gives way again.
+    val repsWidth = columnWidth(ColReps, current.sets.map { it.repsText() }, entries.map { it.repsText }, atFloor)
+    val lastWidth = maxWidth - (TapInset + RowPad) * 2 - ColIndex - kgWidth - repsWidth - ColRir - ColCheck - LastGap
+    // Every Last in the table at one size, the smallest any row needs.
+    val last = lastColumn(current.lastTime.map { it.short() }, current.lastTime.flatMap { set -> set.extensions.map { it.short() } }, lastWidth)
+    CompositionLocalProvider(LocalLast provides last, LocalKg provides kg, LocalReps provides repsWidth) {
+    // The cue first, then the table straight under it, whatever the pad is doing; a long table
+    // scrolls in what the cue leaves.
+    SubcomposeLayout(Modifier.fillMaxSize().testTag(SetTableTag)) { constraints ->
+        val loose = constraints.copy(minWidth = constraints.maxWidth, minHeight = 0)
+        val full = constraints.maxHeight
+        // The cue is cut to its first lines, never dropped, when it would leave the table less than its heads and two rows.
+        val keep = (LabelHeight + RowHeight * 2).roundToPx()
+        val cueRoom = (full - keep).coerceAtLeast(0).toDp()
+        val cuePlaced = subcompose("cue") { cue(cueRoom) }.map { it.measure(loose) }
+        val cueHeight = cuePlaced.maxOfOrNull { it.height } ?: 0
+        val above = cueHeight
+        val tablePlaced = subcompose("table") {
+            Column(Modifier.fillMaxWidth()) {
+                // The heads sit above the rows, so they stay while the rows scroll.
+                Box(Modifier.padding(horizontal = TapInset)) {
+                    ColumnHeads(
+                        showLast = current.lastTime.isNotEmpty(),
+                        split = table.entry?.right != null && table.followUp == null && table.warmupEdit == null,
+                    )
+                }
+                LazyColumn(
+                    Modifier.fillMaxWidth().fadingEdges(listState),
+                    state = listState,
+                    contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
+                ) {
+                    items(items, key = { it.key }) { it.content() }
+                }
+            }
+        }.map { it.measure(loose.copy(maxHeight = (full - above).coerceAtLeast(0))) }
+        layout(constraints.maxWidth, full) {
+            cuePlaced.forEach { it.place(0, 0) }
+            tablePlaced.forEach { it.place(0, above) }
         }
-        LazyColumn(
-            Modifier.fillMaxWidth().weight(1f).fadingEdges(listState),
-            state = listState,
-            contentPadding = PaddingValues(start = TapInset, end = TapInset, bottom = 8.dp),
-        ) {
-            items(items, key = { it.key }) { it.content() }
+    }
+    }
+    }
+}
+
+/** The trend's direction and its words: `e1RM up 5% in 4 weeks, to 126 kg`, as Progress and the coach line put it. */
+@Composable
+internal fun trendWords(trend: LiftTrend): Pair<Direction, String> = when (trend) {
+    is LiftTrend.Moved -> {
+        val up = trend.toKg > trend.fromKg
+        val percent = abs(trend.percent).roundToInt()
+        (if (up) Direction.Up else Direction.Down) to
+            stringResource(if (up) R.string.trend_up else R.string.trend_down, percent, com.hyperlog.app.ui.history.estimateText(trend.toKg))
+    }
+    is LiftTrend.Steady -> Direction.Flat to stringResource(R.string.trend_steady, com.hyperlog.app.ui.history.estimateText(trend.kg))
+    is LiftTrend.Stalled -> Direction.Flat to pluralStringResource(R.plurals.trend_stalled, trend.sessions, trend.sessions)
+}
+
+
+/** The kg column: its [width], and the [size] of the weights in it, one for the whole table. */
+private class KgColumn(val width: Dp, val size: TextUnit)
+
+private val LocalKg = staticCompositionLocalOf { KgColumn(ColKg, TextUnit.Unspecified) }
+
+/** Under this a weight stops being large text, so the column widens instead. */
+private val KgFloor = 12.sp
+
+private val LocalReps = staticCompositionLocalOf { ColReps }
+
+/** What keeps a value clear of the one beside it, split between its two sides. */
+private val ValueGap = 8.dp
+
+/** A column's width: [least], or what its [shown] values and the [typed] ones in their cells need at [atFloor]. */
+@Composable
+private fun columnWidth(least: Dp, shown: List<String>, typed: List<String>, atFloor: TextStyle) =
+    maxOf(least, widestText(shown, atFloor) + ValueGap + 2.dp, widestText(typed, atFloor) + (CellInset + CellPad) * 2 + 4.dp)
+
+/** Every entry the pad can have open, each in its own cell. */
+private fun TableState.entries() = listOfNotNull(entry, picked?.entry, warmupEdit?.entry, correction?.entry)
+
+/** Every weight the table can show outside a cell, for the kg column to fit them all. */
+private fun TableState.loggedWeights(): List<String> = buildList {
+    current.sets.forEach { set ->
+        add(formatKg(set.weightKg))
+        set.extensions.forEach { add(formatKg(it.weightKg)) }
+    }
+    current.lastTime.forEach { add(formatKg(it.weightKg)) }
+    warmups.forEach { add(formatKg(it.weightKg)) }
+    current.prescription?.let { plan ->
+        plan.indices.forEach { i ->
+            val kg = plannedWeight(i, plan, current::setAt, current.toDo, current.lastTime, current.ladder, activeKg)
+            kg?.let { add(formatKg(it)) }
+            (current.techniqueAt(i) as? Technique.Dropset)?.let { drops ->
+                generateSequence(kg) { backoffWeight(it, drops.percent, current.ladder) }.drop(1).take(drops.drops).forEach { add(formatKg(it)) }
+            }
         }
     }
 }
 
+/** How the Last column writes its sets, the same for the whole table. */
+private class LastColumn(val style: TextStyle, val tight: Boolean = false, val shown: Boolean = true)
+
+private val LocalLast = staticCompositionLocalOf { LastColumn(TextStyle.Default) }
+
+/**
+ * A set keeps to a line at one size, down to the floor. Past that it's written [tight] on two lines,
+ * and only what two lines can't hold takes Last under the floor. A weight that still won't fit
+ * leaves Last empty, for the eye: better no weight than a wrong one.
+ */
+@Composable
+private fun lastColumn(sets: List<String>, subRows: List<String>, width: Dp): LastColumn {
+    val body = MaterialTheme.typography.bodyMedium
+    val atFloor = body.copy(fontSize = LastFloor)
+    fun style(size: TextUnit) = body.copy(fontSize = size, lineHeight = size * 1.2f)
+    if (widestText(sets.flatMap { it.split(" + ") } + subRows, atFloor) <= width) {
+        return LastColumn(style(sharedFontSize((sets + subRows).map { it to width }, body, floor = LastFloor)))
+    }
+    val measurer = rememberTextMeasurer()
+    val lines = sets.flatMap { set ->
+        twoLines(set.tight().split(TightBreak)) { measurer.measure(it, atFloor, maxLines = 1, softWrap = false).size.width }
+    } + subRows.map { it.tight().unbroken() }
+    val size = sharedFontSize(lines.map { it to width }, atFloor, floor = LastWeightFloor)
+    return LastColumn(style(size), tight = true, shown = widestText(lines, body.copy(fontSize = size)) <= width)
+}
+
+/** `50×10+5`: a set without its spaces, free to break before its `×` and its `+`, never in a figure. */
+private fun String.tight() = replace(" × ", "$TightBreak×").replace(" + ", "$TightBreak+")
+
+private fun String.unbroken() = replace(TightBreak.toString(), "")
+
+private const val TightBreak = '\u200B'
+
+/** A row holds two lines, so the three parts of `50`, `×10`, `+5` share them the narrowest way. */
+private fun twoLines(parts: List<String>, width: (String) -> Int): List<String> {
+    if (parts.size < 3) return parts
+    val (weight, reps, partials) = parts
+    return listOf(listOf(weight + reps, partials), listOf(weight, reps + partials)).minBy { it.maxOf(width) }
+}
+
+/** What Last keeps clear of the kg column, whose figures fill it at large text. */
+private val LastGap = 8.dp
+
+/** Below this a figure stops being large text; past it Last wraps instead. */
+private val LastFloor = 12.sp
+
+/** Last's size when two lines can't hold a set at its floor: at 200 % still over the 14 sp it has at 100 %. */
+private val LastWeightFloor = 8.sp
+
 /**
  * Scrolls as little as it takes to show the item at [index] whole, so the warm-ups above it stay
- * in view as long as they can; one out of view comes to the top.
+ * in view as long as they can: one out of view below comes in at the foot, one above at the top.
  */
 private suspend fun LazyListState.keepInView(index: Int) {
     val info = layoutInfo
@@ -223,28 +372,19 @@ private suspend fun LazyListState.keepInView(index: Int) {
     val end = info.viewportEndOffset - info.afterContentPadding
     val item = info.visibleItemsInfo.firstOrNull { it.index == index }
     when {
+        // Out of view below: brought in to the foot of the list, not its head, so the rows above
+        // it (the warm-ups) stay in view as long as they can.
+        item == null && index > (info.visibleItemsInfo.lastOrNull()?.index ?: -1) -> {
+            scrollToItem(index)
+            withFrameNanos { }
+            val shown = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } ?: return
+            scrollBy((shown.offset + shown.size - end).toFloat().coerceAtMost(0f))
+        }
         item == null -> animateScrollToItem(index)
         item.offset < start -> animateScrollBy((item.offset - start).toFloat())
         item.offset + item.size > end -> animateScrollBy(minOf(item.offset + item.size - end, item.offset - start).toFloat())
     }
 }
-
-/** Fades the list out at an edge that has more to scroll to, so it reads as scrollable. */
-private fun Modifier.fadingEdges(state: LazyListState): Modifier = this
-    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-    .drawWithContent {
-        drawContent()
-        val fade = 32.dp.toPx()
-        if (state.canScrollBackward) {
-            drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black, endY = fade), size = size.copy(height = fade), blendMode = BlendMode.DstIn)
-        }
-        if (state.canScrollForward) {
-            drawRect(
-                Brush.verticalGradient(0f to Color.Black, 1f to Color.Transparent, startY = size.height - fade, endY = size.height),
-                topLeft = Offset(0f, size.height - fade), size = size.copy(height = fade), blendMode = BlendMode.DstIn,
-            )
-        }
-    }
 
 // ---------------------------------------------------------------- building the rows
 
@@ -365,20 +505,21 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
                 before = kg
             }
             for (j in 0 until count) {
-                val last = lastDrops.getOrNull(j)?.let { "${formatKg(it.weightKg)} × ${it.reps}" }
+                val last = lastDrops.getOrNull(j)?.short()
                 val join = foot(j, count)
                 val footPlus = if (join == Join.Foot) plus else null
                 val active = (open && j == logged.size) || table.corrects(index, j)
                 out += SubItem("ext-$index-$j", active) {
+                    val row = stringResource(R.string.row_drop, j + 1, index + 1)
                     when {
-                        table.corrects(index, j) -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, correcting = table.correction!!.entry, hold = false)
+                        table.corrects(index, j) -> ActiveSubRow(row, last, table, weightLocked = false, join = join, toFailure = true, correcting = table.correction!!.entry, hold = false)
                         j < logged.size -> DoneSubRow(
-                            last, logged[j].weightKg, "${logged[j].reps}", join,
+                            row, last, logged[j].weightKg, "${logged[j].reps}", join,
                             onCorrect = table.onCorrect?.let { { it(index, j) } },
                             description = stringResource(R.string.correct_drop_description, j + 1, index + 1),
                         )
-                        open && j == logged.size -> ActiveSubRow(last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus)
-                        else -> PlannedSubRow(last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus)
+                        open && j == logged.size -> ActiveSubRow(row, last, table, weightLocked = false, join = join, toFailure = true, plus = footPlus)
+                        else -> PlannedSubRow(row, last, weights[j], "${lastDrops.getOrNull(j)?.reps ?: DEFAULT_DROP_REPS}", join, toFailure = true, plus = footPlus)
                     }
                 }
             }
@@ -387,19 +528,20 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
             val rows = logged.size + if (open) 1 else 0
             logged.forEachIndexed { j, mini ->
                 out += SubItem("ext-$index-$j", table.corrects(index, j)) {
-                    if (table.corrects(index, j)) ActiveSubRow(null, table, weightLocked = true, join = foot(j, rows), correcting = table.correction!!.entry, hold = false)
+                    val row = stringResource(R.string.row_mini_set, j + 1, index + 1)
+                    if (table.corrects(index, j)) ActiveSubRow(row, null, table, weightLocked = true, join = foot(j, rows), correcting = table.correction!!.entry, hold = false)
                     else DoneSubRow(
-                        null, mini.weightKg, "${mini.reps}", foot(j, rows),
+                        row, null, mini.weightKg, "${mini.reps}", foot(j, rows),
                         onCorrect = table.onCorrect?.let { { it(index, j) } },
                         description = stringResource(R.string.correct_mini_set_description, j + 1, index + 1),
                     )
                 }
             }
             when {
-                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(null, table, weightLocked = true, join = Join.Foot) }
+                open -> out += SubItem("ext-$index-${logged.size}", true) { ActiveSubRow(stringResource(R.string.row_mini_set, logged.size + 1, index + 1), null, table, weightLocked = true, join = Join.Foot) }
                 // Before the set, one planned mini-set shows the target of the first, at the set's weight.
                 set == null -> out += SubItem("ext-$index-0", false) {
-                    PlannedSubRow(null, plannedKg, "${technique.miniSetReps}", Join.Foot)
+                    PlannedSubRow(stringResource(R.string.row_mini_set, 1, index + 1), null, plannedKg, "${technique.miniSetReps}", Join.Foot)
                 }
             }
         }
@@ -407,15 +549,16 @@ private fun subRows(table: TableState, index: Int, technique: Technique?, planne
             val last = lastTime.firstOrNull { it.kind == Extension.Kind.Hold }?.let { seconds(it.reps) }
             when {
                 logged.isNotEmpty() -> out += SubItem("ext-$index-0", table.corrects(index, 0)) {
-                    if (table.corrects(index, 0)) ActiveSubRow(last, table, weightLocked = true, join = Join.Foot, correcting = table.correction!!.entry, hold = true)
+                    val row = stringResource(R.string.row_hold, index + 1)
+                    if (table.corrects(index, 0)) ActiveSubRow(row, last, table, weightLocked = true, join = Join.Foot, correcting = table.correction!!.entry, hold = true)
                     else DoneSubRow(
-                        last, logged[0].weightKg, seconds(logged[0].reps), Join.Foot,
+                        row, last, logged[0].weightKg, seconds(logged[0].reps), Join.Foot,
                         onCorrect = table.onCorrect?.let { { it(index, 0) } },
                         description = stringResource(R.string.correct_hold_description, index + 1),
                     )
                 }
-                open -> out += SubItem("ext-$index-0", true) { ActiveSubRow(last, table, weightLocked = true, join = Join.Foot) }
-                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(last, plannedKg, seconds(technique.seconds), Join.Foot) }
+                open -> out += SubItem("ext-$index-0", true) { ActiveSubRow(stringResource(R.string.row_hold, index + 1), last, table, weightLocked = true, join = Join.Foot) }
+                set == null -> out += SubItem("ext-$index-0", false) { PlannedSubRow(stringResource(R.string.row_hold, index + 1), last, plannedKg, seconds(technique.seconds), Join.Foot) }
             }
         }
         else -> Unit
@@ -458,13 +601,14 @@ private fun RowFrame(
 private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, table: TableState) {
     val cs = MaterialTheme.colorScheme
     val description = stringResource(R.string.warmup_description, i + 1, formatKg(w.weightKg), w.reps)
+    val row = stringResource(R.string.row_warmup, i + 1)
     val tick = Modifier.toggleable(value = done, role = Role.Checkbox, onValueChange = { table.onTickWarmup(i) })
         .semantics { contentDescription = description }
     if (editing != null) {
         RowFrame(RowHeight, modifier = Modifier.testTag(ActiveWarmupTag)) {
             IndexCell(stringResource(R.string.warmup_lead), Tone.Active, null, Join.None, RowHeight, bold = true)
             Spacer(Modifier.weight(1f))
-            EntryCells(editing, flagged = false, table.actions)
+            EntryCells(row, editing, flagged = false, table.actions)
             Spacer(Modifier.width(ColRir))
             CheckCell(if (done) Check.Done else Check.Todo, tick)
         }
@@ -476,8 +620,8 @@ private fun WarmupRow(i: Int, w: WarmupSet, done: Boolean, editing: SetEntry?, t
         Spacer(Modifier.weight(1f))
         // Planned looks planned, done looks done: muted like a prefill until ticked.
         val color = if (done) cs.onSurface else cs.outline
-        ValueText(formatKg(w.weightKg), ColKg, color)
-        ValueText("${w.reps}", ColReps, color)
+        WeightText(formatKg(w.weightKg), color, spokenWeight(row, formatKg(w.weightKg)))
+        ValueText("${w.reps}", LocalReps.current, color, spoken = spokenReps(row, "${w.reps}"))
         Spacer(Modifier.width(ColRir))
         CheckCell(if (done) Check.Done else Check.Todo, tick)
     }
@@ -490,6 +634,7 @@ private fun UpcomingSetRow(
     table: TableState, steppedBack: Boolean = false,
 ) {
     val color = MaterialTheme.colorScheme.outline
+    val row = stringResource(R.string.row_set, i + 1)
     // The set to do while a warm-up is typed or a later set picked: a tap brings the pad back to it.
     val back = when {
         !steppedBack -> null
@@ -506,10 +651,10 @@ private fun UpcomingSetRow(
         IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Plain, technique, join, RowHeight,
             onClick = if (!steppedBack && table.current.editable(i) || table.current.prescription == null && !steppedBack) { { table.onSetOptions(i) } } else null,
             description = stringResource(R.string.set_options_description, i + 1))
-        LastCell(last)
-        ValueText(weight, ColKg, color)
-        ValueText(reps, ColReps, color)
-        RirCell { target?.rir?.let { RirChip(it, target = true) } }
+        LastCell(row, last)
+        WeightText(weight, color, spokenWeight(row, weight))
+        ValueText(reps, LocalReps.current, color, spoken = spokenReps(row, reps))
+        RirCell { target?.rir?.let { RirChip(it, target = true, spoken = spokenRir(row, it, target = true)) } }
         CheckCell(Check.Todo, null)
     }
 }
@@ -519,16 +664,17 @@ private fun ActiveSetRow(
     i: Int, last: LoggedSet?, entry: SetEntry, flagged: Boolean, table: TableState, target: SetPrescription?,
     technique: Technique?, join: Join, editing: Boolean = false,
 ) {
+    val row = stringResource(R.string.row_set, i + 1)
     RowFrame(RowHeight) {
         if (editing) EditCell(stringResource(R.string.correct_set_editing, i + 1))
         else IndexCell("${i + 1}", if (technique != null) Tone.Technique else Tone.Active, technique, join, RowHeight,
             onClick = { table.onSetOptions(i) }, description = stringResource(R.string.set_options_description, i + 1), bold = true)
-        LastCell(last)
-        EntryCells(entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
+        LastCell(row, last)
+        EntryCells(row, entry, flagged, table.actions, repsPlaceholder = target?.reps?.toString())
         RirCell {
             when {
-                entry.rir != null -> RirChip(entry.rir, target = false)
-                target?.rir != null -> RirChip(target.rir, target = true)
+                entry.rir != null -> RirChip(entry.rir, target = false, spoken = spokenRir(row, entry.rir, target = false))
+                target?.rir != null -> RirChip(target.rir, target = true, spoken = spokenRir(row, target.rir, target = true))
             }
         }
         if (editing) CheckCell(Check.Done, null)
@@ -551,16 +697,17 @@ private fun DoneSetRow(i: Int, last: LoggedSet?, set: LoggedSet, table: TableSta
     val color = MaterialTheme.colorScheme.onSurface
     val onClick = table.correctSet(i)
     val correct = stringResource(R.string.correct_set_description, i + 1)
+    val row = stringResource(R.string.row_set, i + 1)
     // Anything logged can be tapped and corrected.
     RowFrame(RowHeight, onClick = onClick, clickLabel = correct,
         modifier = if (onClick != null) Modifier.semantics { contentDescription = correct } else Modifier) {
         IndexCell("${i + 1}", if (technique != null) Tone.Technique else if (open) Tone.Active else Tone.Plain, technique, join, RowHeight, bold = open,
             record = table.current.recordAt(i))
-        LastCell(last)
-        ValueText(formatKg(set.weightKg), ColKg, color)
+        LastCell(row, last)
+        WeightText(formatKg(set.weightKg), color, spokenWeight(row, formatKg(set.weightKg)))
         val reps = set.repsText()
-        ValueText(reps, ColReps, color, small = reps.length > 6)
-        RirCell { set.rir?.let { RirChip(it, target = false) } }
+        ValueText(reps, LocalReps.current, color, small = reps.length > 6, spoken = spokenReps(row, reps))
+        RirCell { set.rir?.let { RirChip(it, target = false, spoken = spokenRir(row, it, target = false)) } }
         val logged = stringResource(R.string.check_logged, i + 1)
         val undo = stringResource(R.string.check_undo, i + 1)
         CheckCell(
@@ -595,10 +742,17 @@ private fun BenchRow(angle: Int?, last: Int?, onClick: (() -> Unit)?) {
                 SymbolIcon(Symbol.AirlineSeatReclineNormal, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant)
             }
         }
-        Text(stringResource(R.string.bench_row), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        val label = MaterialTheme.typography.bodyLarge
+        val bench = stringResource(R.string.bench_row)
+        val atFloor = label.copy(fontSize = KgFloor)
+        val needs = widestText(listOf(bench), atFloor)
+        // Like Last, it gives way: the circle and the cell still say what the row is.
+        BoxWithConstraints(Modifier.weight(1f)) {
+            if (needs <= maxWidth) Text(bench, style = label, maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = KgFloor, maxFontSize = label.fontSize))
+        }
         // The table's cell: outlined in outline, the value Inter at figureLarge's size, a placeholder muted.
         Box(
-            Modifier.width(ColKg).padding(horizontal = CellInset).height(CellHeight).border(1.dp, cs.outline, CellShape),
+            Modifier.width(LocalKg.current.width).padding(horizontal = CellInset).height(CellHeight).border(1.dp, cs.outline, CellShape),
             contentAlignment = Alignment.Center,
         ) {
             val shown = angle ?: last
@@ -616,7 +770,7 @@ private fun BenchRow(angle: Int?, last: Int?, onClick: (() -> Unit)?) {
                 Text(stringResource(R.string.bench_row_placeholder), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
             }
         }
-        Spacer(Modifier.width(ColReps + ColRir + ColCheck))
+        Spacer(Modifier.width(LocalReps.current + ColRir + ColCheck))
     }
 }
 
@@ -634,29 +788,30 @@ private fun AddSetRow(onAdd: () -> Unit) {
 /** A drop or mini-set still to come: muted like every prefill; a drop is to failure, an outlined 0 chip. */
 @Composable
 private fun PlannedSubRow(
-    last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null,
+    row: String, last: String?, kg: Double?, reps: String, join: Join, toFailure: Boolean = false, plus: (() -> Unit)? = null,
 ) {
     val color = MaterialTheme.colorScheme.outline
     RowFrame(SubRowHeight) {
         IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus)
-        SubLast(last)
-        ValueText(kg?.let(::formatKg).orEmpty(), ColKg, color)
-        ValueText(reps, ColReps, color)
-        RirCell { if (toFailure) RirChip(0, target = true) }
+        SubLast(row, last)
+        val weight = kg?.let(::formatKg).orEmpty()
+        WeightText(weight, color, spokenWeight(row, weight))
+        ValueText(reps, LocalReps.current, color, spoken = spokenReps(row, reps))
+        RirCell { if (toFailure) RirChip(0, target = true, spoken = spokenRir(row, 0, target = true)) }
         CheckCell(Check.Todo, null, small = true)
     }
 }
 
 /** A drop or mini-set done: full contrast and a filled check. A tap loads it into the pad to correct it. */
 @Composable
-private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCorrect: (() -> Unit)?, description: String) {
+private fun DoneSubRow(row: String, last: String?, kg: Double, reps: String, join: Join, onCorrect: (() -> Unit)?, description: String) {
     val color = MaterialTheme.colorScheme.onSurface
     RowFrame(SubRowHeight, onClick = onCorrect, clickLabel = description,
         modifier = if (onCorrect != null) Modifier.semantics { contentDescription = description } else Modifier) {
         IndexCell(null, Tone.Technique, null, join, SubRowHeight)
-        SubLast(last)
-        ValueText(formatKg(kg), ColKg, color)
-        ValueText(reps, ColReps, color)
+        SubLast(row, last)
+        WeightText(formatKg(kg), color, spokenWeight(row, formatKg(kg)))
+        ValueText(reps, LocalReps.current, color, spoken = spokenReps(row, reps))
         Spacer(Modifier.width(ColRir))
         val logged = stringResource(R.string.sub_row_logged)
         CheckCell(Check.Done, Modifier.semantics { contentDescription = logged }, small = true)
@@ -669,6 +824,7 @@ private fun DoneSubRow(last: String?, kg: Double, reps: String, join: Join, onCo
  */
 @Composable
 private fun ActiveSubRow(
+    row: String,
     last: String?,
     table: TableState,
     weightLocked: Boolean,
@@ -688,16 +844,16 @@ private fun ActiveSubRow(
     }
     RowFrame(SubRowHeight, modifier = Modifier.testTag(ActiveSubRowTag)) {
         if (correcting != null) EditCell() else IndexCell(null, Tone.Technique, null, join, SubRowHeight, plus = plus)
-        SubLast(last)
-        if (weightLocked) ValueText(entry.weight, ColKg, MaterialTheme.colorScheme.outline)
-        else Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(ColKg), height = SubCellHeight) { tap(Field.Weight) }
+        SubLast(row, last)
+        if (weightLocked) WeightText(entry.weight, MaterialTheme.colorScheme.outline, spokenWeight(row, entry.weight))
+        else Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), modifier = Modifier.width(LocalKg.current.width), spoken = spokenWeight(row, entry.weight), height = SubCellHeight) { tap(Field.Weight) }
         val reps = when {
             correcting == null && table.holdSeconds != null -> AnnotatedString(seconds(table.holdSeconds))
             hold -> AnnotatedString(seconds(entry.full.toIntOrNull() ?: 0))
             else -> repsAnnotated(entry)
         }
-        Cell(reps, focused = entry.field == Field.Reps, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), height = SubCellHeight) { tap(Field.Reps) }
-        RirCell { if (toFailure) RirChip(0, target = true) }
+        Cell(reps, focused = entry.field == Field.Reps, description = stringResource(R.string.col_reps), modifier = Modifier.width(LocalReps.current), spoken = spokenReps(row, reps.text), height = SubCellHeight) { tap(Field.Reps) }
+        RirCell { if (toFailure) RirChip(0, target = true, spoken = spokenRir(row, 0, target = true)) }
         if (correcting != null) CheckCell(Check.Done, null, small = true)
         else {
             val log = table.onLogShown
@@ -710,6 +866,7 @@ private fun ActiveSubRow(
 /** The index column of the row whose circle reads [label] (`W`, the set number). */
 internal fun indexTag(label: String) = "index-$label"
 
+internal const val SetTableTag = "set-table"
 internal const val RecordBadgeTag = "record-badge"
 
 internal const val ActiveSubRowTag = "active-sub-row"
@@ -717,15 +874,33 @@ internal const val ActiveWarmupTag = "active-warmup"
 
 // ---------------------------------------------------------------- cells
 
+/** [row]'s weight as a screen reader says it, `Set 1 weight, 100 kg`. */
+@Composable
+private fun spokenWeight(row: String, kg: String) =
+    if (kg.isEmpty()) stringResource(R.string.spoken_weight_empty, row) else stringResource(R.string.spoken_weight, row, kg)
+
+/** [row]'s reps as a screen reader says them, with the [target] while none are typed. */
+@Composable
+private fun spokenReps(row: String, reps: String, target: String? = null) = when {
+    reps.isNotEmpty() -> stringResource(R.string.spoken_reps, row, reps)
+    target != null -> stringResource(R.string.spoken_reps_target, row, target)
+    else -> stringResource(R.string.spoken_reps_empty, row)
+}
+
+/** [row]'s RIR as a screen reader says it, a [target] apart from one logged. */
+@Composable
+private fun spokenRir(row: String, rir: Int, target: Boolean) =
+    stringResource(if (target) R.string.spoken_rir_target else R.string.spoken_rir, row, if (rir >= 4) "4+" else "$rir")
+
 /** The kg and reps cells of the row being typed: tap either to type into it. */
 @Composable
-private fun RowScope.EntryCells(entry: SetEntry, flagged: Boolean, actions: PadActions, repsPlaceholder: String? = null) {
+private fun RowScope.EntryCells(row: String, entry: SetEntry, flagged: Boolean, actions: PadActions, repsPlaceholder: String? = null) {
     fun tap(field: Field) {
         actions.focus(field)
         actions.setPadVisible(true)
     }
-    Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), flagged = flagged, modifier = Modifier.width(ColKg)) { tap(Field.Weight) }
-    Cell(repsAnnotated(entry), focused = entry.field != Field.Weight, description = stringResource(R.string.col_reps), modifier = Modifier.width(ColReps), placeholder = repsPlaceholder) { tap(Field.Reps) }
+    Cell(AnnotatedString(entry.weight), focused = entry.field == Field.Weight, description = stringResource(R.string.col_kg), flagged = flagged, modifier = Modifier.width(LocalKg.current.width), spoken = spokenWeight(row, entry.weight)) { tap(Field.Weight) }
+    Cell(repsAnnotated(entry), focused = entry.field != Field.Weight, description = stringResource(R.string.col_reps), modifier = Modifier.width(LocalReps.current), spoken = spokenReps(row, entry.repsText, repsPlaceholder), placeholder = repsPlaceholder) { tap(Field.Reps) }
 }
 
 /**
@@ -790,6 +965,8 @@ private fun RowScope.IndexCell(
                 if (technique == null) {
                     Text(
                         label,
+                        // The circle's description says which set it is.
+                        Modifier.semantics { hideFromAccessibility() },
                         style = MaterialTheme.typography.titleSmall,
                         color = ink,
                         fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
@@ -863,31 +1040,45 @@ private fun RowScope.RirCell(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun RowScope.LastCell(last: LoggedSet?) = SubLast(last?.short())
+private fun RowScope.LastCell(row: String, last: LoggedSet?) = SubLast(row, last?.short(), lines = 2)
 
 @Composable
-private fun RowScope.SubLast(last: String?) {
+private fun RowScope.SubLast(row: String, last: String?, lines: Int = 1) {
+    val spoken = last?.let { stringResource(R.string.spoken_last, row, it.replace(" × ", " kg × ")) }
+    val column = LocalLast.current
     Text(
-        last.orEmpty(),
-        Modifier.weight(1f),
-        style = MaterialTheme.typography.bodyMedium,
+        // A long one breaks before its `+`, never inside `50 × 10`.
+        when {
+            !column.shown -> ""
+            column.tight -> last.orEmpty().tight().let { if (lines > 1) it else it.unbroken() }
+            else -> last.orEmpty().replace(" × ", "\u00A0×\u00A0").replace(" + ", " +\u00A0")
+        },
+        Modifier.weight(1f).padding(end = LastGap).then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),
+        style = column.style,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        maxLines = lines,
     )
 }
 
 @Composable
-private fun ValueText(text: String, width: Dp, color: Color, small: Boolean = false) {
+private fun ValueText(text: String, width: Dp, color: Color, small: Boolean = false, spoken: String? = null, size: TextUnit = TextUnit.Unspecified) {
+    val style = (if (small) MaterialTheme.typography.figureMedium else MaterialTheme.typography.figureLarge)
+    val largest = if (size.isSpecified) size else style.fontSize
     Text(
         text,
-        Modifier.width(width),
+        Modifier.width(width).padding(horizontal = ValueGap / 2).then(if (spoken != null && text.isNotEmpty()) Modifier.semantics { contentDescription = spoken } else Modifier),
         color = color,
         textAlign = TextAlign.Center,
-        style = (if (small) MaterialTheme.typography.figureMedium else MaterialTheme.typography.figureLarge),
+        style = style,
         maxLines = 1,
+        // A value too wide for its column steps down: at maxLines 1 it would otherwise lose its end.
+        autoSize = TextAutoSize.StepBased(minFontSize = minOf(KgFloor.value, largest.value).sp, maxFontSize = largest),
     )
 }
+
+/** A weight in the kg column, at the table's size. */
+@Composable
+private fun WeightText(text: String, color: Color, spoken: String?) = LocalKg.current.let { ValueText(text, it.width, color, spoken = spoken, size = it.size) }
 
 /** The column heads. "Last" only shows once there is a last time to compare with. */
 @Composable
@@ -896,13 +1087,23 @@ private fun ColumnHeads(showLast: Boolean, split: Boolean = false) {
     val st = MaterialTheme.typography.labelMedium
     Row(Modifier.fillMaxWidth().height(LabelHeight).padding(horizontal = RowPad), verticalAlignment = Alignment.Bottom) {
         Spacer(Modifier.width(ColIndex))
-        Text(if (showLast) stringResource(R.string.col_last) else "", Modifier.weight(1f), style = st, color = c)
-        Text(stringResource(R.string.col_kg), Modifier.width(ColKg), style = st, color = c, textAlign = TextAlign.Center)
-        Text(stringResource(if (split) R.string.col_reps_split else R.string.col_reps), Modifier.width(ColReps), style = st, color = c, textAlign = TextAlign.Center)
-        Text(stringResource(R.string.col_rir), Modifier.width(ColRir), style = st, color = c, textAlign = TextAlign.Center)
+        val reps = stringResource(if (split) R.string.col_reps_split else R.string.col_reps)
+        // The columns stay put at large text, so the heads step down together rather than split.
+        val size = sharedFontSize(listOf(stringResource(R.string.col_kg) to LocalKg.current.width, reps to LocalReps.current, stringResource(R.string.col_rir) to ColRir), st, floor = 11.sp)
+        @Composable
+        fun Head(text: String, modifier: Modifier, align: Alignment.Horizontal = Alignment.CenterHorizontally) =
+            // Past the floor a head runs over its column into the room around it, whole, rather than clip.
+            Text(text, modifier.wrapContentWidth(align, unbounded = true), style = st, fontSize = size, color = c, maxLines = 1, softWrap = false)
+        Head(if (showLast && LocalLast.current.shown) stringResource(R.string.col_last) else "", Modifier.weight(1f), Alignment.Start)
+        Head(stringResource(R.string.col_kg), Modifier.width(LocalKg.current.width))
+        Head(reps, Modifier.width(LocalReps.current))
+        Head(stringResource(R.string.col_rir), Modifier.width(ColRir))
         Spacer(Modifier.width(ColCheck))
     }
 }
+
+/** `18 × 7`: a drop as Last writes it. */
+private fun Extension.short() = "${formatKg(weightKg)} × $reps"
 
 /** `25 × 10`, `25 × 10 + 6`, `30 × 10/9`: last time's set, without its RIR. */
 internal fun LoggedSet.short() = "${formatKg(weightKg)} × $fullReps" + (rightReps?.let { "/$it" } ?: "") + if (partialReps > 0) " + $partialReps" else ""
@@ -951,6 +1152,8 @@ internal fun Cell(
     focused: Boolean,
     description: String,
     modifier: Modifier,
+    /** What a screen reader says: the value with its set and unit. */
+    spoken: String? = null,
     /** The weight check is on this value: it reads in the error colour, like the check's reason. */
     flagged: Boolean = false,
     height: Dp = CellHeight,
@@ -980,7 +1183,8 @@ internal fun Cell(
         val style = (if (text.length > 6) MaterialTheme.typography.figureMedium else MaterialTheme.typography.figureLarge)
         Text(
             if (empty) AnnotatedString(placeholder!!) else text,
-            Modifier.padding(horizontal = CellPad),
+            // Outside the padding, so an empty cell's label keeps a size and stays in the tree.
+            (if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier).padding(horizontal = CellPad),
             style = style,
             autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = style.fontSize),
             color = when { empty -> cs.outline; flagged -> cs.error; else -> cs.onSurface },

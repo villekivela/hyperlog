@@ -1,41 +1,30 @@
 package com.hyperlog.app.ui.settings
 
-import com.hyperlog.app.ui.theme.Tones
-import com.hyperlog.app.ui.theme.SegmentedList
-import com.hyperlog.app.ui.theme.SegmentedRow
-import com.hyperlog.app.ui.theme.GroupGap
-import com.hyperlog.app.ui.theme.hyperlogTopBarColors
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.ui.graphics.Color
-import com.hyperlog.app.ui.theme.Group
-import com.hyperlog.app.ui.theme.GroupHead
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,23 +32,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import com.hyperlog.app.coach.CoachCost
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
 import com.hyperlog.app.backup.Backups
+import com.hyperlog.app.coach.CoachCost
 import com.hyperlog.app.ui.symbols.Symbol
 import com.hyperlog.app.ui.symbols.SymbolIcon
+import com.hyperlog.app.ui.theme.GroupGap
+import com.hyperlog.app.ui.theme.GroupHead
+import com.hyperlog.app.ui.theme.SegmentedList
+import com.hyperlog.app.ui.theme.SegmentedRow
+import com.hyperlog.app.ui.theme.TextEdge
+import com.hyperlog.app.ui.theme.Tones
+import com.hyperlog.app.ui.theme.hyperlogTopBarColors
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import com.hyperlog.app.ui.theme.TextEdge
 
 /** Where the starting-weights import stands: how many exercises have one, and whether the last file was rejected. */
 data class StartingWeightsStatus(val count: Int, val invalid: Boolean)
@@ -163,10 +160,10 @@ fun SettingsScreen(
             val libraryTitle = stringResource(R.string.settings_library)
             val weightsTitle = stringResource(R.string.settings_starting_weights)
             SegmentedList {
-                row(gymsTitle, gyms, Symbol.FitnessCenter, onClick = onGyms, trailing = chevron)
+                row(gymsTitle, gyms, Symbol.Storefront, onClick = onGyms, trailing = chevron)
                 row(libraryTitle, library, Symbol.List, onClick = onLibrary, trailing = chevron)
                 row(
-                    weightsTitle, weights, Symbol.History, onClick = onImportStartingWeights,
+                    weightsTitle, weights, Symbol.MoveToInbox, onClick = onImportStartingWeights,
                     supportingColor = if (startingWeights.invalid) error else null,
                 )
             }
@@ -202,8 +199,7 @@ fun SettingsScreen(
                     item {
                         Box(Modifier.toggleable(on, role = Role.Switch, onValueChange = onScriptedCoach)) {
                             SegmentedRow(
-                                stringResource(R.string.settings_scripted_coach), stringResource(R.string.settings_scripted_coach_body), Symbol.Sports,
-                                supportingLines = 2,
+                                stringResource(R.string.settings_scripted_coach), stringResource(R.string.settings_scripted_coach_body), Symbol.Forum,
                                 trailing = { Switch(checked = on, onCheckedChange = null) },
                             )
                         }
@@ -271,7 +267,7 @@ fun SettingsScreen(
                 GroupHead(stringResource(R.string.settings_debug))
                 val galleryTitle = stringResource(R.string.mannequin_gallery)
                 val galleryLine = stringResource(R.string.settings_mannequin_gallery_body)
-                SegmentedList { row(galleryTitle, galleryLine, Symbol.Exercise, onClick = open, trailing = chevron) }
+                SegmentedList { row(galleryTitle, galleryLine, Symbol.AccessibilityNew, onClick = open, trailing = chevron) }
             }
             if (version != null) {
                 Text(

@@ -1,38 +1,30 @@
 package com.hyperlog.app.ui.history
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
@@ -41,14 +33,15 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hyperlog.app.R
 import com.hyperlog.app.domain.formatKg
+import com.hyperlog.app.history.WeekTotal
 import java.time.LocalDate
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
-import com.hyperlog.app.ui.theme.TextEdge
 
 // Charts (docs/design/history.md): thin marks on hairline grids, one accent (primary), ink for
 // everything else. Each chart has its table in the rows under it, so nothing is read by touch alone.
@@ -91,6 +84,8 @@ fun TrendChart(
     ticks: Boolean = true,
     goal: Double? = null,
     goalLabel: String? = null,
+    /** A smooth curve through the sessions that never overshoots one (monotone), not straight segments. */
+    smooth: Boolean = false,
     description: String,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -148,7 +143,16 @@ fun TrendChart(
         val joined = line.withIndex().filter { it.value != null }
         if (joined.size >= 2) {
             val path = Path()
-            joined.forEachIndexed { n, (i, v) -> if (n == 0) path.moveTo(x(i), y(v!!)) else path.lineTo(x(i), y(v!!)) }
+            val xs = joined.map { x(it.index) }
+            val ys = joined.map { y(it.value!!) }
+            if (smooth) {
+                val m = monotoneSlopes(xs, ys)
+                path.moveTo(xs[0], ys[0])
+                for (n in 0 until xs.lastIndex) {
+                    val dx = (xs[n + 1] - xs[n]) / 3
+                    path.cubicTo(xs[n] + dx, ys[n] + m[n] * dx, xs[n + 1] - dx, ys[n + 1] - m[n + 1] * dx, xs[n + 1], ys[n + 1])
+                }
+            } else joined.forEachIndexed { n, (i, v) -> if (n == 0) path.moveTo(x(i), y(v!!)) else path.lineTo(x(i), y(v!!)) }
             drawPath(path, cs.primary, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
         // The selected session: the accent dot on the line (or on the dot when it has no line value).
@@ -185,70 +189,86 @@ fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * A week's sets per muscle, one [SetsBar] each. The names' column fits the longest name and a gap (at least
- * 128 dp, on the 8 dp grid), so every bar starts from the same baseline; past half the width a
- * name wraps rather than being cut off. The values' column fits the widest value ("12.5"), so the
- * longest bar ends at the same place whatever its value.
- */
-@Composable
-fun WeekSets(sets: Map<String, Double>) {
-    val most = sets.values.maxOrNull() ?: return
-    val style = MaterialTheme.typography.bodyMedium
-    val valueStyle = MaterialTheme.typography.labelLarge
-    val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val longest = sets.keys.maxOf { measurer.measure(it, style, maxLines = 1).size.width }
-        // 8 dp between the longest name and its bar.
-        val fit = with(density) { longest.toDp() } + 8.dp
-        val column = (ceil(fit.value / 8f) * 8f).dp.coerceIn(128.dp, (maxWidth - TextEdge * 2) / 2)
-        val widest = sets.values.maxOf { measurer.measure(formatSets(it), valueStyle, maxLines = 1).size.width }
-        val values = with(density) { widest.toDp() }
-        Column { sets.forEach { (muscle, count) -> SetsBar(muscle, count, most, labelWidth = column, valueWidth = values) } }
-    }
-}
-
 /** Sets as counted: whole sets plain ("7"), a half with its decimal ("7.5"). */
 fun formatSets(sets: Double): String {
     val halves = Math.round(sets * 2)
     return if (halves % 2 == 0L) "${halves / 2}" else "${halves / 2}.5"
 }
 
-/** One muscle's sets as an 8 dp bar from a shared baseline, its value after the tip. */
+/**
+ * The work sets of [weeks] (oldest first) as bars from zero, with the sets on a tick column and the
+ * first and last week under them. Tap or drag selects the nearest week; [selected] is in full ink.
+ */
 @Composable
-fun SetsBar(
-    muscle: String,
-    sets: Double,
-    most: Double,
+fun WorkSetsChart(
+    weeks: List<WeekTotal>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    description: String,
     modifier: Modifier = Modifier,
-    labelWidth: Dp = 128.dp,
-    valueWidth: Dp = 24.dp,
+    height: Dp = 56.dp,
 ) {
     val cs = MaterialTheme.colorScheme
-    Row(
-        modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = TextEdge),
-        verticalAlignment = Alignment.CenterVertically,
+    val measurer = rememberTextMeasurer()
+    val tick = MaterialTheme.typography.labelSmall.copy(color = cs.onSurfaceVariant)
+    val unit = stringResource(R.string.history_sets_axis)
+    val scale = remember(weeks) {
+        // Zero and the top: a chart this short has no room for the ticks between.
+        Scale.of(0.0, weeks.maxOf { it.workSets }.toDouble().coerceAtLeast(1.0)).let { s -> s.copy(min = 0.0, ticks = listOf(0.0, s.max)) }
+    }
+    fun nearestWeek(px: Float, width: Float) = (px / (width / weeks.size)).toInt().coerceIn(0, weeks.lastIndex)
+    // Room for the labels, which grow with the system's text size.
+    val labels = measurer.measure(unit, tick)
+    val density = LocalDensity.current
+    val column = maxOf(TickColumn, with(density) { labels.size.width.toDp() + 8.dp })
+    val axis = maxOf(DateAxis, with(density) { labels.size.height.toDp() + 12.dp })
+    Canvas(
+        modifier.fillMaxWidth().height(height + axis)
+            .semantics { contentDescription = description }
+            .pointerInput(weeks, column) { detectTapGestures { onSelect(nearestWeek(it.x, size.width - column.toPx())) } }
+            .pointerInput(weeks, column) { detectHorizontalDragGestures { change, _ -> onSelect(nearestWeek(change.position.x, size.width - column.toPx())) } },
     ) {
-        Text(muscle, Modifier.width(labelWidth), style = MaterialTheme.typography.bodyMedium)
-        BoxWithConstraints(Modifier.weight(1f)) {
-            // Leave room after the longest bar for the gap and the widest value.
-            val full = (maxWidth - 8.dp - valueWidth).coerceAtLeast(0.dp)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.width(full * (sets / most.coerceAtLeast(1.0)).toFloat()).height(8.dp)
-                        .background(cs.primary, RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    formatSets(sets),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = cs.onSurfaceVariant,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-            }
+        val plotW = size.width - column.toPx()
+        val plotH = height.toPx()
+        fun y(v: Double) = (plotH * (1 - (v - scale.min) / (scale.max - scale.min))).toFloat()
+        scale.ticks.forEach { t ->
+            drawLine(cs.outlineVariant, Offset(0f, y(t)), Offset(plotW, y(t)), strokeWidth = 1.dp.toPx())
+            label(measurer, scale.format(t), tick, Offset(plotW + 8.dp.toPx(), y(t)), centerY = true)
         }
+        val slot = plotW / weeks.size
+        val bar = slot * 0.6f
+        weeks.forEachIndexed { i, week ->
+            val top = y(week.workSets.toDouble())
+            val left = slot * i + (slot - bar) / 2
+            drawRoundRect(
+                if (i == selected) cs.primary else cs.primary.copy(alpha = 0.38f),
+                topLeft = Offset(left, top), size = Size(bar, plotH - top), cornerRadius = CornerRadius(4.dp.toPx()),
+            )
+        }
+        // The week read, on the axis, so an empty one is marked too.
+        drawCircle(cs.primary, radius = 4.dp.toPx(), center = Offset(slot * selected + slot / 2, plotH + 4.dp.toPx()))
+        val ay = plotH + 8.dp.toPx()
+        label(measurer, short(weeks.first().start), tick, Offset(0f, ay))
+        if (weeks.size > 1) label(measurer, short(weeks.last().start), tick, Offset(plotW, ay), alignEnd = true)
+        label(measurer, unit, tick, Offset(size.width, ay), alignEnd = true)
+    }
+}
+
+/**
+ * [sets] along one track from zero, with the range [low]–[high] a band on it, on a scale up to
+ * [most]: the band says where the bar should reach, in tone, so being short never reads as a fault.
+ */
+@Composable
+fun TargetBar(sets: Double, low: Int, high: Int, most: Double, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Canvas(modifier.height(12.dp)) {
+        fun x(v: Double) = (size.width * (v / most.coerceAtLeast(1.0))).toFloat()
+        val bar = 8.dp.toPx()
+        val line = (size.height - bar) / 2
+        // One track from zero, the band a raised stretch of it, and the sets along the same line.
+        drawRoundRect(cs.surfaceContainerHighest, topLeft = Offset(0f, line), size = Size(size.width, bar), cornerRadius = CornerRadius(bar / 2))
+        drawRoundRect(cs.outline, topLeft = Offset(x(low.toDouble()), 0f), size = Size(x(high.toDouble()) - x(low.toDouble()), size.height), cornerRadius = CornerRadius(4.dp.toPx()))
+        if (sets > 0) drawRoundRect(cs.primary, topLeft = Offset(0f, line), size = Size(x(sets), bar), cornerRadius = CornerRadius(bar / 2))
     }
 }
 
@@ -272,6 +292,21 @@ private data class Scale(val min: Double, val max: Double, val ticks: List<Doubl
             return listOf(1.0, 2.0, 2.5, 5.0, 10.0).first { it * p >= raw - 1e-9 } * p
         }
     }
+}
+
+/** Fritsch–Carlson tangents: a curve through every point that rises and falls only where the points do. */
+internal fun monotoneSlopes(xs: List<Float>, ys: List<Float>): FloatArray {
+    val n = xs.size
+    val d = FloatArray(n - 1) { (ys[it + 1] - ys[it]) / (xs[it + 1] - xs[it]).coerceAtLeast(1e-3f) }
+    val m = FloatArray(n) { i -> when (i) { 0 -> d[0]; n - 1 -> d[n - 2]; else -> if (d[i - 1] * d[i] <= 0f) 0f else (d[i - 1] + d[i]) / 2 } }
+    for (i in 0 until n - 1) {
+        if (d[i] == 0f) { m[i] = 0f; m[i + 1] = 0f; continue }
+        val a = m[i] / d[i]
+        val b = m[i + 1] / d[i]
+        val h = a * a + b * b
+        if (h > 9f) { val t = 3f / kotlin.math.sqrt(h); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i] }
+    }
+    return m
 }
 
 private fun xOf(dates: List<LocalDate>, i: Int, width: Float): Float {

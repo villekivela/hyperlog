@@ -28,8 +28,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyperlog.app.R
@@ -106,7 +106,7 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
     val side = totalKg?.let { plates.perSide(it) }
     val description = platesDescription(plates, side, totalKg, machine)
     val text = (if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall)
-    Row(modifier.clearAndSetSemantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.semantics(mergeDescendants = true) { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
         BarSide(side.orEmpty(), height = if (compact) 24.dp else 40.dp, muted = side == null && totalKg != null, scale = if (compact) 1f else 1.5f)
         Spacer(Modifier.width(if (compact) 8.dp else 16.dp))
         // A warm-up row's legend is one line, so the row keeps its 48 dp.
@@ -117,6 +117,18 @@ internal fun PlateLoad(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mo
         legendRow {
             if (side == null && totalKg != null) {
                 Text(stringResource(R.string.plates_not_on), style = text, color = cs.onSurfaceVariant)
+                return@legendRow
+            }
+            // Nothing typed: the line says what is there, so the drawing never stands alone.
+            if (totalKg == null && !compact) {
+                Text(
+                    when {
+                        plates.baseKg <= 0 -> stringResource(R.string.plates_type_weight)
+                        machine -> stringResource(R.string.plates_whole_machine_line, formatKg(plates.baseKg))
+                        else -> stringResource(R.string.plates_whole_bar_line, formatKg(plates.baseKg))
+                    },
+                    style = text, color = cs.onSurfaceVariant,
+                )
                 return@legendRow
             }
             legend(side.orEmpty()).forEach { (kg, n) ->
@@ -225,7 +237,7 @@ internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mod
     val cs = MaterialTheme.colorScheme
     val side = totalKg?.let { plates.perSide(it) }
     val description = wholeDescription(plates, side, totalKg, machine)
-    androidx.compose.foundation.layout.Column(modifier.clearAndSetSemantics { contentDescription = description }) {
+    androidx.compose.foundation.layout.Column(modifier.semantics(mergeDescendants = true) { contentDescription = description }) {
         Text(totalKg?.let { stringResource(R.string.weight_kg, formatKg(it)) }.orEmpty(), style = MaterialTheme.typography.figureHeadline)
         Text(
             stringResource(if (machine) R.string.plates_whole_machine_line else R.string.plates_whole_bar_line, formatKg(plates.baseKg)),
@@ -256,6 +268,10 @@ internal fun WholeBar(plates: LadderSpec.Plates, totalKg: Double?, modifier: Mod
     }
 }
 
+/** What a sleeve shows past its outermost plate, and its length with none on. */
+private val SleeveStub = 12.dp
+private val EmptySleeve = 48.dp
+
 /**
  * Both sides, mirrored about the middle: the bar's grip (or, on a machine, the machine as a
  * block), the collars, the plates heaviest inside, and the sleeves.
@@ -269,15 +285,19 @@ private fun BothSides(side: List<Double>, machine: Boolean, muted: Boolean) {
         val mid = size.height / 2
         val cx = size.width / 2
         val stroke = 6.dp.toPx()
-        drawLine(bar, Offset(0f, mid), Offset(size.width, mid), strokeWidth = stroke, cap = StrokeCap.Round)
+        val inner = if (machine) size.width * 0.11f + 6.dp.toPx() else size.width * 0.2f
+        val collarW = 5.dp.toPx()
+        // The bar (or axle) ends a sleeve's stub past its outermost plate, never at the screen's edge.
+        val loaded = side.sumOf { ((plateWidth(it) * 2.2f).toPx() + 2.dp.toPx()).toDouble() }.toFloat()
+        val reach = (inner + collarW + 2.dp.toPx() + maxOf(loaded + SleeveStub.toPx(), EmptySleeve.toPx())).coerceAtMost(cx - stroke / 2)
+        drawLine(bar, Offset(cx - reach, mid), Offset(cx + reach, mid), strokeWidth = stroke, cap = StrokeCap.Round)
         if (machine) {
             val w = size.width * 0.22f
             drawRoundRect(bar, Offset(cx - w / 2, mid - size.height * 0.3f), Size(w, size.height * 0.6f), CornerRadius(6.dp.toPx()))
         }
-        val inner = if (machine) size.width * 0.11f + 6.dp.toPx() else size.width * 0.2f
         listOf(-1f, 1f).forEach { dir ->
             var x = cx + dir * inner
-            val collarW = 5.dp.toPx(); val collarH = size.height * 0.36f
+            val collarH = size.height * 0.36f
             drawRoundRect(bar, Offset(if (dir > 0) x else x - collarW, mid - collarH / 2), Size(collarW, collarH), CornerRadius(2.dp.toPx()))
             x += dir * (collarW + 2.dp.toPx())
             side.forEach { kg ->

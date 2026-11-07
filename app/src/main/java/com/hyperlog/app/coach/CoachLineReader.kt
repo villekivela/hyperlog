@@ -59,7 +59,7 @@ class CoachLineReader(private val db: HyperlogDatabase, private val programs: Pr
             val ownSlots = row.programId != null && row.programId == active?.id
             LoggedSession(
                 date = dateOf(row.startedAt),
-                eased = row.easy || day?.deload == true || day?.eased == true,
+                eased = programs.eased(row),
                 exercises = dao.sessionExercises(row.id).filter { !it.removed }.mapNotNull { se ->
                     val sets = dao.sets(se.id).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
                     val slot = day?.slot(se.slotId)
