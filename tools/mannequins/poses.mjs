@@ -306,7 +306,7 @@ export const POSES = {
     equipment: 'machine',
     motion: 'standing_calf',
     kit: { standing_calf: {} },
-    body: { trunk: -6, hipZ: 0.12, legs: 0.999, pads: 0.075 },
+    body: { trunk: -6 },
     top: { arm: 10.4 },
     feet: { stance: 0.09 },
     grip: {},

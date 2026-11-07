@@ -1487,8 +1487,8 @@ gallery (Technique videos).
     down (the pulldown, the pressdown) the clip's first half is the concentric, so the lowering is
     the 1 s and the lifting the 2 s. The same holds for the handles pulled in on levers (#127: the
     chest-supported row, the machine pulldown). Every other movement of #127's starter batch starts
-    the clip where the muscle is shortest, so its lowering is the eccentric; the seated calf raise
-    holds the stretch at the bottom for half a second, and the leg press calf press for a second. Only the lowering is baked into
+    the clip where the muscle is shortest, so its lowering is the eccentric; the seated and standing calf
+    raises hold the stretch at the bottom for half a second, and the leg press calf press for a second. Only the lowering is baked into
     the clip; the phone plays it forward over the lowering time, holds, plays it backward over the
     lifting time, and holds again, in the sheet and the gallery alike. With animations removed the
     clip stays a still frame at the bottom. The player takes the tempo as an input, so a tempo on
