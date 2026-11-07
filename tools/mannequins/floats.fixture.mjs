@@ -22,19 +22,27 @@ const fillsItsBox = (mesh, box) => {
   });
 };
 
-/** A part's centre line, and how far its surface stands off it. */
-function lineOf(mesh, box) {
+/**
+ * A part that fills its box, as points over its middle sheet across its two longest sides, and how far
+ * its surface stands off that sheet: half its thinnest side. A tube is then a line of points, a pad a
+ * sheet of them, so a flat part a few centimetres off another doesn't pass as touching it.
+ */
+function sheetOf(mesh, box) {
   const scale = new THREE.Vector3().setFromMatrixScale(mesh.matrixWorld);
   const size = box.getSize(new THREE.Vector3()).multiply(scale);
-  const axes = ['x', 'y', 'z'].sort((a, b) => size[b] - size[a]);
+  const [a, b, c] = ['x', 'y', 'z'].sort((u, v) => size[v] - size[u]);
   const middle = box.getCenter(new THREE.Vector3());
-  const n = Math.max(1, Math.ceil(size[axes[0]] / STEP));
-  const points = Array.from({ length: n + 1 }, (_, i) => {
-    const p = middle.clone();
-    p[axes[0]] = box.min[axes[0]] + ((box.max[axes[0]] - box.min[axes[0]]) * i) / n;
-    return p.applyMatrix4(mesh.matrixWorld);
-  });
-  return { points, radius: size[axes[1]] / 2 };
+  const [na, nb] = [a, b].map((k) => Math.max(1, Math.ceil(size[k] / STEP)));
+  const points = [];
+  for (let i = 0; i <= na; i++) {
+    for (let j = 0; j <= nb; j++) {
+      const p = middle.clone();
+      p[a] = box.min[a] + ((box.max[a] - box.min[a]) * i) / na;
+      p[b] = box.min[b] + ((box.max[b] - box.min[b]) * j) / nb;
+      points.push(p.applyMatrix4(mesh.matrixWorld));
+    }
+  }
+  return { points, radius: size[c] / 2 };
 }
 
 /** Points along a bent part's edges. */
@@ -58,6 +66,13 @@ function edgesOf(mesh) {
   return { points, radius: 0 };
 }
 
+/** A mesh's shape in the world as it now stands: points through it, and how far its surface stands off them. */
+export function shapeOf(mesh) {
+  mesh.geometry.computeBoundingBox();
+  const box = mesh.geometry.boundingBox;
+  return fillsItsBox(mesh, box) ? sheetOf(mesh, box) : edgesOf(mesh);
+}
+
 /** The names of the parts of `stage`'s kit that join nothing standing on the floor, at `d` of the rep. */
 export function floating(stage, d = 0.5) {
   stage.pose(d);
@@ -65,9 +80,7 @@ export function floating(stage, d = 0.5) {
   const parts = [];
   stage.kit.group.traverse((o) => {
     if (!o.isMesh || !o.visible) return;
-    o.geometry.computeBoundingBox();
-    const box = o.geometry.boundingBox;
-    const shape = fillsItsBox(o, box) ? lineOf(o, box) : edgesOf(o);
+    const shape = shapeOf(o);
     parts.push({ name: o.name, role: o.userData.role, ...shape, around: new THREE.Box3().setFromPoints(shape.points).expandByScalar(shape.radius + TOUCHING) });
   });
   const touching = (a, b) => a.around.intersectsBox(b.around)
